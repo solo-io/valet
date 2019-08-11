@@ -4,6 +4,7 @@ import "context"
 
 type Options struct {
 	Cluster Cluster
+	Gloo    Gloo
 	Top     Top
 }
 
@@ -17,4 +18,11 @@ type Cluster struct {
 	Location    string
 	Project     string
 	KubeVersion string
+}
+
+type Gloo struct {
+	GlooVersion   string
+	Enterprise    bool
+	LicenseKey    string
+	GlooNamespace string
 }

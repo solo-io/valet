@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"github.com/solo-io/kube-cluster/cli/cluster"
+	"github.com/solo-io/kube-cluster/cli/install"
 	"github.com/solo-io/kube-cluster/cli/options"
 
 	"github.com/solo-io/go-utils/cliutils"
@@ -37,6 +38,7 @@ func SoloCli(version string) *cobra.Command {
 		app.SuggestionsMinimumDistance = 1
 		app.AddCommand(
 			cluster.ClusterCmd(opts),
+			install.InstallCmd(opts),
 		)
 	}
 

@@ -5,6 +5,7 @@ import (
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/kube-cluster/cli/cluster/gke"
 	"github.com/solo-io/kube-cluster/cli/cluster/minikube"
+	"github.com/solo-io/kube-cluster/cli/internal"
 	"github.com/solo-io/kube-cluster/cli/options"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -15,7 +16,7 @@ func EnsureCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobr
 		Use:     "ensure",
 		Short:   "ensures kubernetes cluster is running",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return RootAddError
+			return internal.RootAddError
 		},
 	}
 	cmd.PersistentFlags().StringVarP(&opts.Cluster.KubeVersion, "kube-version", "v", "v1.13.0", "kube version")

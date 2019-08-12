@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"context"
-	"github.com/solo-io/kube-cluster/cli/ensure"
-	"github.com/solo-io/kube-cluster/cli/options"
+	"github.com/solo-io/valet/cli/ensure"
+	"github.com/solo-io/valet/cli/options"
 
 	"github.com/solo-io/go-utils/cliutils"
 

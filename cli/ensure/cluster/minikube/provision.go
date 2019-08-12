@@ -3,8 +3,8 @@ package minikube
 import (
 	"context"
 	"github.com/solo-io/go-utils/contextutils"
-	"github.com/solo-io/kube-cluster/cli/ensure/cluster/cluster"
-	"github.com/solo-io/kube-cluster/cli/options"
+	"github.com/solo-io/valet/cli/ensure/cluster/cluster"
+	"github.com/solo-io/valet/cli/options"
 	"go.uber.org/zap"
 )
 

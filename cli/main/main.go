@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/solo-io/kube-cluster/cli/cmd"
+	"github.com/solo-io/valet/cli/cmd"
 	"os"
 )
 

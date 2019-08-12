@@ -4,7 +4,7 @@ import (
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/errors"
-	"github.com/solo-io/kube-cluster/cli/options"
+	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )

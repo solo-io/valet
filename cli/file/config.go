@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/osutils"
-	"github.com/solo-io/kube-cluster/cli/options"
+	"github.com/solo-io/valet/cli/options"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 )

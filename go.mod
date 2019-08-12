@@ -1,4 +1,4 @@
-module github.com/solo-io/kube-cluster
+module github.com/solo-io/valet
 
 go 1.12
 

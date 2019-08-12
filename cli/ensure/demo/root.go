@@ -2,9 +2,9 @@ package demo
 
 import (
 	"github.com/solo-io/go-utils/cliutils"
-	"github.com/solo-io/kube-cluster/cli/ensure/demo/petclinic"
-	"github.com/solo-io/kube-cluster/cli/internal"
-	"github.com/solo-io/kube-cluster/cli/options"
+	"github.com/solo-io/valet/cli/ensure/demo/petclinic"
+	"github.com/solo-io/valet/cli/internal"
+	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 )
 

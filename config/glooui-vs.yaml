@@ -1,0 +1,18 @@
+apiVersion: gateway.solo.io/v1
+kind: VirtualService
+metadata:
+  name: glooui
+  namespace: gloo-system
+spec:
+  virtualHost:
+    domains:
+      - "*"
+    name: gloo-system.glooui
+    routes:
+      - matcher:
+          prefix: /
+        routeAction:
+          single:
+            upstream:
+              name: gloo-system-grpcserver-8080
+              namespace: gloo-system

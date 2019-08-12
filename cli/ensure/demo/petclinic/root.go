@@ -28,6 +28,7 @@ func EnsurePetclinicDemo(opts *options.Options) error {
 		"https://raw.githubusercontent.com/sololabs/demos/master/petclinic_demo/petclinic.yaml",
 		"https://raw.githubusercontent.com/sololabs/demos/master/petclinic_demo/petclinic-vets.yaml",
 		"https://raw.githubusercontent.com/sololabs/demos/master/petclinic_demo/petclinic-db.yaml",
+		"https://raw.githubusercontent.com/sololabs/demos/master/petclinic_demo/petclinic-virtual-service.yaml",
 	}
 	return applyFiles(opts.Top.Ctx, files...)
 }

@@ -37,10 +37,16 @@ type Gloo struct {
 	Enterprise bool   `yaml:"enterprise"`
 	LicenseKey string `yaml:"license_key"`
 	Namespace  string `yaml:"namespace"`
+	AWS        AWS    `yaml:"aws"`
+}
+
+type AWS struct {
+	Secret   bool `yaml:"secret"`
+	Upstream bool `yaml:"upstream"`
 }
 
 type Demos struct {
 	Petclinic *Petclinic `yaml:"petclinic"`
 }
 
-type Petclinic struct {}
+type Petclinic struct{}

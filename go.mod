@@ -13,6 +13,7 @@ require (
 	golang.org/x/tools v0.0.0-20190628153133-6cdbf07be9d0
 	google.golang.org/api v0.7.0
 	google.golang.org/genproto v0.0.0-20190716160619-c506a9f90610
+	google.golang.org/grpc v1.21.1
 	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/api v0.0.0-20181221193117-173ce66c1e39+incompatible
 	k8s.io/apimachinery v0.0.0-20190104073114-849b284f3b75+incompatible

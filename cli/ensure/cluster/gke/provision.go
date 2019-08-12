@@ -28,8 +28,8 @@ type gkeProvisioner struct {
 func (m *gkeProvisioner) Ensure(ctx context.Context) error {
 	running, err := m.cluster.IsRunning(ctx)
 	if err == nil && running {
-		contextutils.LoggerFrom(ctx).Infow("GKE cluster is running")
-		return nil
+		contextutils.LoggerFrom(ctx).Infow("GKE cluster is running, setting context")
+		return m.cluster.SetKubeContext(ctx)
 	} else if err != nil {
 		contextutils.LoggerFrom(ctx).Warnw("Error checking if cluster is running, cleaning up any existing cluster")
 	} else {
@@ -40,7 +40,12 @@ func (m *gkeProvisioner) Ensure(ctx context.Context) error {
 		contextutils.LoggerFrom(ctx).Warnw("Error destroying cluster",
 			zap.Error(err))
 	}
-	return m.cluster.Create(ctx)
+	err = m.cluster.Create(ctx)
+	if err != nil {
+		contextutils.LoggerFrom(ctx).Errorw("Error creating cluster", zap.Error(err))
+		return err
+	}
+	return m.cluster.SetKubeContext(ctx)
 }
 
 func (m *gkeProvisioner) GetCluster() cluster.KubeCluster {

@@ -13,6 +13,8 @@ import (
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 	container2 "google.golang.org/genproto/googleapis/container/v1"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"time"
 )
 
@@ -72,6 +74,9 @@ func (c *gkeCluster) IsRunning(ctx context.Context) (bool, error) {
 			zap.Error(err),
 			zap.String("clusterName", getClusterIdentifier(c.config)))
 		return false, err
+	} else if cluster == nil {
+		contextutils.LoggerFrom(ctx).Infow("Cluster not running")
+		return false, nil
 	}
 	return cluster.GetStatus() == container2.Cluster_RUNNING, nil
 }
@@ -79,6 +84,12 @@ func (c *gkeCluster) IsRunning(ctx context.Context) (bool, error) {
 func (c *gkeCluster) getCluster(ctx context.Context) (*container2.Cluster, error) {
 	cluster, err := c.client.GetCluster(ctx, &container2.GetClusterRequest{Name: getClusterIdentifier(c.config)})
 	if err != nil {
+		st, ok := status.FromError(err)
+		if ok && st.Code() == codes.NotFound{
+			contextutils.LoggerFrom(ctx).Infow("Cluster not found")
+			return nil, nil
+		}
+		// Use st.Message() and st.Code()
 		contextutils.LoggerFrom(ctx).Errorw("Error getting cluster",
 			zap.Error(err),
 			zap.String("clusterName", getClusterIdentifier(c.config)))

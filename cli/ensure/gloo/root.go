@@ -127,7 +127,11 @@ func validateOpts(config options.Gloo) error {
 		return errors.Errorf("must specify a version to install")
 	}
 	if config.Enterprise && config.LicenseKey == "" {
-		return errors.Errorf("must specify a license-key when installing enterprise gloo")
+		if os.Getenv("LICENSE_KEY") != "" {
+			config.LicenseKey = os.Getenv("LICENSE_KEY")
+		} else {
+			return errors.Errorf("must specify a license-key when installing enterprise gloo")
+		}
 	}
 	return nil
 }

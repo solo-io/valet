@@ -34,18 +34,14 @@ build:
 	go build -ldflags=$(LDFLAGS) -o _output/valet -v main.go
 
 .PHONY: build-linux
-build-linux: $(OUTPUT_DIR)/valet-linux-amd64
-
-$(OUTPUT_DIR)/valet-linux-amd64: $(SOURCES)
-	GO111MODULE=on CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags=$(LDFLAGS) -o $@ -v main.go
+build-linux:
+	GO111MODULE=on CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags=$(LDFLAGS) -o _output/valet-linux-amd64 -v main.go
 
 #----------------------------------------------------------------------------------
 # Docker
 #----------------------------------------------------------------------------------
 docker-build: build-linux
-	docker build -t quay.io/solo-io/valet:$(VERSION) .
+	docker build -t gcr.io/solo-test-236622/valet:$(VERSION) .
 
 docker-push: docker-build
-ifeq ($(RELEASE),"true")
-	docker push quay.io/solo-io/valet:$(VERSION)
-endif
+	docker push gcr.io/solo-test-236622/valet:$(VERSION)

@@ -9,6 +9,7 @@ import (
 	"github.com/solo-io/valet/cli/ensure/demo"
 	"github.com/solo-io/valet/cli/ensure/demo/petclinic"
 	"github.com/solo-io/valet/cli/ensure/gloo"
+	"github.com/solo-io/valet/cli/ensure/resources"
 	"github.com/solo-io/valet/cli/file"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
@@ -33,7 +34,8 @@ func EnsureCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobr
 	cmd.AddCommand(
 		cluster.ClusterCmd(opts, optionsFunc...),
 		gloo.GlooCmd(opts, optionsFunc...),
-		demo.DemoCmd(opts, optionsFunc...))
+		demo.DemoCmd(opts, optionsFunc...),
+		resources.ResourcesCmd(opts, optionsFunc...))
 	return cmd
 }
 
@@ -79,6 +81,14 @@ func ensure(opts *options.Options) error {
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	if config.Resources != nil {
+		opts.Ensure.Resources = config.Resources
+		err := resources.EnsureResources(opts)
+		if err != nil {
+			return err
 		}
 	}
 

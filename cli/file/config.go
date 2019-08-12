@@ -10,9 +10,10 @@ import (
 )
 
 type Config struct {
-	Cluster *options.Cluster `yaml:"cluster"`
-	Gloo    *options.Gloo    `yaml:"gloo"`
-	Demos   *options.Demos   `yaml:"demos"`
+	Cluster   *options.Cluster `yaml:"cluster"`
+	Gloo      *options.Gloo    `yaml:"gloo"`
+	Demos     *options.Demos   `yaml:"demos"`
+	Resources []string         `yaml:"resources"`
 }
 
 func LoadConfig(ctx context.Context, path string) (*Config, error) {

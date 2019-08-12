@@ -15,6 +15,7 @@ type Top struct {
 
 type Ensure struct {
 	File string
+	Resources []string
 }
 
 type Cluster struct {

@@ -1,6 +1,20 @@
 # Valet
 
-Valet is a tool for automatically ensuring the state of kubernetes clusters, Solo products, and demo applications. For example, given the following configuration in `demo.yaml`:
+Valet is a tool for automatically ensuring the state of kubernetes clusters, Solo products, and demo applications. 
+
+## Installing
+
+The easiest way to install Valet is to run: 
+
+`go get -u github.com/solo-io/valet`
+
+This will put the latest valet binary in your `$GOPATH/bin` directory. 
+
+## Example Usage
+
+### Example 1: Deploy Open Source Gloo on Minikube
+
+For example, given the following configuration in `demo.yaml`:
 
 ```yaml
 cluster:
@@ -11,7 +25,9 @@ demos:
   petclinic: {}
 ```
 
-Run `valet ensure -f demo.yaml` to get a minikube cluster running gloo v0.18.15 with the petclinic demo resources.  
+Run `valet ensure -f demo.yaml` to get a minikube cluster running gloo v0.18.15 with the petclinic demo resources. If minikube is already running, or Gloo is already installed, valet will detect that and not re-create when possible. 
+
+### Example 2: Deploy Enterprise Gloo on GKE
 
 A similar config could be provided for creating a GKE cluster running enterprise Gloo:
 

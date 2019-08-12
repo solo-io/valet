@@ -2,6 +2,8 @@ package cluster
 
 import (
 	"github.com/solo-io/go-utils/cliutils"
+	"github.com/solo-io/kube-cluster/cli/ensure/cluster/gke"
+	"github.com/solo-io/kube-cluster/cli/ensure/cluster/minikube"
 	"github.com/solo-io/kube-cluster/cli/internal"
 	"github.com/solo-io/kube-cluster/cli/options"
 	"github.com/spf13/cobra"
@@ -10,13 +12,16 @@ import (
 func ClusterCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "cluster",
-		Short:   "interacting with kube clusters",
+		Short:   "ensuring state of kube clusters",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return internal.RootAddError
 		},
 	}
 
-	cmd.AddCommand(EnsureCmd(opts))
+	cmd.AddCommand(
+		gke.GkeCmd(opts),
+		minikube.MinikubeCmd(opts))
+	cmd.PersistentFlags().StringVarP(&opts.Cluster.KubeVersion, "kube-version", "v", "v1.13.0", "kube version")
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	return cmd
 }

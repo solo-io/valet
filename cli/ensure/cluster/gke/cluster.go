@@ -4,9 +4,8 @@ import (
 	container "cloud.google.com/go/container/apiv1"
 	"context"
 	"fmt"
-	"github.com/kelseyhightower/envconfig"
 	"github.com/solo-io/go-utils/contextutils"
-	"github.com/solo-io/kube-cluster/cli/cluster/cluster"
+	"github.com/solo-io/kube-cluster/cli/ensure/cluster/cluster"
 	"github.com/solo-io/kube-cluster/cli/internal"
 	"github.com/solo-io/kube-cluster/cli/options"
 	"go.uber.org/zap"
@@ -19,55 +18,25 @@ import (
 
 var _ cluster.KubeCluster = new(gkeCluster)
 
-type GkeClusterConfig struct {
-	ClusterName     string `split_words:"true" required:"true"`
-	ClusterLocation string `split_words:"true" required:"true"`
-	ClusterProject  string `split_words:"true" required:"true"`
-	KubeVersion     string `split_words:"true" default:"1.15.0"`
+func getParent(config options.Cluster) string {
+	return fmt.Sprintf("projects/%s/locations/%s", config.GKE.Project, config.GKE.Location)
 }
 
-func getParent(config GkeClusterConfig) string {
-	return fmt.Sprintf("projects/%s/locations/%s", config.ClusterProject, config.ClusterLocation)
+func getClusterIdentifier(config options.Cluster) string {
+	return fmt.Sprintf("%s/clusters/%s", getParent(config), config.GKE.Name)
 }
 
-func getClusterIdentifier(config GkeClusterConfig) string {
-	return fmt.Sprintf("%s/clusters/%s", getParent(config), config.ClusterName)
-}
-
-func getOperationIdentifier(config GkeClusterConfig, opName string) string {
+func getOperationIdentifier(config options.Cluster, opName string) string {
 	return fmt.Sprintf("%s/operations/%s", getParent(config), opName)
 }
 
-func NewGkeClusterFromEnv(ctx context.Context) (*gkeCluster, error) {
-	var config GkeClusterConfig
-	err := envconfig.Process("", &config)
-	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Error parsing env config", zap.Error(err))
-		return nil, err
-	}
-	client, err := getClusterManagerClient(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return &gkeCluster{
-		config: config,
-		client: client,
-	}, nil
-}
-
 func NewGkeClusterFromOpts(ctx context.Context, opts options.Cluster) (*gkeCluster, error) {
-	config := GkeClusterConfig{
-		KubeVersion: opts.KubeVersion,
-		ClusterName: opts.Name,
-		ClusterLocation: opts.Location,
-		ClusterProject: opts.Project,
-	}
 	client, err := getClusterManagerClient(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return &gkeCluster{
-		config: config,
+		config: opts,
 		client: client,
 	}, nil
 }
@@ -88,7 +57,7 @@ func getClusterManagerClient(ctx context.Context) (*container.ClusterManagerClie
 }
 
 type gkeCluster struct {
-	config GkeClusterConfig
+	config options.Cluster
 	client *container.ClusterManagerClient
 }
 
@@ -122,9 +91,9 @@ func (c *gkeCluster) SetKubeContext(ctx context.Context) error {
 	contextutils.LoggerFrom(ctx).Infow("Setting kube context to GKE")
 	out, err := internal.ExecuteCmd("gcloud",
 		"container", "clusters", "get-credentials",
-		"--project="+c.config.ClusterProject,
-		"--zone="+c.config.ClusterLocation,
-		c.config.ClusterName)
+		"--project="+c.config.GKE.Project,
+		"--zone="+c.config.GKE.Location,
+		c.config.GKE.Name)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Error setting kube context",
 			zap.Error(err),
@@ -134,9 +103,9 @@ func (c *gkeCluster) SetKubeContext(ctx context.Context) error {
 }
 
 func (c *gkeCluster) Create(ctx context.Context) error {
-	contextutils.LoggerFrom(ctx).Infow("Creating cluster", zap.String("name", c.config.ClusterName))
+	contextutils.LoggerFrom(ctx).Infow("Creating cluster", zap.String("name", c.config.GKE.Name))
 	clusterToCreate := container2.Cluster{
-		Name:             c.config.ClusterName,
+		Name:             c.config.GKE.Name,
 		InitialNodeCount: 3,
 	}
 	req := container2.CreateClusterRequest{
@@ -178,7 +147,7 @@ func (c *gkeCluster) waitForOperation(ctx context.Context, operationId string) e
 }
 
 func (c *gkeCluster) Destroy(ctx context.Context) error {
-	contextutils.LoggerFrom(ctx).Infow("Deleting cluster", zap.String("name", c.config.ClusterName))
+	contextutils.LoggerFrom(ctx).Infow("Deleting cluster", zap.String("name", c.config.GKE.Name))
 	req := container2.DeleteClusterRequest{
 		Name: getClusterIdentifier(c.config),
 	}

@@ -1,0 +1,6 @@
+cluster:
+  type: minikube
+gloo:
+  version: v0.18.15
+demos:
+  petclinic: {}

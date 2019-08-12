@@ -13,10 +13,8 @@ import (
 func App(version string, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 
 	app := &cobra.Command{
-		Use:   "soloctl",
-		Short: "CLI for Solo products",
-		Long: `soloctl is the unified CLI for solo products.
-	Find more information at https://solo.io`,
+		Use:   "valet",
+		Short: "CLI for ensuring the state of clusters, solo products, and demos",
 		Version: version,
 	}
 
@@ -26,7 +24,7 @@ func App(version string, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 	return app
 }
 
-func SoloCli(version string) *cobra.Command {
+func ValetCli(version string) *cobra.Command {
 	opts := &options.Options{
 		Top: options.Top{
 			Ctx: context.Background(),

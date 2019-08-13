@@ -21,20 +21,17 @@ func GlooCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.
 		},
 	}
 	cmd.PersistentFlags().StringVarP(&opts.Gloo.Version, "version", "v", "", "gloo version")
-	cmd.PersistentFlags().StringVarP(&opts.Gloo.Namespace, "namespace", "n", "gloo-system", "gloo namespace")
 	cmd.PersistentFlags().BoolVarP(&opts.Gloo.Enterprise, "enterprise", "e", false, "install enterprise gloo")
 	cmd.PersistentFlags().StringVar(&opts.Gloo.LicenseKey, "license-key", "", "enterprise gloo license key")
 
 	cmd.PersistentFlags().BoolVarP(&opts.Gloo.AWS.Upstream, "upstream", "u", false, "create an AWS upstream from the AWS secret")
 	cmd.PersistentFlags().BoolVarP(&opts.Gloo.AWS.Secret, "secret", "s", false, "create an AWS secret (requires ACCESS_KEY_ID and SECRET_ACCESS_KEY environment variables")
+
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	return cmd
 }
 
 func EnsureGloo(opts *options.Options) error {
-	if opts.Gloo.Namespace == "" {
-		opts.Gloo.Namespace = "gloo-system"
-	}
 	if err := validateOpts(opts.Gloo); err != nil {
 		return err
 	}

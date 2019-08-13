@@ -15,6 +15,8 @@ import (
 	"time"
 )
 
+const DefaultNamespace = "gloo-system"
+
 type GlooEnsurer interface {
 	Install(ctx context.Context, config options.Gloo, localPathToGlooctl string) error
 }
@@ -50,7 +52,7 @@ func waitUntilPodsRunning(ctx context.Context, config options.Gloo) error {
 	if err != nil {
 		return err
 	}
-	pods := kubeClient.CoreV1().Pods(config.Namespace)
+	pods := kubeClient.CoreV1().Pods(DefaultNamespace)
 	podsReady := func() (bool, error) {
 		list, err := pods.List(v1.ListOptions{})
 		if err != nil {
@@ -97,18 +99,18 @@ func checkForGlooInstall(ctx context.Context, config options.Gloo) (bool, error)
 	if err != nil {
 		return false, err
 	}
-	ns, err := kubeClient.CoreV1().Namespaces().Get(config.Namespace, v1.GetOptions{})
+	ns, err := kubeClient.CoreV1().Namespaces().Get(DefaultNamespace, v1.GetOptions{})
 	if err != nil {
 		if kubeerrs.IsNotFound(err) {
 			return false, nil
 		}
-		contextutils.LoggerFrom(ctx).Errorw("Error trying to get namespace", zap.Error(err), zap.String("ns", config.Namespace))
+		contextutils.LoggerFrom(ctx).Errorw("Error trying to get namespace", zap.Error(err), zap.String("ns", DefaultNamespace))
 		return false, err
 	}
 	if ns.Status.Phase != v12.NamespaceActive {
 		contextutils.LoggerFrom(ctx).Errorw("Namespace is not active", zap.Any("phase", ns.Status.Phase))
 	}
-	pods, err := kubeClient.CoreV1().Pods(config.Namespace).List(v1.ListOptions{LabelSelector: "gloo"})
+	pods, err := kubeClient.CoreV1().Pods(DefaultNamespace).List(v1.ListOptions{LabelSelector: "gloo"})
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Error listing pods", zap.Error(err))
 		return false, err

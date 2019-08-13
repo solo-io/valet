@@ -118,6 +118,9 @@ func (c *gkeCluster) Create(ctx context.Context) error {
 	clusterToCreate := container2.Cluster{
 		Name:             c.config.GKE.Name,
 		InitialNodeCount: 3,
+		ResourceLabels: map[string]string {
+			"creator": "valet",
+		},
 	}
 	req := container2.CreateClusterRequest{
 		Parent:  getParent(c.config),

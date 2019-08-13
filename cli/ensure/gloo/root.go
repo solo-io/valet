@@ -25,14 +25,14 @@ func GlooCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.
 	cmd.PersistentFlags().StringVar(&opts.Gloo.LicenseKey, "license-key", "", "enterprise gloo license key")
 
 	cmd.PersistentFlags().BoolVarP(&opts.Gloo.AWS.Upstream, "upstream", "u", false, "create an AWS upstream from the AWS secret")
-	cmd.PersistentFlags().BoolVarP(&opts.Gloo.AWS.Secret, "secret", "s", false, "create an AWS secret (requires ACCESS_KEY_ID and SECRET_ACCESS_KEY environment variables")
+	cmd.PersistentFlags().BoolVarP(&opts.Gloo.AWS.Secret, "secret", "s", false, "create an AWS secret (requires AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables")
 
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	return cmd
 }
 
 func EnsureGloo(opts *options.Options) error {
-	if err := validateOpts(opts.Gloo); err != nil {
+	if err := validateOpts(&opts.Gloo); err != nil {
 		return err
 	}
 	return ensureGloo(opts.Top.Ctx, opts.Gloo)
@@ -114,13 +114,13 @@ func createAwsSecret(ctx context.Context, localPathToGlooctl string) error {
 		contextutils.LoggerFrom(ctx).Infow("aws secret exists")
 		return nil
 	}
-	accessKey := os.Getenv("ACCESS_KEY_ID")
+	accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
 	if accessKey == "" {
-		return errors.Errorf("Must specify ACCESS_KEY_ID in environment to create AWS secret")
+		return errors.Errorf("Must specify AWS_ACCESS_KEY_ID in environment to create AWS secret")
 	}
-	secretKey := os.Getenv("SECRET_ACCESS_KEY")
+	secretKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
 	if secretKey == "" {
-		return errors.Errorf("Must specify SECRET_ACCESS_KEY in environment to create AWS secret")
+		return errors.Errorf("Must specify AWS_SECRET_ACCESS_KEY in environment to create AWS secret")
 	}
 	out, err := internal.ExecuteCmd(localPathToGlooctl, "create", "secret", "aws",
 		"--secret-key", secretKey,
@@ -136,7 +136,7 @@ func createAwsSecret(ctx context.Context, localPathToGlooctl string) error {
 	return nil
 }
 
-func validateOpts(config options.Gloo) error {
+func validateOpts(config *options.Gloo) error {
 	if config.Version == "" {
 		return errors.Errorf("must specify a version to install")
 	}

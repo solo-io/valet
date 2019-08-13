@@ -51,11 +51,24 @@ func ensureGloo(ctx context.Context, config options.Gloo) error {
 		return err
 	}
 
+	err = createAwsResources(ctx, config, localPathToGlooctl)
+	if err != nil {
+		return err
+	}
+
+	if config.UiVirtualService != nil {
+		vsCreator := NewKubectlUiVirtualServiceCreator()
+		return vsCreator.Create(ctx, *config.UiVirtualService)
+	}
+	return nil
+}
+
+func createAwsResources(ctx context.Context, config options.Gloo, localPathToGlooctl string) error {
 	if !config.AWS.Secret {
 		return nil
 	}
 
-	err = createAwsSecret(ctx, localPathToGlooctl)
+	err := createAwsSecret(ctx, localPathToGlooctl)
 	if err != nil {
 		return err
 	}
@@ -64,7 +77,11 @@ func ensureGloo(ctx context.Context, config options.Gloo) error {
 		return nil
 	}
 
-	return createAwsUpstream(ctx, localPathToGlooctl)
+	err = createAwsUpstream(ctx, localPathToGlooctl)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func createAwsUpstream(ctx context.Context, localPathToGlooctl string) error {

@@ -21,7 +21,7 @@ func MinikubeCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *co
 }
 
 func EnsureMinikube(opts *options.Options) error {
-	provisioner := NewMinikubeProvisionerFromOpts(opts.Top.Ctx, opts.Cluster)
+	provisioner := NewMinikubeProvisionerFromOpts(opts.Cluster)
 	err := provisioner.Ensure(opts.Top.Ctx)
 	if err != nil {
 		contextutils.LoggerFrom(opts.Top.Ctx).Errorw("Error ensuring minikube cluster", zap.Error(err))

@@ -10,19 +10,8 @@ import (
 
 var _ cluster.Provisioner = new(minikubeProvisioner)
 
-func NewMinikubeProvisionerFromEnv(ctx context.Context) (*minikubeProvisioner, error) {
-	minikubeCluster, err := NewMinikubeClusterFromEnv(ctx)
-	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Error getting minikube cluster", zap.Error(err))
-		return nil, err
-	}
-	return &minikubeProvisioner{
-		cluster: minikubeCluster,
-	}, nil
-}
-
-func NewMinikubeProvisionerFromOpts(ctx context.Context, opts options.Cluster) *minikubeProvisioner {
-	minikubeCluster := NewMinikubeClusterFromOpts(ctx, opts)
+func NewMinikubeProvisionerFromOpts(opts options.Cluster) *minikubeProvisioner {
+	minikubeCluster := NewMinikubeClusterFromOpts(opts)
 	return &minikubeProvisioner{
 		cluster: minikubeCluster,
 	}

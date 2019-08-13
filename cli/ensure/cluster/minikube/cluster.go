@@ -2,7 +2,6 @@ package minikube
 
 import (
 	"context"
-	"github.com/kelseyhightower/envconfig"
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/valet/cli/ensure/cluster/cluster"
 	"github.com/solo-io/valet/cli/internal"
@@ -17,19 +16,7 @@ type MinikubeClusterConfig struct {
 	KubeVersion     string `split_words:"true" default:"v1.13.0"`
 }
 
-func NewMinikubeClusterFromEnv(ctx context.Context) (*minikubeCluster, error) {
-	var config MinikubeClusterConfig
-	err := envconfig.Process("", &config)
-	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Error parsing env config", zap.Error(err))
-		return nil, err
-	}
-	return &minikubeCluster{
-		config: config,
-	}, nil
-}
-
-func NewMinikubeClusterFromOpts(ctx context.Context, opts options.Cluster) *minikubeCluster {
+func NewMinikubeClusterFromOpts(opts options.Cluster) *minikubeCluster {
 	config := MinikubeClusterConfig{
 		KubeVersion: opts.KubeVersion,
 	}

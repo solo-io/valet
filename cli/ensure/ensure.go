@@ -77,6 +77,7 @@ func ensure(opts *options.Options) error {
 
 	if config.Demos != nil {
 		if config.Demos.Petclinic != nil {
+			opts.Demos.Petclinic = config.Demos.Petclinic
 			err := petclinic.EnsurePetclinicDemo(opts)
 			if err != nil {
 				return err

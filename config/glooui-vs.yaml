@@ -16,14 +16,3 @@ spec:
             upstream:
               name: gloo-system-apiserver-ui-8080
               namespace: gloo-system
-    virtualHostPlugins:
-      extensions:
-        configs:
-          extauth:
-            basicAuth:
-              realm: "test"
-              apr:
-                users:
-                  user:
-                    salt: "TYiryv0/"
-                    hashedPassword: "8BvzLUO9IfGPGGsPnAgSu1"

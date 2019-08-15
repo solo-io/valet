@@ -1,12 +1,15 @@
 package file
 
 import (
+	"bytes"
 	"context"
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/osutils"
 	"github.com/solo-io/valet/cli/options"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
+	"net/http"
+	"net/url"
 )
 
 type Config struct {
@@ -19,12 +22,8 @@ type Config struct {
 func LoadConfig(ctx context.Context, path string) (*Config, error) {
 	var c Config
 
-	osClient := osutils.NewOsClient()
-	bytes, err := osClient.ReadFile(path)
+	bytes, err := loadBytesFromPath(ctx, path)
 	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Could not read file",
-			zap.Error(err),
-			zap.String("path", path))
 		return nil, err
 	}
 
@@ -37,4 +36,53 @@ func LoadConfig(ctx context.Context, path string) (*Config, error) {
 	}
 
 	return &c, nil
+}
+
+func loadBytesFromPath(ctx context.Context, path string) ([]byte, error) {
+	if isValidUrl(path) {
+		bytes, err := loadBytesFromUrl(path)
+		if err != nil {
+			contextutils.LoggerFrom(ctx).Errorw("Could not read url",
+				zap.Error(err),
+				zap.String("path", path))
+			return nil, err
+		}
+		return bytes, nil
+	}
+
+	osClient := osutils.NewOsClient()
+	bytes, err := osClient.ReadFile(path)
+	if err != nil {
+		contextutils.LoggerFrom(ctx).Errorw("Could not read file",
+			zap.Error(err),
+			zap.String("path", path))
+		return nil, err
+	}
+	return bytes, nil
+}
+
+func loadBytesFromUrl(path string) ([]byte, error) {
+	// Get the data
+	resp, err := http.Get(path)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = buf.ReadFrom(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+// isValidUrl tests a string to determine if it is a url or not.
+func isValidUrl(toTest string) bool {
+	_, err := url.ParseRequestURI(toTest)
+	if err != nil {
+		return false
+	} else {
+		return true
+	}
 }

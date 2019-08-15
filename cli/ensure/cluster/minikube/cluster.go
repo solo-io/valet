@@ -48,7 +48,7 @@ func (m *minikubeCluster) IsRunning(ctx context.Context) (bool, error) {
 
 func (m *minikubeCluster) SetKubeContext(ctx context.Context) error {
 	contextutils.LoggerFrom(ctx).Infow("Setting kube context to minikube")
-	out, err := internal.ExecuteCmd("minikube", "update-context")
+	out, err := internal.ExecuteCmd("kubectl", "config", "use-context", "minikube")
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Error setting kube context to minikube",
 			zap.Error(err),
@@ -64,8 +64,9 @@ func (m *minikubeCluster) Create(ctx context.Context) error {
 		contextutils.LoggerFrom(ctx).Errorw("Error creating minikube",
 			zap.Error(err),
 			zap.String("output", out))
+		return err
 	}
-	return err
+	return m.SetKubeContext(ctx)
 }
 
 func (m *minikubeCluster) Destroy(ctx context.Context) error {

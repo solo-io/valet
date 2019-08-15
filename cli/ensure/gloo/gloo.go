@@ -31,7 +31,7 @@ type glooEnsurer struct {
 }
 
 func (g *glooEnsurer) Install(ctx context.Context, config options.Gloo, localPathToGlooctl string) error {
-	glooInstalled, err := checkForGlooInstall(ctx, config)
+	glooInstalled, err := checkForGlooInstall(ctx, config, localPathToGlooctl)
 	if err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func waitUntilPodsRunning(ctx context.Context, config options.Gloo) error {
 	}
 }
 
-func checkForGlooInstall(ctx context.Context, config options.Gloo) (bool, error) {
+func checkForGlooInstall(ctx context.Context, config options.Gloo, localPathToGlooctl string) (bool, error) {
 	kubeClient, err := kube.KubeClient()
 	if err != nil {
 		return false, err
@@ -136,7 +136,7 @@ func checkForGlooInstall(ctx context.Context, config options.Gloo) (bool, error)
 	}
 	contextutils.LoggerFrom(ctx).Warnw("Detected Gloo install, but did not find any containers with the expected version",
 		zap.String("expected", config.Version[1:]))
-	return false, nil
+	return false, uninstallAll(ctx, localPathToGlooctl)
 }
 
 func install(ctx context.Context, fullPath string, config options.Gloo) error {
@@ -148,6 +148,18 @@ func install(ctx context.Context, fullPath string, config options.Gloo) error {
 	out, err := internal.ExecuteCmd(fullPath, args...)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Failed to install gloo",
+			zap.Error(err),
+			zap.String("out", out))
+	}
+	return err
+}
+
+func uninstallAll(ctx context.Context, fullPath string) error {
+	contextutils.LoggerFrom(ctx).Infow("Uninstalling existing gloo")
+	args := []string{"uninstall", "--all"}
+	out, err := internal.ExecuteCmd(fullPath, args...)
+	if err != nil {
+		contextutils.LoggerFrom(ctx).Errorw("Failed to uninstall gloo",
 			zap.Error(err),
 			zap.String("out", out))
 	}

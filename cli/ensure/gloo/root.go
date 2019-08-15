@@ -33,7 +33,7 @@ func GlooCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.
 }
 
 func EnsureGloo(opts *options.Options) error {
-	if err := validateOpts(&opts.Gloo); err != nil {
+	if err := validateOpts(opts.Top.Ctx, &opts.Gloo); err != nil {
 		return err
 	}
 	return ensureGloo(opts.Top.Ctx, opts.Gloo)

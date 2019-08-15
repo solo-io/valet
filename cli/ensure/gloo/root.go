@@ -5,6 +5,7 @@ import (
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/errors"
+	"github.com/solo-io/go-utils/githubutils"
 	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
@@ -136,9 +137,15 @@ func createAwsSecret(ctx context.Context, localPathToGlooctl string) error {
 	return nil
 }
 
-func validateOpts(config *options.Gloo) error {
+func validateOpts(ctx context.Context, config *options.Gloo) error {
 	if config.Version == "" {
-		return errors.Errorf("must specify a version to install")
+		tag, err := getLatestTag(ctx, config)
+		if err != nil {
+			contextutils.LoggerFrom(ctx).Errorw("Error determining latest release", zap.Error(err))
+			return errors.Errorf("did not specify a version to install, and couldn't determine latest release")
+		}
+		contextutils.LoggerFrom(ctx).Infow("Setting version to latest release", zap.String("tag", tag))
+		config.Version = tag
 	}
 	if config.Enterprise && config.LicenseKey == "" {
 		if os.Getenv("LICENSE_KEY") != "" {
@@ -148,4 +155,14 @@ func validateOpts(config *options.Gloo) error {
 		}
 	}
 	return nil
+}
+
+func getLatestTag(ctx context.Context, config *options.Gloo) (string, error) {
+	client := githubutils.GetClientWithOrWithoutToken(ctx)
+	repo := getRepo(config.Enterprise)
+	release, _, err := client.Repositories.GetLatestRelease(ctx, "solo-io", repo)
+	if err != nil {
+		return "", err
+	}
+	return release.GetTagName(), nil
 }

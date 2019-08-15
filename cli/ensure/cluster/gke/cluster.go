@@ -115,9 +115,24 @@ func (c *gkeCluster) SetKubeContext(ctx context.Context) error {
 
 func (c *gkeCluster) Create(ctx context.Context) error {
 	contextutils.LoggerFrom(ctx).Infow("Creating cluster", zap.String("name", c.config.GKE.Name))
+	nodePool := container2.NodePool{
+		Name: "pool-1",
+		InitialNodeCount: 1,
+		Autoscaling: &container2.NodePoolAutoscaling{
+			Enabled: true,
+			MinNodeCount: 1,
+			MaxNodeCount: 30,
+		},
+		Config: &container2.NodeConfig{
+			MachineType: "n1-standard-4",
+		},
+		Management: &container2.NodeManagement{
+			AutoUpgrade: false,
+		},
+	}
 	clusterToCreate := container2.Cluster{
 		Name:             c.config.GKE.Name,
-		InitialNodeCount: 3,
+		NodePools: []*container2.NodePool { &nodePool },
 		ResourceLabels: map[string]string {
 			"creator": "valet",
 		},

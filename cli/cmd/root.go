@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"github.com/solo-io/valet/cli/config"
 	"github.com/solo-io/valet/cli/ensure"
 	"github.com/solo-io/valet/cli/options"
 
@@ -35,6 +36,7 @@ func ValetCli(version string) *cobra.Command {
 		app.SuggestionsMinimumDistance = 1
 		app.AddCommand(
 			ensure.EnsureCmd(opts),
+			config.ConfigCmd(opts),
 		)
 	}
 

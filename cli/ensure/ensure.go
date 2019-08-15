@@ -1,8 +1,11 @@
 package ensure
 
 import (
+	"context"
 	"github.com/solo-io/go-utils/cliutils"
+	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/errors"
+	"github.com/solo-io/valet/cli/config"
 	"github.com/solo-io/valet/cli/ensure/cluster"
 	"github.com/solo-io/valet/cli/ensure/cluster/gke"
 	"github.com/solo-io/valet/cli/ensure/cluster/minikube"
@@ -14,6 +17,7 @@ import (
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
+	"os"
 )
 
 var (
@@ -44,15 +48,19 @@ func ensure(opts *options.Options) error {
 		return MustProvideFileError
 	}
 
-	config, err := file.LoadConfig(opts.Top.Ctx, opts.Ensure.File)
+	cfg, err := file.LoadConfig(opts.Top.Ctx, opts.Ensure.File)
 	if err != nil {
 		return err
 	}
 
-	if config.Cluster != nil {
-		opts.Cluster.Type = config.Cluster.Type
-		opts.Cluster.GKE = config.Cluster.GKE
-		opts.Cluster.Minikube = config.Cluster.Minikube
+	if err := loadEnv(opts.Top.Ctx); err != nil {
+		return err
+	}
+
+	if cfg.Cluster != nil {
+		opts.Cluster.Type = cfg.Cluster.Type
+		opts.Cluster.GKE = cfg.Cluster.GKE
+		opts.Cluster.Minikube = cfg.Cluster.Minikube
 
 		var clusterErr error
 		if opts.Cluster.Type == "gke" {
@@ -67,17 +75,17 @@ func ensure(opts *options.Options) error {
 		}
 	}
 
-	if config.Gloo != nil {
-		opts.Gloo = *config.Gloo
+	if cfg.Gloo != nil {
+		opts.Gloo = *cfg.Gloo
 		err := gloo.EnsureGloo(opts)
 		if err != nil {
 			return err
 		}
 	}
 
-	if config.Demos != nil {
-		if config.Demos.Petclinic != nil {
-			opts.Demos.Petclinic = config.Demos.Petclinic
+	if cfg.Demos != nil {
+		if cfg.Demos.Petclinic != nil {
+			opts.Demos.Petclinic = cfg.Demos.Petclinic
 			err := petclinic.EnsurePetclinicDemo(opts)
 			if err != nil {
 				return err
@@ -85,13 +93,33 @@ func ensure(opts *options.Options) error {
 		}
 	}
 
-	if config.Resources != nil {
-		opts.Ensure.Resources = config.Resources
+	if cfg.Resources != nil {
+		opts.Ensure.Resources = cfg.Resources
 		err := resources.EnsureResources(opts)
 		if err != nil {
 			return err
 		}
 	}
 
+	return nil
+}
+
+func loadEnv(ctx context.Context) error {
+	globalConfig, err := config.LoadGlobalConfig(ctx)
+	if err != nil {
+		contextutils.LoggerFrom(ctx).Errorw("Failed to load global config", zap.Error(err))
+		return err
+	}
+
+	for k, v := range globalConfig.Env {
+		val := os.Getenv(k)
+		if val == "" {
+			err := os.Setenv(k, v)
+			if err != nil {
+				contextutils.LoggerFrom(ctx).Errorw("Failed to set environment variable", zap.Error(err))
+				return err
+			}
+		}
+	}
 	return nil
 }

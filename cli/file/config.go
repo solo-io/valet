@@ -41,13 +41,12 @@ func LoadConfig(ctx context.Context, path string) (*Config, error) {
 func loadBytesFromPath(ctx context.Context, path string) ([]byte, error) {
 	if isValidUrl(path) {
 		bytes, err := loadBytesFromUrl(path)
-		if err != nil {
-			contextutils.LoggerFrom(ctx).Errorw("Could not read url",
-				zap.Error(err),
-				zap.String("path", path))
-			return nil, err
+		if err == nil {
+			return bytes, nil
 		}
-		return bytes, nil
+		contextutils.LoggerFrom(ctx).Warnw("Could not read url, trying to read file",
+			zap.Error(err),
+			zap.String("path", path))
 	}
 
 	osClient := osutils.NewOsClient()

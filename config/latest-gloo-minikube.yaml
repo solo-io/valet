@@ -1,8 +1,0 @@
-# This requires no environment configuration.
-# It deploys the latest gloo to minikube and all the resources for the petclinic demo.
-
-cluster:
-  type: minikube
-gloo: {}
-demos:
-  petclinic: {}

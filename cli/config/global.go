@@ -33,12 +33,27 @@ type ValetGlobalConfig struct {
 	Env map[string]string `yaml:"env"`
 }
 
-func GetGlobalConfigPath() (string, error) {
+func GetValetConfigDir() (string, error) {
 	userHome, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(userHome, ".valet", "global.yaml"), nil
+	valetDir := filepath.Join(userHome, ".valet")
+	if _, err := os.Stat(valetDir); os.IsNotExist(err) {
+		err = os.Mkdir(valetDir, os.ModePerm)
+		if err != nil {
+			return "", err
+		}
+	}
+	return valetDir, nil
+}
+
+func GetGlobalConfigPath() (string, error) {
+	valetDir, err := GetValetConfigDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(valetDir, "global.yaml"), nil
 }
 
 func LoadGlobalConfig(ctx context.Context) (*ValetGlobalConfig, error) {

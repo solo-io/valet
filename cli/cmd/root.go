@@ -5,6 +5,7 @@ import (
 	"github.com/solo-io/valet/cli/config"
 	"github.com/solo-io/valet/cli/ensure"
 	"github.com/solo-io/valet/cli/options"
+	"github.com/solo-io/valet/cli/teardown"
 
 	"github.com/solo-io/go-utils/cliutils"
 
@@ -36,6 +37,7 @@ func ValetCli(version string) *cobra.Command {
 		app.SuggestionsMinimumDistance = 1
 		app.AddCommand(
 			ensure.EnsureCmd(opts),
+			teardown.Teardown(opts),
 			config.ConfigCmd(opts),
 		)
 	}

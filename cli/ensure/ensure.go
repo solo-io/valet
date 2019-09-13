@@ -53,7 +53,7 @@ func ensure(opts *options.Options) error {
 		return err
 	}
 
-	if err := loadEnv(opts.Top.Ctx); err != nil {
+	if err := LoadEnv(opts.Top.Ctx); err != nil {
 		return err
 	}
 
@@ -104,7 +104,7 @@ func ensure(opts *options.Options) error {
 	return nil
 }
 
-func loadEnv(ctx context.Context) error {
+func LoadEnv(ctx context.Context) error {
 	globalConfig, err := config.LoadGlobalConfig(ctx)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Failed to load global config", zap.Error(err))

@@ -57,17 +57,17 @@ func ensure(opts *options.Options) error {
 	}
 
 	if cfg.Cluster != nil {
-		opts.Cluster.Type = cfg.Cluster.Type
-		opts.Cluster.GKE = cfg.Cluster.GKE
-		opts.Cluster.Minikube = cfg.Cluster.Minikube
+		opts.Ensure.Cluster.Type = cfg.Cluster.Type
+		opts.Ensure.Cluster.GKE = cfg.Cluster.GKE
+		opts.Ensure.Cluster.Minikube = cfg.Cluster.Minikube
 
 		var clusterErr error
-		if opts.Cluster.Type == "gke" {
+		if opts.Ensure.Cluster.Type == "gke" {
 			clusterErr = gke.EnsureGke(opts)
-		} else if opts.Cluster.Type == "minikube" {
+		} else if opts.Ensure.Cluster.Type == "minikube" {
 			clusterErr = minikube.EnsureMinikube(opts)
 		} else {
-			return errors.Errorf("unknown type", zap.String("type", opts.Cluster.Type))
+			return errors.Errorf("unknown type", zap.String("type", opts.Ensure.Cluster.Type))
 		}
 		if clusterErr != nil {
 			return clusterErr
@@ -75,7 +75,7 @@ func ensure(opts *options.Options) error {
 	}
 
 	if cfg.Gloo != nil {
-		opts.Gloo = *cfg.Gloo
+		opts.Ensure.Gloo = *cfg.Gloo
 		err := gloo.EnsureGloo(opts)
 		if err != nil {
 			return err
@@ -84,7 +84,7 @@ func ensure(opts *options.Options) error {
 
 	if cfg.Demos != nil {
 		if cfg.Demos.Petclinic != nil {
-			opts.Demos.Petclinic = cfg.Demos.Petclinic
+			opts.Ensure.Demos.Petclinic = cfg.Demos.Petclinic
 			err := petclinic.EnsurePetclinic(opts)
 			if err != nil {
 				return err

@@ -36,21 +36,21 @@ func teardown(opts *options.Options) error {
 	}
 
 	if cfg.Cluster != nil {
-		opts.Cluster.Type = cfg.Cluster.Type
-		opts.Cluster.GKE = cfg.Cluster.GKE
-		opts.Cluster.Minikube = cfg.Cluster.Minikube
+		opts.Ensure.Cluster.Type = cfg.Cluster.Type
+		opts.Ensure.Cluster.GKE = cfg.Cluster.GKE
+		opts.Ensure.Cluster.Minikube = cfg.Cluster.Minikube
 
-		if opts.Cluster.Type == "gke" {
-			cluster, err := gke.NewGkeClusterFromOpts(opts.Top.Ctx, opts.Cluster)
+		if opts.Ensure.Cluster.Type == "gke" {
+			cluster, err := gke.NewGkeClusterFromOpts(opts.Top.Ctx, opts.Ensure.Cluster)
 			if err != nil {
 				return err
 			}
 			return cluster.Destroy(opts.Top.Ctx)
-		} else if opts.Cluster.Type == "minikube" {
-			cluster := minikube.NewMinikubeClusterFromOpts(opts.Cluster)
+		} else if opts.Ensure.Cluster.Type == "minikube" {
+			cluster := minikube.NewMinikubeClusterFromOpts(opts.Ensure.Cluster)
 			return cluster.Destroy(opts.Top.Ctx)
 		} else {
-			return errors.Errorf("unknown type", zap.String("type", opts.Cluster.Type))
+			return errors.Errorf("unknown type", zap.String("type", opts.Ensure.Cluster.Type))
 		}
 	}
 	return nil

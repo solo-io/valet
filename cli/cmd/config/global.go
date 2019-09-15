@@ -18,7 +18,7 @@ import (
 func Config(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
-		Short: "global config for valet",
+		Short: "manage global config for valet",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return internal.RootAddError
 		},

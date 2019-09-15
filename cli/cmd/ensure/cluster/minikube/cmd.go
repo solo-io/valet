@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func MinikubeCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
+func Minikube(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "minikube",
 		Short:   "ensures minikube cluster is running",
@@ -21,7 +21,7 @@ func MinikubeCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *co
 }
 
 func EnsureMinikube(opts *options.Options) error {
-	provisioner := NewMinikubeProvisionerFromOpts(opts.Cluster)
+	provisioner := NewMinikubeProvisionerFromOpts(opts.Ensure.Cluster)
 	err := provisioner.Ensure(opts.Top.Ctx)
 	if err != nil {
 		contextutils.LoggerFrom(opts.Top.Ctx).Errorw("Error ensuring minikube cluster", zap.Error(err))

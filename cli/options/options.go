@@ -3,11 +3,9 @@ package options
 import "context"
 
 type Options struct {
-	Cluster Cluster
-	Gloo    Gloo
-	Ensure  Ensure
-	Top     Top
-	Demos   Demos
+	Ensure Ensure
+	Build  Build
+	Top    Top
 }
 
 type Top struct {
@@ -16,6 +14,9 @@ type Top struct {
 
 type Ensure struct {
 	File      string
+	Cluster   Cluster
+	Gloo      Gloo
+	Demos     Demos
 	Resources []string
 }
 
@@ -70,6 +71,11 @@ type Demos struct {
 	Petclinic *Petclinic `yaml:"petclinic"`
 }
 
-type Petclinic struct{
+type Petclinic struct {
 	DNS *DNS `yaml:"dns"`
+}
+
+type Build struct {
+	File    string
+	Version string
 }

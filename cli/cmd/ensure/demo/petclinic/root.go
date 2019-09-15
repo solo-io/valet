@@ -37,11 +37,11 @@ func EnsurePetclinic(opts *options.Options) error {
 		return err
 	}
 
-	if opts.Demos.Petclinic == nil || opts.Demos.Petclinic.DNS == nil {
+	if opts.Ensure.Demos.Petclinic == nil || opts.Ensure.Demos.Petclinic.DNS == nil {
 		return nil
 	}
 
-	if opts.Demos.Petclinic.DNS.HostedZone == "" {
+	if opts.Ensure.Demos.Petclinic.DNS.HostedZone == "" {
 		contextutils.LoggerFrom(opts.Top.Ctx).Infow("No dns config provided")
 	}
 
@@ -55,14 +55,14 @@ func EnsurePetclinic(opts *options.Options) error {
 	if err != nil {
 		return err
 	}
-	domain := opts.Demos.Petclinic.DNS.Domain
+	domain := opts.Ensure.Demos.Petclinic.DNS.Domain
 	if domain == "" {
-		domain, err = internal.CreateDomain(opts.Top.Ctx, "petclinic", opts.Demos.Petclinic.DNS.HostedZone)
+		domain, err = internal.CreateDomain(opts.Top.Ctx, "petclinic", opts.Ensure.Demos.Petclinic.DNS.HostedZone)
 		if err != nil {
 			return err
 		}
 	}
-	err = client.CreateMapping(opts.Top.Ctx, opts.Demos.Petclinic.DNS.HostedZone, domain, proxyIp)
+	err = client.CreateMapping(opts.Top.Ctx, opts.Ensure.Demos.Petclinic.DNS.HostedZone, domain, proxyIp)
 	if err != nil {
 		return err
 	}

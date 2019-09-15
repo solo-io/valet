@@ -15,7 +15,7 @@ var (
 	MissingLocationError = errors.Errorf("Must provide a GKE location")
 )
 
-func GkeCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
+func Gke(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "gke",
 		Short:   "ensures GKE cluster is running",
@@ -24,9 +24,9 @@ func GkeCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 		},
 	}
 
-	cmd.PersistentFlags().StringVarP(&opts.Cluster.GKE.Name, "name", "n", "", "GKE cluster name")
-	cmd.PersistentFlags().StringVarP(&opts.Cluster.GKE.Project, "project", "p", "", "GKE cluster project")
-	cmd.PersistentFlags().StringVarP(&opts.Cluster.GKE.Location, "location", "l", "", "GKE cluster location")
+	cmd.PersistentFlags().StringVarP(&opts.Ensure.Cluster.GKE.Name, "name", "n", "", "GKE cluster name")
+	cmd.PersistentFlags().StringVarP(&opts.Ensure.Cluster.GKE.Project, "project", "p", "", "GKE cluster project")
+	cmd.PersistentFlags().StringVarP(&opts.Ensure.Cluster.GKE.Location, "location", "l", "", "GKE cluster location")
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	return cmd
 }
@@ -39,7 +39,7 @@ func EnsureGke(opts *options.Options) error {
 }
 
 func ensureGke(opts *options.Options) error {
-	provisioner, err := NewGkeProvisionerFromOpts(opts.Top.Ctx, opts.Cluster)
+	provisioner, err := NewGkeProvisionerFromOpts(opts.Top.Ctx, opts.Ensure.Cluster)
 	if err != nil {
 		contextutils.LoggerFrom(opts.Top.Ctx).Errorw("Error creating gke provisioner", zap.Error(err))
 		return err
@@ -54,13 +54,13 @@ func ensureGke(opts *options.Options) error {
 }
 
 func validateOpts(opts *options.Options) error {
-	if opts.Cluster.GKE.Name == "" {
+	if opts.Ensure.Cluster.GKE.Name == "" {
 		return MissingNameError
 	}
-	if opts.Cluster.GKE.Project == "" {
+	if opts.Ensure.Cluster.GKE.Project == "" {
 		return MissingProjectError
 	}
-	if opts.Cluster.GKE.Location == "" {
+	if opts.Ensure.Cluster.GKE.Location == "" {
 		return MissingLocationError
 	}
 	return nil

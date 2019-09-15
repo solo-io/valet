@@ -21,22 +21,22 @@ func Gloo(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Com
 			return EnsureGloo(opts)
 		},
 	}
-	cmd.PersistentFlags().StringVarP(&opts.Gloo.Version, "version", "v", "", "gloo version")
-	cmd.PersistentFlags().BoolVarP(&opts.Gloo.Enterprise, "enterprise", "e", false, "install enterprise gloo")
-	cmd.PersistentFlags().StringVar(&opts.Gloo.LicenseKey, "license-key", "", "enterprise gloo license key")
+	cmd.PersistentFlags().StringVarP(&opts.Ensure.Gloo.Version, "version", "v", "", "gloo version")
+	cmd.PersistentFlags().BoolVarP(&opts.Ensure.Gloo.Enterprise, "enterprise", "e", false, "install enterprise gloo")
+	cmd.PersistentFlags().StringVar(&opts.Ensure.Gloo.LicenseKey, "license-key", "", "enterprise gloo license key")
 
-	cmd.PersistentFlags().BoolVarP(&opts.Gloo.AWS.Upstream, "upstream", "u", false, "create an AWS upstream from the AWS secret")
-	cmd.PersistentFlags().BoolVarP(&opts.Gloo.AWS.Secret, "secret", "s", false, "create an AWS secret (requires AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables")
+	cmd.PersistentFlags().BoolVarP(&opts.Ensure.Gloo.AWS.Upstream, "upstream", "u", false, "create an AWS upstream from the AWS secret")
+	cmd.PersistentFlags().BoolVarP(&opts.Ensure.Gloo.AWS.Secret, "secret", "s", false, "create an AWS secret (requires AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables")
 
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	return cmd
 }
 
 func EnsureGloo(opts *options.Options) error {
-	if err := validateOpts(opts.Top.Ctx, &opts.Gloo); err != nil {
+	if err := validateOpts(opts.Top.Ctx, &opts.Ensure.Gloo); err != nil {
 		return err
 	}
-	return ensureGloo(opts.Top.Ctx, opts.Gloo)
+	return ensureGloo(opts.Top.Ctx, opts.Ensure.Gloo)
 }
 
 func ensureGloo(ctx context.Context, config options.Gloo) error {

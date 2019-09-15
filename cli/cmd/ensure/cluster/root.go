@@ -19,9 +19,9 @@ func Cluster(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.
 	}
 
 	cmd.AddCommand(
-		gke.GkeCmd(opts),
-		minikube.MinikubeCmd(opts))
-	cmd.PersistentFlags().StringVarP(&opts.Cluster.KubeVersion, "kube-version", "v", "v1.13.0", "kube version")
+		gke.Gke(opts),
+		minikube.Minikube(opts))
+	cmd.PersistentFlags().StringVarP(&opts.Ensure.Cluster.KubeVersion, "kube-version", "v", "v1.13.0", "kube version")
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	return cmd
 }

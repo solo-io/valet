@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"context"
-	"github.com/solo-io/valet/cli/config"
-	"github.com/solo-io/valet/cli/ensure"
+	"github.com/solo-io/valet/cli/cmd/config"
+	"github.com/solo-io/valet/cli/cmd/ensure"
+	"github.com/solo-io/valet/cli/cmd/teardown"
 	"github.com/solo-io/valet/cli/options"
-	"github.com/solo-io/valet/cli/teardown"
 
 	"github.com/solo-io/go-utils/cliutils"
 
@@ -15,8 +15,8 @@ import (
 func App(version string, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 
 	app := &cobra.Command{
-		Use:   "valet",
-		Short: "CLI for ensuring the state of clusters, solo products, and demos",
+		Use:     "valet",
+		Short:   "CLI for ensuring the state of clusters, solo products, and demos",
 		Version: version,
 	}
 
@@ -36,9 +36,9 @@ func ValetCli(version string) *cobra.Command {
 	optionsFunc := func(app *cobra.Command) {
 		app.SuggestionsMinimumDistance = 1
 		app.AddCommand(
-			ensure.EnsureCmd(opts),
+			ensure.Ensure(opts),
 			teardown.Teardown(opts),
-			config.ConfigCmd(opts),
+			config.Config(opts),
 		)
 	}
 

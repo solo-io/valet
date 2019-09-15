@@ -3,10 +3,9 @@ package teardown
 import (
 	"github.com/pkg/errors"
 	"github.com/solo-io/go-utils/cliutils"
-	"github.com/solo-io/valet/cli/ensure"
-	"github.com/solo-io/valet/cli/ensure/cluster/gke"
-	"github.com/solo-io/valet/cli/ensure/cluster/minikube"
-	"github.com/solo-io/valet/cli/file"
+	"github.com/solo-io/valet/cli/cmd/ensure"
+	"github.com/solo-io/valet/cli/cmd/ensure/cluster/gke"
+	"github.com/solo-io/valet/cli/cmd/ensure/cluster/minikube"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -27,7 +26,7 @@ func Teardown(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra
 }
 
 func teardown(opts *options.Options) error {
-	cfg, err := file.LoadConfig(opts.Top.Ctx, opts.Ensure.File)
+	cfg, err := ensure.LoadConfig(opts.Top.Ctx, opts.Ensure.File)
 	if err != nil {
 		return err
 	}

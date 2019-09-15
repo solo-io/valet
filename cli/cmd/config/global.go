@@ -15,7 +15,7 @@ import (
 	"path/filepath"
 )
 
-func ConfigCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
+func Config(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
 		Short: "global config for valet",

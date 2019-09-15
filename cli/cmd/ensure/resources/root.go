@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func ResourcesCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
+func Resources(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "resources",
 		Short:   "ensuring resources are applied to the cluster",

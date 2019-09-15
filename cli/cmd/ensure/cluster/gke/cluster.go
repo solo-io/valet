@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/solo-io/go-utils/contextutils"
-	"github.com/solo-io/valet/cli/ensure/cluster/cluster"
+	"github.com/solo-io/valet/cli/cmd/ensure/cluster/cluster"
 	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/options"
 	"go.uber.org/zap"

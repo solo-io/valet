@@ -2,13 +2,13 @@ package demo
 
 import (
 	"github.com/solo-io/go-utils/cliutils"
-	"github.com/solo-io/valet/cli/ensure/demo/petclinic"
+	"github.com/solo-io/valet/cli/cmd/ensure/demo/petclinic"
 	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 )
 
-func DemoCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
+func Demo(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "demo",
 		Short:   "ensuring state of demo applications",
@@ -18,7 +18,7 @@ func DemoCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.
 	}
 
 	cmd.AddCommand(
-		petclinic.EnsurePetclinicDemoCmd(opts, optionsFunc...))
+		petclinic.Petclinic(opts, optionsFunc...))
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	return cmd
 }

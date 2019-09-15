@@ -13,7 +13,7 @@ import (
 	"os"
 )
 
-func GlooCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
+func Gloo(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gloo",
 		Short: "ensures gloo is installed to namespace",

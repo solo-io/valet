@@ -1,4 +1,4 @@
-package file
+package ensure
 
 import (
 	"bytes"
@@ -12,15 +12,15 @@ import (
 	"net/url"
 )
 
-type Config struct {
+type ClusterConfig struct {
 	Cluster   *options.Cluster `yaml:"cluster"`
 	Gloo      *options.Gloo    `yaml:"gloo"`
 	Demos     *options.Demos   `yaml:"demos"`
 	Resources []string         `yaml:"resources"`
 }
 
-func LoadConfig(ctx context.Context, path string) (*Config, error) {
-	var c Config
+func LoadConfig(ctx context.Context, path string) (*ClusterConfig, error) {
+	var c ClusterConfig
 
 	bytes, err := loadBytesFromPath(ctx, path)
 	if err != nil {

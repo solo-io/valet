@@ -5,19 +5,19 @@ import (
 	"fmt"
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/go-utils/contextutils"
-	"github.com/solo-io/valet/cli/ensure/gloo"
+	"github.com/solo-io/valet/cli/cmd/ensure/gloo"
 	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
 
-func EnsurePetclinicDemoCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
+func Petclinic(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "petclinic",
 		Short:   "ensuring state of petclinic demo",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return EnsurePetclinicDemo(opts)
+			return EnsurePetclinic(opts)
 		},
 	}
 
@@ -25,7 +25,7 @@ func EnsurePetclinicDemoCmd(opts *options.Options, optionsFunc ...cliutils.Optio
 	return cmd
 }
 
-func EnsurePetclinicDemo(opts *options.Options) error {
+func EnsurePetclinic(opts *options.Options) error {
 	files := []string {
 		"https://raw.githubusercontent.com/sololabs/demos/master/petclinic_demo/petclinic.yaml",
 		"https://raw.githubusercontent.com/sololabs/demos/master/petclinic_demo/petclinic-vets.yaml",

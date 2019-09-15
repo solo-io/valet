@@ -8,6 +8,6 @@ RUN gcloud components install kubectl
 
 EXPOSE 8080
 
-COPY _output/valet-linux-amd64 /usr/local/bin/valet
+COPY valet-linux-amd64 /usr/local/bin/valet
 
 ENTRYPOINT [ "/usr/local/bin/valet" ]

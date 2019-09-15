@@ -20,6 +20,10 @@ func docker(docker artifacts.Docker, opts options.Build) error {
 				return err
 			}
 
+			if opts.SkipDockerPush {
+				continue
+			}
+
 			cmd = exec.Command("docker", "push", dockerTag)
 			fmt.Printf("Pushing docker container %s\n", dockerTag)
 			output, err = cmd.CombinedOutput()

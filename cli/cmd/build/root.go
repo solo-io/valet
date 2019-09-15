@@ -42,6 +42,7 @@ func Build(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Co
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	cmd.PersistentFlags().StringVarP(&opts.Build.File, "file", "f", artifacts.DefaultArtifactsFile, "path to file containing artifacts spec")
 	cmd.PersistentFlags().StringVarP(&opts.Build.Version, "version", "v", "", "artifacts version")
+	cmd.PersistentFlags().BoolVar(&opts.Build.SkipDockerPush, "skip-docker-push", false, "skip pushing docker images")
 	return cmd
 }
 

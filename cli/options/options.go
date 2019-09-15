@@ -78,4 +78,6 @@ type Petclinic struct {
 type Build struct {
 	File    string
 	Version string
+	// if true, then don't push images to docker repo
+	SkipDockerPush bool
 }

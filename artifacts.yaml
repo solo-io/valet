@@ -1,0 +1,13 @@
+build:
+  go:
+    version: github.com/solo-io/valet/cli/version.Version
+    binaries:
+      - name: valet
+        os: [linux, darwin]
+        entrypoint: main.go
+
+docker:
+  registries: [quay.io/solo-io]
+  containers:
+    - name: valet
+      dockerfile: Dockerfile

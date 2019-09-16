@@ -28,6 +28,9 @@ var (
 	CouldNotCreateManifestsError = func(err error) error {
 		return errors.Wrapf(err, "Could not create charts and manifests")
 	}
+	FailedToSyncArtifactsError = func(err error) error {
+		return errors.Wrapf(err, "Failed to sync artifacts to bucket")
+	}
 )
 
 func Build(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
@@ -53,7 +56,7 @@ func build(opts *options.Options) error {
 	if opts.Build.Version == "" {
 		return MustProvideVersionError
 	}
-	if err := EnsureArtifactsDir(); err != nil {
+	if err := ensureArtifactsDir(); err != nil {
 		return CouldNotPrepareArtifactsDirError(err)
 	}
 	artifactsCfg, err := artifacts.ReadArtifactsConfig(opts.Build.File)
@@ -75,8 +78,8 @@ func build(opts *options.Options) error {
 	}
 	fmt.Printf("Finished charts and manifests [%s]\n", time.Now().Format(time.RFC3339))
 	fmt.Printf("Syncing artifacts to google storage\n")
-	if err := SyncToGsutil(artifactsCfg.ProductName, opts.Build.Version); err != nil {
-		return err
+	if err := syncToGoogleStorage(artifactsCfg.ProductName, opts.Build.Version); err != nil {
+		return FailedToSyncArtifactsError(err)
 	}
 	fmt.Printf("Artifacts saved.\n")
 	return nil

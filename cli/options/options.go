@@ -36,10 +36,11 @@ type GKE struct {
 type Minikube struct{}
 
 type Gloo struct {
-	Version    string `yaml:"version"`
-	Enterprise bool   `yaml:"enterprise"`
-	LicenseKey string `yaml:"license_key"`
-	AWS        AWS    `yaml:"aws"`
+	Version        string `yaml:"version"`
+	Enterprise     bool   `yaml:"enterprise"`
+	ValetArtifacts bool   `yaml:"valetArtifacts"`
+	LicenseKey     string `yaml:"license_key"`
+	AWS            AWS    `yaml:"aws"`
 	// If present, a virtual service will be created called "glooui".
 	UiVirtualService *UiVirtualService `yaml:"ui_virtual_service"`
 }

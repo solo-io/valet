@@ -24,7 +24,6 @@ func Gloo(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Com
 	cmd.PersistentFlags().StringVarP(&opts.Ensure.Gloo.Version, "version", "v", "", "gloo version")
 	cmd.PersistentFlags().BoolVarP(&opts.Ensure.Gloo.Enterprise, "enterprise", "e", false, "install enterprise gloo")
 	cmd.PersistentFlags().StringVar(&opts.Ensure.Gloo.LicenseKey, "license-key", "", "enterprise gloo license key")
-
 	cmd.PersistentFlags().BoolVarP(&opts.Ensure.Gloo.AWS.Upstream, "upstream", "u", false, "create an AWS upstream from the AWS secret")
 	cmd.PersistentFlags().BoolVarP(&opts.Ensure.Gloo.AWS.Secret, "secret", "s", false, "create an AWS secret (requires AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables")
 

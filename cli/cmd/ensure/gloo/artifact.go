@@ -139,3 +139,22 @@ func downloadFile(filepath, url string) error {
 	_, err = io.Copy(out, resp.Body)
 	return err
 }
+
+func NewUrlArtifactDownloader() *urlArtifactDownloader {
+	return &urlArtifactDownloader{}
+}
+
+type urlArtifactDownloader struct {
+
+}
+
+var _ ArtifactDownloader = new(urlArtifactDownloader)
+
+func (d *urlArtifactDownloader) Download(ctx context.Context, remotePath, localPath string) error {
+	contextutils.LoggerFrom(ctx).Infow("Downloading glooctl", zap.String("remotePath", remotePath), zap.String("localPath", localPath))
+	err := downloadFile(localPath, remotePath)
+	if err != nil {
+		return err
+	}
+	return chmod(ctx, localPath)
+}

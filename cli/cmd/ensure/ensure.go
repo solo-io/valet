@@ -34,6 +34,8 @@ func Ensure(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	cmd.PersistentFlags().StringVarP(&opts.Ensure.File, "file", "f", "", "path to file containing config to ensure")
+	cmd.PersistentFlags().BoolVarP(&opts.Ensure.Gloo.ValetArtifacts, "valet-artifacts", "", false, "use valet artifacts (in google storage)")
+	cmd.PersistentFlags().StringVarP(&opts.Ensure.Gloo.Version, "gloo-version", "", "", "gloo version")
 	cmd.AddCommand(
 		cluster.Cluster(opts, optionsFunc...),
 		gloo.Gloo(opts, optionsFunc...),
@@ -75,7 +77,11 @@ func ensure(opts *options.Options) error {
 	}
 
 	if cfg.Gloo != nil {
+		glooVersion := opts.Ensure.Gloo.Version
+		valetArtifacts := opts.Ensure.Gloo.ValetArtifacts
 		opts.Ensure.Gloo = *cfg.Gloo
+		opts.Ensure.Gloo.ValetArtifacts = valetArtifacts
+		opts.Ensure.Gloo.Version = glooVersion
 		err := gloo.EnsureGloo(opts)
 		if err != nil {
 			return err

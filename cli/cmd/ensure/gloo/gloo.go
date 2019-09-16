@@ -2,6 +2,7 @@ package gloo
 
 import (
 	"context"
+	"fmt"
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/go-utils/testutils/kube"
@@ -127,15 +128,19 @@ func checkForGlooInstall(ctx context.Context, config options.Gloo, localPathToGl
 			}
 		}
 	}
+	version := config.Version
+	if !config.ValetArtifacts {
+		version = version[1:]
+	}
 	for _, pod := range pods.Items {
 		for _, container := range pod.Spec.Containers {
-			if strings.Contains(container.Image, config.Version[1:]) {
+			if strings.Contains(container.Image, version) {
 				return true, nil
 			}
 		}
 	}
 	contextutils.LoggerFrom(ctx).Warnw("Detected Gloo install, but did not find any containers with the expected version",
-		zap.String("expected", config.Version[1:]))
+		zap.String("expected", version))
 	return false, uninstallAll(ctx, localPathToGlooctl)
 }
 
@@ -144,6 +149,11 @@ func install(ctx context.Context, fullPath string, config options.Gloo) error {
 	args := []string{"install", "gateway"}
 	if config.Enterprise {
 		args = append(args, "--license-key", config.LicenseKey)
+	}
+	if config.ValetArtifacts {
+		helmChart := fmt.Sprintf("https://storage.googleapis.com/valet/artifacts/gloo/%s/gloo-%s.tgz", config.Version, config.Version)
+		args = append(args, "-f", helmChart)
+		contextutils.LoggerFrom(ctx).Infow("Using helm chart from valet artifacts", zap.String("helmChart", helmChart))
 	}
 	out, err := internal.ExecuteCmd(fullPath, args...)
 	if err != nil {

@@ -80,18 +80,30 @@ func ensureGlooctlIsDownloaded(ctx context.Context, gloo options.Gloo) (string, 
 		contextutils.LoggerFrom(ctx).Errorw("Error checking if glooctl was downloaded, attempting to download", zap.Error(err))
 	}
 
+	if gloo.ValetArtifacts {
+		err = downloadFromValet(ctx, gloo, localPathToGlooctl)
+	} else {
+		err = downloadFromGithub(ctx, gloo, localPathToGlooctl)
+	}
+
+	return localPathToGlooctl, err
+}
+
+func downloadFromValet(ctx context.Context, gloo options.Gloo, localPathToGlooctl string) error {
+	downloader := NewUrlArtifactDownloader()
+	remotePath := fmt.Sprintf("https://storage.googleapis.com/valet/artifacts/gloo/%s/glooctl-%s-amd64", gloo.Version, runtime.GOOS)
+	return downloader.Download(ctx, remotePath, localPathToGlooctl)
+}
+
+func downloadFromGithub(ctx context.Context, gloo options.Gloo, localPathToGlooctl string) error {
 	if gloo.Enterprise && os.Getenv("GITHUB_TOKEN") == "" {
 		contextutils.LoggerFrom(ctx).Errorw(UnableToDownloadEnterpriseGlooctlError.Error())
-		return "", UnableToDownloadEnterpriseGlooctlError
+		return UnableToDownloadEnterpriseGlooctlError
 	}
 
 	client := githubutils.GetClientWithOrWithoutToken(ctx)
 	downloader := NewGithubArtifactDownloader(client, getRepo(gloo.Enterprise), gloo.Version)
-	err = downloader.Download(ctx, getAssetName(), localPathToGlooctl)
-	if err != nil {
-		return "", err
-	}
-	return localPathToGlooctl, nil
+	return downloader.Download(ctx, getAssetName(), localPathToGlooctl)
 }
 
 func getRepo(enterprise bool) string {
@@ -123,7 +135,11 @@ func getFilepath(gloo options.Gloo) (string, error) {
 	if gloo.Enterprise {
 		enterpriseText = "-enterprise"
 	}
-	filename := fmt.Sprintf("glooctl%s-%s", enterpriseText, gloo.Version[1:])
+	version := gloo.Version
+	if !gloo.ValetArtifacts {
+		version = version[1:]
+	}
+	filename := fmt.Sprintf("glooctl%s-%s", enterpriseText, version)
 	return filepath.Join(dir, filename), nil
 }
 

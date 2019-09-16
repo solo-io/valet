@@ -11,3 +11,5 @@ docker:
   containers:
     - name: valet
       dockerfile: Dockerfile
+
+productName: valet

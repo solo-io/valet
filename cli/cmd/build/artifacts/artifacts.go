@@ -24,9 +24,10 @@ func ReadArtifactsConfig(path string) (*Artifacts, error) {
 }
 
 type Artifacts struct {
-	Build  Build  `json:"build,omitempty"`
-	Docker Docker `json:"docker,omitempty"`
-	Helm   Helm   `json:"helm,omitempty"`
+	Build       Build  `json:"build,omitempty"`
+	Docker      Docker `json:"docker,omitempty"`
+	Helm        Helm   `json:"helm,omitempty"`
+	ProductName string `json:"productName,omitempty"`
 }
 
 type Build struct {

@@ -74,5 +74,10 @@ func build(opts *options.Options) error {
 		return CouldNotCreateManifestsError(err)
 	}
 	fmt.Printf("Finished charts and manifests [%s]\n", time.Now().Format(time.RFC3339))
+	fmt.Printf("Syncing artifacts to google storage\n")
+	if err := SyncToGsutil(artifactsCfg.ProductName, opts.Build.Version); err != nil {
+		return err
+	}
+	fmt.Printf("Artifacts saved.")
 	return nil
 }

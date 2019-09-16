@@ -65,7 +65,7 @@ func build(opts *options.Options) error {
 	}
 	fmt.Printf("Artifacts version: %s\n", opts.Build.Version)
 	fmt.Printf("Starting artifacts build [%s]\n", time.Now().Format(time.RFC3339))
-	if err := buildArtifacts(artifactsCfg.Build, opts.Build); err != nil {
+	if err := buildArtifacts(artifactsCfg.Build, opts.Build, artifactsCfg.ProductName); err != nil {
 		return CouldNotBuildArtifactsError(err)
 	}
 	fmt.Printf("Finished artifacts build [%s]\n", time.Now().Format(time.RFC3339))
@@ -73,14 +73,9 @@ func build(opts *options.Options) error {
 		return CouldNotBuildContainersError(err)
 	}
 	fmt.Printf("Finished docker [%s]\n", time.Now().Format(time.RFC3339))
-	if err := helm(artifactsCfg.Helm, opts.Build); err != nil {
+	if err := helm(artifactsCfg.Helm, opts.Build, artifactsCfg.ProductName); err != nil {
 		return CouldNotCreateManifestsError(err)
 	}
 	fmt.Printf("Finished charts and manifests [%s]\n", time.Now().Format(time.RFC3339))
-	fmt.Printf("Syncing artifacts to google storage\n")
-	if err := syncToGoogleStorage(artifactsCfg.ProductName, opts.Build.Version); err != nil {
-		return FailedToSyncArtifactsError(err)
-	}
-	fmt.Printf("Artifacts saved.\n")
 	return nil
 }

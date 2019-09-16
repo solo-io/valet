@@ -45,6 +45,7 @@ type Binary struct {
 	Os         []string `json:"os,omitempty"`
 	Entrypoint string   `json:"entrypoint,omitempty"`
 	Tests      []Test   `json:"tests,omitempty"`
+	Upload     bool     `json:"upload,omitempty"`
 }
 
 type Test struct {
@@ -70,6 +71,7 @@ type Chart struct {
 	Directory string     `json:"directory,omitempty"`
 	Generator string     `json:"generator,omitempty"`
 	Manifests []Manifest `json:"manifests,omitempty"`
+	Upload    bool       `json:"upload,omitempty"`
 }
 
 type Manifest struct {

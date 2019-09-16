@@ -10,18 +10,19 @@ import (
 	"path/filepath"
 )
 
-func helm(helm artifacts.Helm, opts options.Build) error {
+func helm(helm artifacts.Helm, opts options.Build, productName string) error {
 	for _, chart := range helm.Charts {
-		if err := helmChart(chart, opts); err != nil {
+		if err := helmChart(chart, opts, productName); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func helmChart(chart artifacts.Chart, opts options.Build) error {
+func helmChart(chart artifacts.Chart, opts options.Build, productName string) error {
 	generate := exec.Command("go", "run", chart.Generator, opts.Version)
-	fmt.Printf("Generating helm chart %s\n", chart.Name)
+	chartFilename := fmt.Sprintf("%s-%s.tgz", chart.Name, opts.Version)
+	fmt.Printf("Generating helm chart %s\n", chartFilename)
 	output, err := generate.CombinedOutput()
 	if err != nil {
 		fmt.Printf(string(output))
@@ -32,6 +33,11 @@ func helmChart(chart artifacts.Chart, opts options.Build) error {
 	if err != nil {
 		fmt.Printf(string(output))
 		return err
+	}
+	if chart.Upload {
+		if err := syncFileToGoogleStorage(productName, opts.Version, chartFilename); err != nil {
+			return err
+		}
 	}
 
 	for _, manifest := range chart.Manifests {
@@ -56,6 +62,11 @@ func helmChart(chart artifacts.Chart, opts options.Build) error {
 		err := ioutil.WriteFile(manifestPath, output, os.ModePerm)
 		if err != nil {
 			return err
+		}
+		if chart.Upload {
+			if err := syncFileToGoogleStorage(productName, opts.Version, manifest.Name); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

@@ -15,6 +15,21 @@ func buildArtifacts(build artifacts.Build, opts options.Build) error {
 
 func buildGoArtifacts(goBuild artifacts.Go, opts options.Build) error {
 	for _, binary := range goBuild.Binaries {
+		if binary.Tests != nil {
+			for _, test := range binary.Tests {
+				testArgs := []string{
+					"-r", test.Path,
+				}
+				cmd := exec.Command("ginkgo", testArgs...)
+				fmt.Printf("Running tests: %s... ", test.Path)
+				output, err := cmd.CombinedOutput()
+				if err != nil {
+					fmt.Printf("Error: \n%s", string(output))
+					return err
+				}
+				fmt.Printf("OK\n")
+			}
+		}
 		if binary.Os == nil {
 			binary.Os = DefaultOs
 		}

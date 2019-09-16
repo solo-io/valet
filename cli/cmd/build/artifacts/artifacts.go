@@ -43,6 +43,11 @@ type Binary struct {
 	Name       string   `json:"name,omitempty"`
 	Os         []string `json:"os,omitempty"`
 	Entrypoint string   `json:"entrypoint,omitempty"`
+	Tests      []Test   `json:"tests,omitempty"`
+}
+
+type Test struct {
+	Path string `json:"path,omitempty"`
 }
 
 type Docker struct {

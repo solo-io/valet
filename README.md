@@ -1,6 +1,46 @@
 # Valet
 
-Valet is a tool for automatically ensuring the state of kubernetes clusters, Solo products, and demo applications. 
+Valet is a tool that automates building and deploying solo products and demos. It can be used in the dev environment, in CI, or as part of a GitOps deployment workflow. 
+
+## Usage
+
+There are three primary commands for interacting with Valet: **build**, **ensure**, and **teardown**. There is also a **config** command for setting global configuration. 
+
+### Build
+
+Valet offers the (optional) ability to build artifacts from any repo. It currently supports building Go binaries, tagging and pushing docker containers, and producing Helm charts and manifests. Valet typically determines the artifacts to build by reading a file called `artifacts.yaml` in the root of the repo. An example is included in [this repo](artifacts.yaml) for building Valet itself. 
+
+Valet artifacts are always stored locally in the `_artifacts` directory at the root of the repo. 
+
+Valet artifacts are versioned, with the version provided at runtime. This version may be a semver version (i.e. 1.2.3), a SHA, or any other version. Typically, when running locally, you would use git to determine a meaningful, unique, and stable version:
+
+`valet build -v $(git describe --tags --dirty | cut -c 2-)`
+
+If your repo does not have any tags, then you may use this instead:
+
+`valet build -v $(git describe --always --dirty)`
+
+Artifacts can be tagged for upload to the google storage valet bucket by adding `upload: true` to the binary or helm chart. (NOTE: this requires google storage writer permissions on the valet bucket.) 
+
+### Ensure
+
+Valet offers the ability to set up Kubernetes clusters, download and deploy Solo products (currently only glooctl/Gloo is supported), manage other Kubernetes resources (i.e. demo applications), and handle basic administrative tasks (i.e. setting up DNS mappings). These resources are defined in a yaml config file and passed to valet using `valet ensure -f config.yaml`. 
+
+Currently Valet can manage deploying to Minikube or GKE. If deploying to GKE, the global `GOOGLE_APPLICATION_CREDENTIALS` environment variable must be set. 
+
+Valet first ensures that the Kubernetes cluster is running, and create it if not. Once the cluster is running, if the config specifies installing Gloo, Valet will check to see if `glooctl` is already installed locally at the desired version, and install it if necessary. Then, valet will check the cluster to see if gloo has been deployed at the desired version, and install if necessary. If a different version of Gloo is deploy, valet will first run `glooctl uninstall --all`. If running with the Gloo UI and a DNS entry is requested, then Valet will create it in route53. 
+
+Once Gloo is installed, Valet will deploy petclinic and other resources, and set up an additional DNS entry if desired. 
+
+If no version is specified for installation of Gloo, Valet will install the latest version it can find on github. If a version is provided, it will find and install that specific version. Valet can install using artifacts it produced with `valet build` if two flags are provided:
+
+`valet ensure -f config.yaml --valet-artifacts --gloo-version 0.18.42-8-g6910eec45` 
+
+The first option tells Valet to use google storage to locate artifacts instead of Github. The second tells Valet the specific version of Gloo to use during installation. This version overrides the version specified in the config file. 
+
+### Teardown
+
+When you are done using a cluster, Valet can clean it up with `valet teardown -f config.yaml`. This can be useful if the cluster gets into a bad state, or if it is no longer useful. 
 
 ## Installing
 

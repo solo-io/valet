@@ -78,6 +78,6 @@ func build(opts *options.Options) error {
 	if err := SyncToGsutil(artifactsCfg.ProductName, opts.Build.Version); err != nil {
 		return err
 	}
-	fmt.Printf("Artifacts saved.")
+	fmt.Printf("Artifacts saved.\n")
 	return nil
 }

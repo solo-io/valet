@@ -30,7 +30,7 @@ func EnsureArtifactsDir() error {
 	return os.Mkdir(ArtifactsDir, os.ModePerm)
 }
 
-func SyncToGsutil(product, version string) error {
+func SyncToGoogleStorage(product, version string) error {
 	args := []string {
 		"-m", "rsync", "-r",
 		fmt.Sprintf("./%s/", ArtifactsDir),

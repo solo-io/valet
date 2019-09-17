@@ -1,3 +1,5 @@
+# A sample file for building valet using valet
+
 build:
   go:
     version: github.com/solo-io/valet/cli/version.Version

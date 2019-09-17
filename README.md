@@ -22,7 +22,7 @@ If your repo does not have any tags, then you may use this instead:
 
 Artifacts can be tagged for upload to the google storage valet bucket by adding `upload: true` to the binary or helm chart. (NOTE: this requires google storage writer permissions on the valet bucket.) 
 
-### Ensure
+### Ensure 
 
 Valet offers the ability to set up Kubernetes clusters, download and deploy Solo products (currently only glooctl/Gloo is supported), manage other Kubernetes resources (i.e. demo applications), and handle basic administrative tasks (i.e. setting up DNS mappings). These resources are defined in a yaml config file and passed to valet using `valet ensure -f config.yaml`. 
 

@@ -1,4 +1,4 @@
-# A sample file for building valet using valet
+# A sample file for building valet using valet 
 
 build:
   go:

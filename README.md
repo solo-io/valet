@@ -71,7 +71,7 @@ This will put the latest valet binary in your `$GOPATH/bin` directory.
 
 This requires no setup. 
 
-Run `valet ensure -f https://raw.githubusercontent.com/solo-io/valet-config/master/latest-gloo-minikube.yaml` to get a minikube cluster running the latest gloo, with the petclinic demo resources. 
+Run `valet ensure -f https://raw.githubusercontent.com/solo-io/valet-config/master/latest-gloo-minikube.yaml` ([link](https://raw.githubusercontent.com/solo-io/valet-config/master/latest-gloo-minikube.yaml)) to get a minikube cluster running the latest gloo, with the petclinic demo resources. 
 
 ```
 [11:09:54] rick@Ricks-MBP-2:~/code2/valet$ valet ensure -f https://raw.githubusercontent.com/solo-io/valet-config/master/latest-gloo-minikube.yaml

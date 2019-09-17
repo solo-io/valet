@@ -41,7 +41,7 @@ build-linux:
 # Docker
 #----------------------------------------------------------------------------------
 docker-build: build-linux
-	docker build -t gcr.io/solo-test-236622/valet:$(VERSION) .
+	docker build -t quay.io/solo-io/valet:$(VERSION) -f Dockerfile _output
 
 docker-push: docker-build
-	docker push gcr.io/solo-test-236622/valet:$(VERSION)
+	docker push quay.io/solo-io/valet:$(VERSION)

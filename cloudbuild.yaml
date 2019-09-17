@@ -1,0 +1,28 @@
+steps:
+  - name: gcr.io/cloud-builders/gsutil
+    entrypoint: 'bash'
+    args: ['-c', 'mkdir -p /go/pkg && cd /go/pkg && gsutil cat gs://$PROJECT_ID-cache/valet/valet-mod.tar.gz | tar -xzf -']
+    volumes: &vol
+      - name: 'gopath'
+        path: '/go/pkg'
+    id: 'untar-mod-cache'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args: ['-c', 'docker login quay.io --username "solo-io+solobot" --password $$QUAY_IO_PASSWORD']
+    secretEnv: ['QUAY_IO_PASSWORD']
+    waitFor: ['-']
+    id: 'docker-login'
+
+  # Build and push
+  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.1.5'
+    volumes: *vol
+    env:
+      - 'TAGGED_VERSION=$TAG_NAME'
+    args: ['docker-push']
+    secretEnv: ['QUAY_IO_PASSWORD']
+
+secrets:
+  - kmsKeyName: projects/solo-public/locations/global/keyRings/build/cryptoKeys/build-key
+    secretEnv:
+      QUAY_IO_PASSWORD: CiQABlzmSRx5TcOqbldXa/d/+bkmAfpNAWa3PTS06WvuloZL+vASaQCCPGSGCogonVZVEUNx4G3YJtWi18gSuNx4PvLe08q8xAflTMFkjsyQirAOK3Y2oCvgYwiw/ITcuydjkpMjxDygFyENXS9FKFJoAXHlPQE5qidKr8xxmxF5ezhmjGB0gjyjXIIkbSEnBg==

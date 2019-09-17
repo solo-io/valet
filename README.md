@@ -42,15 +42,7 @@ The first option tells Valet to use google storage to locate artifacts instead o
 
 When you are done using a cluster, Valet can clean it up with `valet teardown -f config.yaml`. This can be useful if the cluster gets into a bad state, or if it is no longer useful. 
 
-## Installing
-
-The easiest way to install Valet is to run: 
-
-`go get -u github.com/solo-io/valet`
-
-This will put the latest valet binary in your `$GOPATH/bin` directory. 
-
-## Global config 
+### Config
 
 In order to get all the value from Valet, run the following commands to set up a few environment variables:
 
@@ -63,7 +55,15 @@ valet config set \
   GOOGLE_APPLICATION_CREDENTIALS=...
 ```
 
-The github token is needed for downloading enterprise glooctl. The AWS vars are needed for creating AWS secrets and upstreams, as well as creating automatic DNS mappings in Route53. The license key is used for installing enterprise Gloo, and the google application credentials are used when managing GKE clusters.  
+The github token is needed for downloading enterprise glooctl. The AWS vars are needed for creating AWS secrets and upstreams, as well as creating automatic DNS mappings in Route53. The license key is used for installing enterprise Gloo, and the google application credentials are used when managing GKE clusters.
+
+## Installing
+
+The easiest way to install Valet is to run: 
+
+`go get -u github.com/solo-io/valet`
+
+This will put the latest valet binary in your `$GOPATH/bin` directory.   
 
 ## Example Usage
 

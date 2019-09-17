@@ -1,0 +1,4 @@
+changelog:
+  - type: NEW_FEATURE
+    description: Initial release of Valet. 
+    issueLink: https://github.com/solo-io/valet

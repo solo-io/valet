@@ -1,0 +1,4 @@
+changelog:
+  - type: NEW_FEATURE
+    description: Valet now publishes container to enable valet commands to be run in CI.
+    issueLink: https://github.com/solo-io/valet/issues/17

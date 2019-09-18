@@ -9,21 +9,14 @@ import (
 )
 
 func docker(docker artifacts.Docker, opts options.Build) error {
-	//eg := errgroup.Group{}
 	for _, registry := range docker.Registries {
 		for _, container := range docker.Containers {
-			//c := container
-			//r := registry
-			//eg.Go(func() error {
-			//	return dockerContainer(r, c, opts)
-			//})
 			if err := dockerContainer(registry, container, opts); err != nil {
 				return err
 			}
 		}
 	}
 	return nil
-	// return eg.Wait()
 }
 
 func dockerContainer(registry string, container artifacts.Container, opts options.Build) error {

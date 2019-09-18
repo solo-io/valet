@@ -14,17 +14,11 @@ func buildArtifacts(build artifacts.Build, opts options.Build, productName strin
 }
 
 func buildGoArtifacts(goBuild artifacts.Go, opts options.Build, productName string) error {
-	//eg := errgroup.Group{}
 	for _, binary := range goBuild.Binaries {
-		//b := binary
-		//eg.Go(func() error {
-		//	return buildGoArtifact(goBuild, b, opts, productName)
-		//})
 		if err := buildGoArtifact(goBuild, binary, opts, productName); err != nil {
 			return err
 		}
 	}
-	//return eg.Wait()
 	return nil
 }
 

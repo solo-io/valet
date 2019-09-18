@@ -1,4 +1,4 @@
-# Valet    
+# Valet   
 
 Valet is a tool that automates building and deploying solo products and demos. It can be used in the dev environment, in CI, or as part of a GitOps deployment workflow.  
 

@@ -4,23 +4,26 @@ import (
 	"fmt"
 	"github.com/solo-io/valet/cli/cmd/build/artifacts"
 	"github.com/solo-io/valet/cli/options"
-	"golang.org/x/sync/errgroup"
 	"os/exec"
 	"path/filepath"
 )
 
 func docker(docker artifacts.Docker, opts options.Build) error {
-	eg := errgroup.Group{}
+	//eg := errgroup.Group{}
 	for _, registry := range docker.Registries {
 		for _, container := range docker.Containers {
-			c := container
-			r := registry
-			eg.Go(func() error {
-				return dockerContainer(r, c, opts)
-			})
+			//c := container
+			//r := registry
+			//eg.Go(func() error {
+			//	return dockerContainer(r, c, opts)
+			//})
+			if err := dockerContainer(registry, container, opts); err != nil {
+				return err
+			}
 		}
 	}
-	return eg.Wait()
+	return nil
+	// return eg.Wait()
 }
 
 func dockerContainer(registry string, container artifacts.Container, opts options.Build) error {

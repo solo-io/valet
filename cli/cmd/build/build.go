@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/solo-io/valet/cli/cmd/build/artifacts"
 	"github.com/solo-io/valet/cli/options"
-	"golang.org/x/sync/errgroup"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -15,14 +14,18 @@ func buildArtifacts(build artifacts.Build, opts options.Build, productName strin
 }
 
 func buildGoArtifacts(goBuild artifacts.Go, opts options.Build, productName string) error {
-	eg := errgroup.Group{}
+	//eg := errgroup.Group{}
 	for _, binary := range goBuild.Binaries {
-		b := binary
-		eg.Go(func() error {
-			return buildGoArtifact(goBuild, b, opts, productName)
-		})
+		//b := binary
+		//eg.Go(func() error {
+		//	return buildGoArtifact(goBuild, b, opts, productName)
+		//})
+		if err := buildGoArtifact(goBuild, binary, opts, productName); err != nil {
+			return err
+		}
 	}
-	return eg.Wait()
+	//return eg.Wait()
+	return nil
 }
 
 func buildGoArtifact(goBuild artifacts.Go, binary artifacts.Binary, opts options.Build, productName string) error {

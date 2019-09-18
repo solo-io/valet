@@ -1,18 +1,17 @@
 package build
 
 import (
-	"fmt"
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/cmd/build/artifacts"
+	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
-	"time"
 )
 
 var (
-	MustProvideFileError = errors.Errorf("Must provide a file option")
-	MustProvideVersionError = errors.Errorf("Must provide a version option")
+	MustProvideFileError             = errors.Errorf("Must provide a file option")
+	MustProvideVersionError          = errors.Errorf("Must provide a version option")
 	CouldNotPrepareArtifactsDirError = func(err error) error {
 		return errors.Wrapf(err, "Could not prepare artifacts directory")
 	}
@@ -63,19 +62,19 @@ func build(opts *options.Options) error {
 	if err != nil {
 		return CouldNotReadArtifactsFileError(err)
 	}
-	fmt.Printf("Artifacts version: %s\n", opts.Build.Version)
-	fmt.Printf("Starting artifacts build [%s]\n", time.Now().Format(time.RFC3339))
+	internal.Report("Artifacts version: %s", opts.Build.Version)
+	internal.Report("Starting artifacts build...")
 	if err := buildArtifacts(artifactsCfg.Build, opts.Build, artifactsCfg.ProductName); err != nil {
 		return CouldNotBuildArtifactsError(err)
 	}
-	fmt.Printf("Finished artifacts build [%s]\n", time.Now().Format(time.RFC3339))
+	internal.Report("Finished artifacts build")
 	if err := docker(artifactsCfg.Docker, opts.Build); err != nil {
 		return CouldNotBuildContainersError(err)
 	}
-	fmt.Printf("Finished docker [%s]\n", time.Now().Format(time.RFC3339))
+	internal.Report("Finished docker")
 	if err := helm(artifactsCfg.Helm, opts.Build, artifactsCfg.ProductName); err != nil {
 		return CouldNotCreateManifestsError(err)
 	}
-	fmt.Printf("Finished charts and manifests [%s]\n", time.Now().Format(time.RFC3339))
+	internal.Report("Finished charts and manifests")
 	return nil
 }

@@ -2,3 +2,9 @@ changelog:
   - type: NEW_FEATURE
     description: Valet now publishes container to enable valet commands to be run in CI.
     issueLink: https://github.com/solo-io/valet/issues/17
+  - type: FIX
+    description: Increase cloudbuild timeout to 20 minutes, since the docker container takes a long time to build.
+    issueLink: https://github.com/solo-io/valet/issues/20
+  - type: NEW_FEATURE
+    description: Wire reporter up to the CLI so all the output is formatted uniformly with timestamps.
+    issueLink: https://github.com/solo-io/valet/issues/18

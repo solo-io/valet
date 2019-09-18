@@ -3,6 +3,7 @@ package build
 import (
 	"fmt"
 	"github.com/solo-io/valet/cli/cmd/build/artifacts"
+	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/options"
 	"os"
 	"os/exec"
@@ -52,10 +53,10 @@ func buildGoArtifact(goBuild artifacts.Go, binary artifacts.Binary, opts options
 		}
 		cmd := exec.Command("go", parts...)
 		cmd.Env = append(os.Environ(), goEnv(osStr)...)
-		fmt.Printf("Building %s\n", binaryName)
+		internal.Report("Building %s", binaryName)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			fmt.Printf(string(output))
+			internal.Report("Error: %s", string(output))
 			return err
 		}
 		if binary.Upload {

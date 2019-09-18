@@ -3,6 +3,7 @@ package build
 import (
 	"fmt"
 	"github.com/solo-io/valet/cli/cmd/build/artifacts"
+	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/options"
 	"io/ioutil"
 	"os"
@@ -22,16 +23,16 @@ func helm(helm artifacts.Helm, opts options.Build, productName string) error {
 func helmChart(chart artifacts.Chart, opts options.Build, productName string) error {
 	generate := exec.Command("go", "run", chart.Generator, opts.Version)
 	chartFilename := fmt.Sprintf("%s-%s.tgz", chart.Name, opts.Version)
-	fmt.Printf("Generating helm chart %s\n", chartFilename)
+	internal.Report("Generating helm chart %s", chartFilename)
 	output, err := generate.CombinedOutput()
 	if err != nil {
-		fmt.Printf(string(output))
+		internal.Report("Error: %s", string(output))
 		return err
 	}
 	pkg := exec.Command("helm", "package", "--destination", ArtifactsDir, chart.Directory)
 	output, err = pkg.CombinedOutput()
 	if err != nil {
-		fmt.Printf(string(output))
+		internal.Report("Error: %s", string(output))
 		return err
 	}
 	if chart.Upload {
@@ -51,7 +52,7 @@ func helmChart(chart artifacts.Chart, opts options.Build, productName string) er
 			cmd = append(cmd, "--values", valuesPath)
 		}
 
-		fmt.Printf("Generating manifest %s\n", manifest.Name)
+		internal.Report("Generating manifest %s", manifest.Name)
 		manifestCmd := exec.Command(cmd[0], cmd[1:]...)
 		output, err = manifestCmd.CombinedOutput()
 		if err != nil {

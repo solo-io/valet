@@ -3,33 +3,30 @@ package build
 import (
 	"fmt"
 	"github.com/solo-io/valet/cli/cmd/build/artifacts"
+	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/options"
-	"golang.org/x/sync/errgroup"
 	"os/exec"
 	"path/filepath"
 )
 
 func docker(docker artifacts.Docker, opts options.Build) error {
-	eg := errgroup.Group{}
 	for _, registry := range docker.Registries {
 		for _, container := range docker.Containers {
-			c := container
-			r := registry
-			eg.Go(func() error {
-				return dockerContainer(r, c, opts)
-			})
+			if err := dockerContainer(registry, container, opts); err != nil {
+				return err
+			}
 		}
 	}
-	return eg.Wait()
+	return nil
 }
 
 func dockerContainer(registry string, container artifacts.Container, opts options.Build) error {
 	dockerTag := fmt.Sprintf("%s:%s", filepath.Join(registry, container.Name), opts.Version)
 	cmd := exec.Command("docker", "build", "-t", dockerTag, "-f", container.Dockerfile, "_artifacts")
-	fmt.Printf("Building docker container %s\n", dockerTag)
+	internal.Report("Building docker container %s", dockerTag)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Printf(string(output))
+		internal.Report("Error: %s", string(output))
 		return err
 	}
 
@@ -38,10 +35,10 @@ func dockerContainer(registry string, container artifacts.Container, opts option
 	}
 
 	cmd = exec.Command("docker", "push", dockerTag)
-	fmt.Printf("Pushing docker container %s\n", dockerTag)
+	internal.Report("Pushing docker container %s", dockerTag)
 	output, err = cmd.CombinedOutput()
 	if err != nil {
-		fmt.Printf(string(output))
+		internal.Report("Error: %s", string(output))
 		return err
 	}
 	return nil

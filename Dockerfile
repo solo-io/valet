@@ -35,6 +35,9 @@ RUN apt-get -y update && \
 
 ENV PATH=/builder/google-cloud-sdk/bin/:/builder/bin:$PATH
 
+# Install kubectl component
+RUN gcloud -q components install kubectl
+
 RUN curl https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash && \
     helm init --client-only
 

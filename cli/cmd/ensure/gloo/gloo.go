@@ -129,7 +129,7 @@ func checkForGlooInstall(ctx context.Context, config options.Gloo, localPathToGl
 		}
 	}
 	version := config.Version
-	if !config.ValetArtifacts {
+	if !config.ValetArtifacts && config.LocalArtifactDir != "" {
 		version = version[1:]
 	}
 	for _, pod := range pods.Items {
@@ -150,7 +150,12 @@ func install(ctx context.Context, fullPath string, config options.Gloo) error {
 	if config.Enterprise {
 		args = append(args, "--license-key", config.LicenseKey)
 	}
-	if config.ValetArtifacts {
+
+	if config.LocalArtifactDir != "" {
+		helmChart := fmt.Sprintf("_artifacts/gloo-%s.tgz", config.Version)
+		args = append(args, "-f", helmChart)
+		contextutils.LoggerFrom(ctx).Infow("Using helm chart from local artifacts", zap.String("helmChart", helmChart))
+	} else if config.ValetArtifacts {
 		helmChart := fmt.Sprintf("https://storage.googleapis.com/valet/artifacts/gloo/%s/gloo-%s.tgz", config.Version, config.Version)
 		args = append(args, "-f", helmChart)
 		contextutils.LoggerFrom(ctx).Infow("Using helm chart from valet artifacts", zap.String("helmChart", helmChart))

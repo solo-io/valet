@@ -22,6 +22,7 @@ func Teardown(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra
 
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	cmd.PersistentFlags().StringVarP(&opts.Ensure.File, "file", "f", "", "path to file containing config to ensure")
+	cmd.PersistentFlags().StringVarP(&opts.Ensure.Cluster.GKE.Name, "gke-cluster-name", "", "", "GKE cluster name to use")
 	return cmd
 }
 
@@ -36,8 +37,12 @@ func teardown(opts *options.Options) error {
 	}
 
 	if cfg.Cluster != nil {
-		opts.Ensure.Cluster.Type = cfg.Cluster.Type
+		gkeName := opts.Ensure.Cluster.GKE.Name
 		opts.Ensure.Cluster.GKE = cfg.Cluster.GKE
+		if gkeName != "" {
+			opts.Ensure.Cluster.GKE.Name = gkeName
+		}
+		opts.Ensure.Cluster.Type = cfg.Cluster.Type
 		opts.Ensure.Cluster.Minikube = cfg.Cluster.Minikube
 
 		if opts.Ensure.Cluster.Type == "gke" {

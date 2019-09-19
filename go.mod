@@ -5,6 +5,7 @@ go 1.12
 require (
 	cloud.google.com/go v0.43.0
 	github.com/aws/aws-sdk-go v1.21.10
+	github.com/docker/docker v1.13.1
 	github.com/ghodss/yaml v1.0.0
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/pkg/errors v0.8.1

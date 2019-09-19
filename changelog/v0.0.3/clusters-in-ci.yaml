@@ -2,3 +2,6 @@ changelog:
   - type: NEW_FEATURE
     description: Allow overriding cluster name via argument to make it easy to spin up and tear down GKE clusters in CI.
     issueLink: https://github.com/solo-io/valet/issues/22
+  - type: NEW_FEATURE
+    description: Support using local artifacts built from valet during ensure.
+    issueLink: https://github.com/solo-io/valet/issues/23

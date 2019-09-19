@@ -10,6 +10,7 @@ import (
 	"github.com/solo-io/valet/cli/options"
 	"go.uber.org/zap"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -80,13 +81,22 @@ func ensureGlooctlIsDownloaded(ctx context.Context, gloo options.Gloo) (string, 
 		contextutils.LoggerFrom(ctx).Errorw("Error checking if glooctl was downloaded, attempting to download", zap.Error(err))
 	}
 
-	if gloo.ValetArtifacts {
+	if gloo.LocalArtifactDir != "" {
+		err = copyFromLocalArtifacts(ctx, gloo, localPathToGlooctl)
+	} else if gloo.ValetArtifacts {
 		err = downloadFromValet(ctx, gloo, localPathToGlooctl)
 	} else {
 		err = downloadFromGithub(ctx, gloo, localPathToGlooctl)
 	}
 
 	return localPathToGlooctl, err
+}
+
+func copyFromLocalArtifacts(ctx context.Context, gloo options.Gloo, localPathToGlooctl string) error {
+	artifactName := fmt.Sprintf("glooctl-%s-amd64", runtime.GOOS)
+	copyFrom := filepath.Join(gloo.LocalArtifactDir, artifactName)
+	cmd := exec.Command("cp", copyFrom, localPathToGlooctl)
+	return cmd.Run()
 }
 
 func downloadFromValet(ctx context.Context, gloo options.Gloo, localPathToGlooctl string) error {
@@ -136,7 +146,7 @@ func getFilepath(gloo options.Gloo) (string, error) {
 		enterpriseText = "-enterprise"
 	}
 	version := gloo.Version
-	if !gloo.ValetArtifacts {
+	if !gloo.ValetArtifacts && gloo.LocalArtifactDir != "" {
 		version = version[1:]
 	}
 	filename := fmt.Sprintf("glooctl%s-%s", enterpriseText, version)

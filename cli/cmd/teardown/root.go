@@ -43,7 +43,6 @@ func teardown(opts *options.Options) error {
 			opts.Ensure.Cluster.GKE.Name = gkeName
 		}
 		opts.Ensure.Cluster.Type = cfg.Cluster.Type
-
 		opts.Ensure.Cluster.Minikube = cfg.Cluster.Minikube
 
 		if opts.Ensure.Cluster.Type == "gke" {

@@ -36,6 +36,7 @@ func Ensure(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 	cmd.PersistentFlags().StringVarP(&opts.Ensure.File, "file", "f", "", "path to file containing config to ensure")
 	cmd.PersistentFlags().BoolVarP(&opts.Ensure.Gloo.ValetArtifacts, "valet-artifacts", "", false, "use valet artifacts (in google storage)")
 	cmd.PersistentFlags().StringVarP(&opts.Ensure.Gloo.Version, "gloo-version", "", "", "gloo version")
+	cmd.PersistentFlags().StringVarP(&opts.Ensure.Cluster.GKE.Name, "gke-cluster-name", "", "", "GKE cluster name to use")
 	cmd.AddCommand(
 		cluster.Cluster(opts, optionsFunc...),
 		gloo.Gloo(opts, optionsFunc...),
@@ -59,8 +60,14 @@ func ensure(opts *options.Options) error {
 	}
 
 	if cfg.Cluster != nil {
-		opts.Ensure.Cluster.Type = cfg.Cluster.Type
+		// TODO: find better way to handle merging config from file and user inputs
+		gkeName := opts.Ensure.Cluster.GKE.Name
 		opts.Ensure.Cluster.GKE = cfg.Cluster.GKE
+		if gkeName != "" {
+			// override
+			opts.Ensure.Cluster.GKE.Name = gkeName
+		}
+		opts.Ensure.Cluster.Type = cfg.Cluster.Type
 		opts.Ensure.Cluster.Minikube = cfg.Cluster.Minikube
 
 		var clusterErr error

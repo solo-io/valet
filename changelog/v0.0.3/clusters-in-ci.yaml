@@ -1,0 +1,4 @@
+changelog:
+  - type: NEW_FEATURE
+    description: Allow overriding cluster name via argument to make it easy to spin up and tear down GKE clusters in CI.
+    issueLink: https://github.com/solo-io/valet/issues/22

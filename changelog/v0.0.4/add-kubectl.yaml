@@ -2,4 +2,3 @@ changelog:
   - type: FIX
     issueLink: https://github.com/solo-io/valet/issues/25
     description: Add kubectl to valet container.
-    

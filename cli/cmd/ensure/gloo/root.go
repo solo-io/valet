@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"os"
+	"strings"
 )
 
 func Gloo(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
@@ -35,31 +36,44 @@ func EnsureGloo(opts *options.Options) error {
 	if err := validateOpts(opts.Top.Ctx, &opts.Ensure.Gloo); err != nil {
 		return err
 	}
-	return ensureGloo(opts.Top.Ctx, opts.Ensure.Gloo)
+	return ensureGloo(&opts.Top, opts.Ensure.Gloo)
 }
 
-func ensureGloo(ctx context.Context, config options.Gloo) error {
+func ensureGloo(top *options.Top, config options.Gloo) error {
 	glooctl := NewGlooctlEnsurer()
-	localPathToGlooctl, err := glooctl.Install(ctx, config)
+	localPathToGlooctl, err := glooctl.Install(top.Ctx, config)
 	if err != nil {
 		return err
 	}
 
 	gloo := NewGlooEnsurer()
-	err = gloo.Install(ctx, config, localPathToGlooctl)
+	err = gloo.Install(top.Ctx, config, localPathToGlooctl)
 	if err != nil {
 		return err
 	}
 
-	err = createAwsResources(ctx, config, localPathToGlooctl)
+	if err := saveGlooUrl(top, localPathToGlooctl); err != nil {
+		return err
+	}
+
+	err = createAwsResources(top.Ctx, config, localPathToGlooctl)
 	if err != nil {
 		return err
 	}
 
 	if config.UiVirtualService != nil {
 		vsCreator := NewKubectlUiVirtualServiceCreator()
-		return vsCreator.Create(ctx, *config.UiVirtualService)
+		return vsCreator.Create(top.Ctx, *config.UiVirtualService)
 	}
+	return nil
+}
+
+func saveGlooUrl(top *options.Top, localPathToGlooctl string) error {
+	out, err := internal.ExecuteCmd(localPathToGlooctl, "proxy", "url")
+	if err != nil {
+		return err
+	}
+	top.GlooUrl = strings.TrimSpace(out)
 	return nil
 }
 

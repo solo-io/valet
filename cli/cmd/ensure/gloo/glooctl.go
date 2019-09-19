@@ -146,7 +146,7 @@ func getFilepath(gloo options.Gloo) (string, error) {
 		enterpriseText = "-enterprise"
 	}
 	version := gloo.Version
-	if !gloo.ValetArtifacts && gloo.LocalArtifactDir != "" {
+	if !gloo.ValetArtifacts && gloo.LocalArtifactDir == "" {
 		version = version[1:]
 	}
 	filename := fmt.Sprintf("glooctl%s-%s", enterpriseText, version)

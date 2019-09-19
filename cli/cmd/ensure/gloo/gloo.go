@@ -129,7 +129,7 @@ func checkForGlooInstall(ctx context.Context, config options.Gloo, localPathToGl
 		}
 	}
 	version := config.Version
-	if !config.ValetArtifacts && config.LocalArtifactDir != "" {
+	if !config.ValetArtifacts && config.LocalArtifactDir == "" {
 		version = version[1:]
 	}
 	for _, pod := range pods.Items {

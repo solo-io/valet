@@ -9,7 +9,8 @@ type Options struct {
 }
 
 type Top struct {
-	Ctx context.Context
+	Ctx     context.Context
+	GlooUrl string
 }
 
 type Ensure struct {
@@ -82,4 +83,21 @@ type Build struct {
 	Version string
 	// if true, then don't push images to docker repo
 	SkipDockerPush bool
+}
+
+type Workflow struct {
+	Name  string `yaml:"name"`
+	Steps []Step `yaml:"steps"`
+}
+
+type Step struct {
+	Apply string `yaml:"apply"`
+	Curl  *Curl  `yaml:"curl"`
+}
+
+type Curl struct {
+	Path       string            `yaml:"path"`
+	Host       string            `yaml:"host"`
+	Headers    map[string]string `yaml:"headers"`
+	StatusCode int               `yaml:"status_code"`
 }

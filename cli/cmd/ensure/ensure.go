@@ -13,6 +13,7 @@ import (
 	"github.com/solo-io/valet/cli/cmd/ensure/demo/petclinic"
 	"github.com/solo-io/valet/cli/cmd/ensure/gloo"
 	"github.com/solo-io/valet/cli/cmd/ensure/resources"
+	workflow2 "github.com/solo-io/valet/cli/cmd/ensure/workflow"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -94,6 +95,12 @@ func ensure(opts *options.Options) error {
 		opts.Ensure.Gloo.Version = glooVersion
 		err := gloo.EnsureGloo(opts)
 		if err != nil {
+			return err
+		}
+	}
+
+	for _, workflow := range cfg.Workflows {
+		if err := workflow2.EnsureWorkflow(opts.Top.Ctx, workflow, opts.Top.GlooUrl); err != nil {
 			return err
 		}
 	}

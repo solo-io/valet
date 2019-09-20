@@ -13,10 +13,11 @@ import (
 )
 
 type ClusterConfig struct {
-	Cluster   *options.Cluster `yaml:"cluster"`
-	Gloo      *options.Gloo    `yaml:"gloo"`
-	Demos     *options.Demos   `yaml:"demos"`
-	Resources []string         `yaml:"resources"`
+	Cluster   *options.Cluster   `yaml:"cluster"`
+	Gloo      *options.Gloo      `yaml:"gloo"`
+	Workflows []options.Workflow `yaml:"workflows"`
+	Demos     *options.Demos     `yaml:"demos"`
+	Resources []string           `yaml:"resources"`
 }
 
 func LoadConfig(ctx context.Context, path string) (*ClusterConfig, error) {

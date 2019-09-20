@@ -1,0 +1,6 @@
+changelog:
+  - type: NEW_FEATURE
+    description: >
+      Add initial support for workflows to apply resources and ensure certain conditions,
+      such getting a 200 on a request to a route after applying a virtual service config.
+    issueLink: https://github.com/solo-io/valet/issues/28

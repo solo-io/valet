@@ -1,0 +1,4 @@
+changelog:
+  - type: FIX
+    issueLink: https://github.com/solo-io/valet/issues/29
+    description: If curling the initial proxy url fails, retry with a new proxy url a few times. This addresses a race condition where glooctl proxy url was returning an unreachable url for a GKE cluster until the external IP was assigned.  

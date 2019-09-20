@@ -44,10 +44,10 @@ func (g *glooEnsurer) Install(ctx context.Context, config options.Gloo, localPat
 	if err != nil {
 		return err
 	}
-	return waitUntilPodsRunning(ctx, config)
+	return waitUntilPodsRunning(ctx)
 }
 
-func waitUntilPodsRunning(ctx context.Context, config options.Gloo) error {
+func waitUntilPodsRunning(ctx context.Context) error {
 	contextutils.LoggerFrom(ctx).Infow("Waiting for pods")
 	kubeClient, err := kube.KubeClient()
 	if err != nil {

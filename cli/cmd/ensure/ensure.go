@@ -100,7 +100,7 @@ func ensure(opts *options.Options) error {
 	}
 
 	for _, workflow := range cfg.Workflows {
-		if err := workflow2.EnsureWorkflow(opts.Top.Ctx, workflow, opts.Top.GlooUrl); err != nil {
+		if err := workflow2.EnsureWorkflow(&opts.Top, workflow); err != nil {
 			return err
 		}
 	}

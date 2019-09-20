@@ -6,32 +6,34 @@ import (
 	"fmt"
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/errors"
+	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/options"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"os/exec"
+	"strings"
 )
 
-func EnsureWorkflow(ctx context.Context, workflow options.Workflow, glooUrl string) error {
-	contextutils.LoggerFrom(ctx).Infow("Starting workflow", zap.String("name", workflow.Name))
+func EnsureWorkflow(top *options.Top, workflow options.Workflow) error {
+	contextutils.LoggerFrom(top.Ctx).Infow("Starting workflow", zap.String("name", workflow.Name))
 	for _, step := range workflow.Steps {
-		if err := runStep(ctx, step, glooUrl); err != nil {
+		if err := runStep(top, step); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func runStep(ctx context.Context, step options.Step, glooUrl string) error {
+func runStep(top *options.Top, step options.Step) error {
 	if step.Apply != "" {
-		if err := apply(ctx, step.Apply); err != nil {
+		if err := apply(top.Ctx, step.Apply); err != nil {
 			return err
 		}
 	}
 
 	if step.Curl != nil {
-		if err := curl(ctx, step.Curl, glooUrl); err != nil {
+		if err := getGlooUrlAndCurlWithRetry(top, step.Curl, 5); err != nil {
 			return err
 		}
 	}
@@ -49,9 +51,36 @@ func apply(ctx context.Context, kubeYaml string) error {
 	return nil
 }
 
-func curl(ctx context.Context, curl *options.Curl, glooUrl string) error {
-	fullUrl := fmt.Sprintf("%s%s", glooUrl, curl.Path)
-	body := bytes.NewReader([]byte(glooUrl))
+func getGlooUrlAndCurlWithRetry(top *options.Top, curl *options.Curl, retries int) error {
+	if top.GlooUrl == "" {
+		glooUrl, err := getGlooUrl(top.LocalPathToGlooctl)
+		if err != nil {
+			return err
+		}
+		top.GlooUrl = glooUrl
+	}
+
+	err := doCurl(top, curl)
+	if err != nil {
+		if retries > 0 {
+			top.GlooUrl = ""
+			return getGlooUrlAndCurlWithRetry(top, curl, retries - 1)
+		}
+	}
+	return err
+}
+
+func getGlooUrl(localPathToGlooctl string) (string, error) {
+	out, err := internal.ExecuteCmd(localPathToGlooctl, "proxy", "url")
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(out), nil
+}
+
+func doCurl(top *options.Top, curl *options.Curl) error {
+	fullUrl := fmt.Sprintf("%s%s", top.GlooUrl, curl.Path)
+	body := bytes.NewReader([]byte(top.GlooUrl))
 	req, err := http.NewRequest("GET", fullUrl, body)
 	if err != nil {
 		return err
@@ -66,7 +95,7 @@ func curl(ctx context.Context, curl *options.Curl, glooUrl string) error {
 		req.Host = curl.Host
 	}
 
-	contextutils.LoggerFrom(ctx).Infow("Curling",
+	contextutils.LoggerFrom(top.Ctx).Infow("Curling",
 		zap.String("url", fullUrl),
 		zap.Any("headers", req.Header),
 		zap.String("host", req.Host))
@@ -85,7 +114,7 @@ func curl(ctx context.Context, curl *options.Curl, glooUrl string) error {
 	if curl.StatusCode != resp.StatusCode {
 		return errors.Errorf("Unexpected status code %s", resp.StatusCode)
 	} else {
-		contextutils.LoggerFrom(ctx).Infow("Curl got expected status code", zap.Int("statusCode", resp.StatusCode))
+		contextutils.LoggerFrom(top.Ctx).Infow("Curl got expected status code", zap.Int("statusCode", resp.StatusCode))
 	}
 	return nil
 }

@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"os"
-	"strings"
 )
 
 func Gloo(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
@@ -45,14 +44,11 @@ func ensureGloo(top *options.Top, config options.Gloo) error {
 	if err != nil {
 		return err
 	}
+	top.LocalPathToGlooctl = localPathToGlooctl
 
 	gloo := NewGlooEnsurer()
 	err = gloo.Install(top.Ctx, config, localPathToGlooctl)
 	if err != nil {
-		return err
-	}
-
-	if err := saveGlooUrl(top, localPathToGlooctl); err != nil {
 		return err
 	}
 
@@ -65,15 +61,6 @@ func ensureGloo(top *options.Top, config options.Gloo) error {
 		vsCreator := NewKubectlUiVirtualServiceCreator()
 		return vsCreator.Create(top.Ctx, *config.UiVirtualService)
 	}
-	return nil
-}
-
-func saveGlooUrl(top *options.Top, localPathToGlooctl string) error {
-	out, err := internal.ExecuteCmd(localPathToGlooctl, "proxy", "url")
-	if err != nil {
-		return err
-	}
-	top.GlooUrl = strings.TrimSpace(out)
 	return nil
 }
 

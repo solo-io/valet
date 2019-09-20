@@ -9,8 +9,9 @@ type Options struct {
 }
 
 type Top struct {
-	Ctx     context.Context
-	GlooUrl string
+	Ctx                context.Context
+	LocalPathToGlooctl string
+	GlooUrl            string
 }
 
 type Ensure struct {

@@ -1,0 +1,4 @@
+changelog:
+  - type: BREAKING_CHANGE
+    issueLink: https://github.com/solo-io/valet/issues/31
+    description: Standardize on camel case instead of snake case for yaml config.

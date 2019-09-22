@@ -62,6 +62,7 @@ func (w *workflowRunner) cleanupResources(ctx context.Context) error {
 				return err
 			}
 		}
+		delete(w.resources, k)
 	}
 	return nil
 }
@@ -171,7 +172,7 @@ func (w *workflowRunner) doCurl(ctx context.Context, curl *api.Curl) error {
 	}
 
 	if curl.StatusCode != resp.StatusCode {
-		return errors.Errorf("Unexpected status code %s", resp.StatusCode)
+		return errors.Errorf("Unexpected status code %d", resp.StatusCode)
 	} else {
 		contextutils.LoggerFrom(ctx).Infow("Curl got expected status code", zap.Int("statusCode", resp.StatusCode))
 	}

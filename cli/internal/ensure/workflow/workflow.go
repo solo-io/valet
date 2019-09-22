@@ -24,12 +24,15 @@ type WorkflowRunner interface {
 func NewWorkflowRunner(gloo gloo.GlooManager) WorkflowRunner {
 	return &workflowRunner{
 		gloo: gloo,
+		resources: make(map[string]bool),
 	}
 }
 
 type workflowRunner struct {
 	gloo    gloo.GlooManager
+
 	glooUrl string
+	resources map[string]bool
 }
 
 func (w *workflowRunner) Run(ctx context.Context, workflowPath string) error {
@@ -54,9 +57,12 @@ func (w *workflowRunner) Run(ctx context.Context, workflowPath string) error {
 }
 
 func (w *workflowRunner) cleanupStep(ctx context.Context, step api.Step) error {
-	if step.Apply != "" {
-		if err := kubectlDelete(ctx, step.Apply); err != nil {
-			return err
+	for k, v  := range w.resources {
+		if v {
+			// resource was not deleted, clean up
+			if err := kubectlDelete(ctx, k); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -67,12 +73,14 @@ func (w *workflowRunner) runStep(ctx context.Context, step api.Step) error {
 		if err := apply(ctx, step.Apply); err != nil {
 			return err
 		}
+		w.resources[step.Apply] = true
 	}
 
 	if step.Delete != "" {
 		if err := kubectlDelete(ctx, step.Delete); err != nil {
 			return err
 		}
+		w.resources[step.Delete] = false
 	}
 
 	if step.Curl != nil {

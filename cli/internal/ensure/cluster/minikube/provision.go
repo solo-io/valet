@@ -3,15 +3,15 @@ package minikube
 import (
 	"context"
 	"github.com/solo-io/go-utils/contextutils"
-	"github.com/solo-io/valet/cli/cmd/ensure/cluster/cluster"
-	"github.com/solo-io/valet/cli/options"
+	"github.com/solo-io/valet/cli/api"
+	"github.com/solo-io/valet/cli/internal/ensure/cluster"
 	"go.uber.org/zap"
 )
 
 var _ cluster.Provisioner = new(minikubeProvisioner)
 
-func NewMinikubeProvisionerFromOpts(opts options.Cluster) *minikubeProvisioner {
-	minikubeCluster := NewMinikubeClusterFromOpts(opts)
+func NewMinikubeProvisionerFromOpts(cluster *api.Minikube) *minikubeProvisioner {
+	minikubeCluster := NewMinikubeClusterFromOpts(cluster)
 	return &minikubeProvisioner{
 		cluster: minikubeCluster,
 	}
@@ -43,8 +43,3 @@ func (m *minikubeProvisioner) Ensure(ctx context.Context) error {
 func (m *minikubeProvisioner) GetCluster() cluster.KubeCluster {
 	return m.cluster
 }
-
-
-
-
-

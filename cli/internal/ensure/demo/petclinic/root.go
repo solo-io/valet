@@ -3,71 +3,56 @@ package petclinic
 import (
 	"context"
 	"fmt"
-	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/go-utils/contextutils"
-	"github.com/solo-io/valet/cli/cmd/ensure/gloo"
+	"github.com/solo-io/valet/cli/api"
 	"github.com/solo-io/valet/cli/internal"
-	"github.com/solo-io/valet/cli/options"
-	"github.com/spf13/cobra"
+	"github.com/solo-io/valet/cli/internal/ensure/gloo"
 	"go.uber.org/zap"
 )
 
-func Petclinic(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "petclinic",
-		Short:   "ensuring state of petclinic demo",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return EnsurePetclinic(opts)
-		},
-	}
-
-	cliutils.ApplyOptions(cmd, optionsFunc)
-	return cmd
-}
-
-func EnsurePetclinic(opts *options.Options) error {
-	files := []string {
+func EnsurePetclinic(ctx context.Context, petclinic *api.Petclinic) error {
+	files := []string{
 		"https://raw.githubusercontent.com/sololabs/demos/master/petclinic_demo/petclinic.yaml",
 		"https://raw.githubusercontent.com/sololabs/demos/master/petclinic_demo/petclinic-vets.yaml",
 		"https://raw.githubusercontent.com/sololabs/demos/master/petclinic_demo/petclinic-db.yaml",
 		"https://raw.githubusercontent.com/sololabs/demos/master/petclinic_demo/petclinic-virtual-service.yaml",
 	}
-	err := applyFiles(opts.Top.Ctx, files...)
+	err := applyFiles(ctx, files...)
 	if err != nil {
 		return err
 	}
 
-	if opts.Ensure.Demos.Petclinic == nil || opts.Ensure.Demos.Petclinic.DNS == nil {
+	if petclinic == nil || petclinic.DNS == nil {
 		return nil
 	}
 
-	if opts.Ensure.Demos.Petclinic.DNS.HostedZone == "" {
-		contextutils.LoggerFrom(opts.Top.Ctx).Infow("No dns config provided")
+	if petclinic.DNS.HostedZone == "" {
+		contextutils.LoggerFrom(ctx).Infow("No dns config provided")
 	}
 
 	client, err := gloo.NewAwsDnsClient()
 	if err != nil {
-		contextutils.LoggerFrom(opts.Top.Ctx).Errorw("Error creating aws dns client", zap.Error(err))
+		contextutils.LoggerFrom(ctx).Errorw("Error creating aws dns client", zap.Error(err))
 		return err
 	}
 
-	proxyIp, err := gloo.GetGlooProxyExternalIp(opts.Top.Ctx)
+	proxyIp, err := gloo.GetGlooProxyExternalIp(ctx)
 	if err != nil {
 		return err
 	}
-	domain := opts.Ensure.Demos.Petclinic.DNS.Domain
+	domain := petclinic.DNS.Domain
 	if domain == "" {
-		domain, err = internal.CreateDomain(opts.Top.Ctx, "petclinic", opts.Ensure.Demos.Petclinic.DNS.HostedZone)
+		domain, err = internal.CreateDomain(ctx, "petclinic", petclinic.DNS.HostedZone)
 		if err != nil {
 			return err
 		}
 	}
-	err = client.CreateMapping(opts.Top.Ctx, opts.Ensure.Demos.Petclinic.DNS.HostedZone, domain, proxyIp)
+	err = client.CreateMapping(ctx, petclinic.DNS.HostedZone, domain, proxyIp)
 	if err != nil {
 		return err
 	}
 
-	return patchPetclinicVsWithDomain(opts.Top.Ctx, domain)
+	return patchPetclinicVsWithDomain(ctx, domain)
 }
 
 func applyFiles(ctx context.Context, files ...string) error {

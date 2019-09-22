@@ -5,15 +5,12 @@ go 1.12
 require (
 	cloud.google.com/go v0.43.0
 	github.com/aws/aws-sdk-go v1.21.10
-	github.com/docker/docker v1.13.1
 	github.com/ghodss/yaml v1.0.0
 	github.com/google/go-github v17.0.0+incompatible
-	github.com/pkg/errors v0.8.1
 	github.com/solo-io/go-utils v0.9.17
 	github.com/spf13/cobra v0.0.3
 	go.uber.org/zap v1.9.1
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
-	golang.org/x/sync v0.0.0-20190423024810-112230192c58
 	google.golang.org/api v0.7.0
 	google.golang.org/genproto v0.0.0-20190716160619-c506a9f90610
 	google.golang.org/grpc v1.21.1

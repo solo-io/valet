@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 	"github.com/solo-io/go-utils/contextutils"
+	"github.com/solo-io/valet/cli/api"
 	"github.com/solo-io/valet/cli/internal"
-	"github.com/solo-io/valet/cli/options"
 	"go.uber.org/zap"
 	"strings"
 )
 
 type UiVirtualServiceCreator interface {
-	Create(ctx context.Context, glooui options.UiVirtualService) error
+	Create(ctx context.Context, glooui api.UiVirtualService) error
 }
 
 var _ UiVirtualServiceCreator = new(kubectlUiVirtualServiceCreator)
@@ -44,7 +44,7 @@ spec:
               namespace: gloo-system`
 )
 
-func (k *kubectlUiVirtualServiceCreator) Create(ctx context.Context, glooui options.UiVirtualService) error {
+func (k *kubectlUiVirtualServiceCreator) Create(ctx context.Context, glooui api.UiVirtualService) error {
 	contextutils.LoggerFrom(ctx).Infow("Creating ui virtual service")
 	out, err := internal.ExecuteCmdStdIn(GlooUiVirtualService, "kubectl", "apply", "-f", "-")
 	if err != nil {

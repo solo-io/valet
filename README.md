@@ -113,13 +113,13 @@ gloo:
   aws:
     secret: true
     upstream: true
-  ui_virtual_service:
+  uiVirtualService:
     dns:
-      hosted_zone: corp.solo.io.
+      hostedZone: corp.solo.io.
 demos:
   petclinic:
     dns:
-      hosted_zone: corp.solo.io.
+      hostedZone: corp.solo.io.
 ```
 
 Valet will ensure the cluster has the latest GlooE with the demo set up and URLs to access petclinic and the Gloo UI. 

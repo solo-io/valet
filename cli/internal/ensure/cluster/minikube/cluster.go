@@ -3,34 +3,27 @@ package minikube
 import (
 	"context"
 	"github.com/solo-io/go-utils/contextutils"
-	"github.com/solo-io/valet/cli/cmd/ensure/cluster/cluster"
+	"github.com/solo-io/valet/cli/api"
 	"github.com/solo-io/valet/cli/internal"
-	"github.com/solo-io/valet/cli/options"
+	"github.com/solo-io/valet/cli/internal/ensure/cluster"
 	"go.uber.org/zap"
 	"strings"
 )
 
 var _ cluster.KubeCluster = new(minikubeCluster)
 
-type MinikubeClusterConfig struct {
-	KubeVersion     string `split_words:"true" default:"v1.13.0"`
-}
-
-func NewMinikubeClusterFromOpts(opts options.Cluster) *minikubeCluster {
-	config := MinikubeClusterConfig{
-		KubeVersion: opts.KubeVersion,
-	}
+func NewMinikubeClusterFromOpts(cluster *api.Minikube) *minikubeCluster {
 	return &minikubeCluster{
-		config: config,
+		cluster: cluster,
 	}
 }
 
 type minikubeCluster struct {
-	config MinikubeClusterConfig
+	cluster *api.Minikube
 }
 
 func (m *minikubeCluster) KubeVersion(ctx context.Context) string {
-	return m.config.KubeVersion
+	return m.cluster.KubeVersion
 }
 
 func (m *minikubeCluster) IsRunning(ctx context.Context) (bool, error) {
@@ -59,7 +52,7 @@ func (m *minikubeCluster) SetKubeContext(ctx context.Context) error {
 
 func (m *minikubeCluster) Create(ctx context.Context) error {
 	contextutils.LoggerFrom(ctx).Infow("Creating minikube")
-	out, err := internal.ExecuteCmd("minikube", "start", "--memory=8192", "--cpus=4", "--kubernetes-version=" + m.config.KubeVersion)
+	out, err := internal.ExecuteCmd("minikube", "start", "--memory=8192", "--cpus=4", "--kubernetes-version="+m.cluster.KubeVersion)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Error creating minikube",
 			zap.Error(err),
@@ -82,5 +75,3 @@ func (m *minikubeCluster) Destroy(ctx context.Context) error {
 	}
 	return nil
 }
-
-

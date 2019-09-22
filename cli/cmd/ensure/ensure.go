@@ -5,15 +5,9 @@ import (
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/errors"
+	"github.com/solo-io/valet/cli/api"
 	"github.com/solo-io/valet/cli/cmd/config"
-	"github.com/solo-io/valet/cli/cmd/ensure/cluster"
-	"github.com/solo-io/valet/cli/cmd/ensure/cluster/gke"
-	"github.com/solo-io/valet/cli/cmd/ensure/cluster/minikube"
-	"github.com/solo-io/valet/cli/cmd/ensure/demo"
-	"github.com/solo-io/valet/cli/cmd/ensure/demo/petclinic"
-	"github.com/solo-io/valet/cli/cmd/ensure/gloo"
-	"github.com/solo-io/valet/cli/cmd/ensure/resources"
-	workflow2 "github.com/solo-io/valet/cli/cmd/ensure/workflow"
+	ensureimpl "github.com/solo-io/valet/cli/internal/ensure"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -35,15 +29,10 @@ func Ensure(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	cmd.PersistentFlags().StringVarP(&opts.Ensure.File, "file", "f", "", "path to file containing config to ensure")
-	cmd.PersistentFlags().BoolVarP(&opts.Ensure.Gloo.ValetArtifacts, "valet-artifacts", "", false, "use valet artifacts (in google storage)")
-	cmd.PersistentFlags().StringVarP(&opts.Ensure.Gloo.Version, "gloo-version", "", "", "gloo version")
-	cmd.PersistentFlags().StringVarP(&opts.Ensure.Cluster.GKE.Name, "gke-cluster-name", "", "", "GKE cluster name to use")
-	cmd.PersistentFlags().StringVarP(&opts.Ensure.Gloo.LocalArtifactDir, "local-artifacts-dir", "", "", "local directory containing artifacts")
-	cmd.AddCommand(
-		cluster.Cluster(opts, optionsFunc...),
-		gloo.Gloo(opts, optionsFunc...),
-		demo.Demo(opts, optionsFunc...),
-		resources.Resources(opts, optionsFunc...))
+	cmd.PersistentFlags().BoolVarP(&opts.Ensure.ValetArtifacts, "valet-artifacts", "", false, "use valet artifacts (in google storage)")
+	cmd.PersistentFlags().StringVarP(&opts.Ensure.GlooVersion, "gloo-version", "", "", "gloo version")
+	cmd.PersistentFlags().StringVarP(&opts.Ensure.GkeClusterName, "gke-cluster-name", "", "", "GKE cluster name to use")
+	cmd.PersistentFlags().StringVarP(&opts.Ensure.LocalArtifactsDir, "local-artifacts-dir", "", "", "local directory containing artifacts")
 	return cmd
 }
 
@@ -61,69 +50,23 @@ func ensure(opts *options.Options) error {
 		return err
 	}
 
+	valet := &api.Valet{
+		ValetArtifacts:    opts.Ensure.ValetArtifacts,
+		LocalArtifactsDir: opts.Ensure.LocalArtifactsDir,
+	}
+
 	if cfg.Cluster != nil {
-		// TODO: find better way to handle merging config from file and user inputs
-		gkeName := opts.Ensure.Cluster.GKE.Name
-		opts.Ensure.Cluster.GKE = cfg.Cluster.GKE
-		if gkeName != "" {
-			// override
-			opts.Ensure.Cluster.GKE.Name = gkeName
-		}
-		opts.Ensure.Cluster.Type = cfg.Cluster.Type
-		opts.Ensure.Cluster.Minikube = cfg.Cluster.Minikube
-
-		var clusterErr error
-		if opts.Ensure.Cluster.Type == "gke" {
-			clusterErr = gke.EnsureGke(opts)
-		} else if opts.Ensure.Cluster.Type == "minikube" {
-			clusterErr = minikube.EnsureMinikube(opts)
-		} else {
-			return errors.Errorf("unknown type", zap.String("type", opts.Ensure.Cluster.Type))
-		}
-		if clusterErr != nil {
-			return clusterErr
+		if opts.Ensure.GkeClusterName != "" {
+			cfg.Cluster.GKE.Name = opts.Ensure.GkeClusterName
 		}
 	}
-
 	if cfg.Gloo != nil {
-		glooVersion := opts.Ensure.Gloo.Version
-		valetArtifacts := opts.Ensure.Gloo.ValetArtifacts
-		localArtifactDir := opts.Ensure.Gloo.LocalArtifactDir
-		opts.Ensure.Gloo = *cfg.Gloo
-		opts.Ensure.Gloo.ValetArtifacts = valetArtifacts
-		opts.Ensure.Gloo.LocalArtifactDir = localArtifactDir
-		opts.Ensure.Gloo.Version = glooVersion
-		err := gloo.EnsureGloo(opts)
-		if err != nil {
-			return err
+		if opts.Ensure.GlooVersion != "" {
+			cfg.Gloo.Version = opts.Ensure.GlooVersion
 		}
 	}
 
-	for _, workflow := range cfg.Workflows {
-		if err := workflow2.EnsureWorkflow(&opts.Top, workflow); err != nil {
-			return err
-		}
-	}
-
-	if cfg.Demos != nil {
-		if cfg.Demos.Petclinic != nil {
-			opts.Ensure.Demos.Petclinic = cfg.Demos.Petclinic
-			err := petclinic.EnsurePetclinic(opts)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	if cfg.Resources != nil {
-		opts.Ensure.Resources = cfg.Resources
-		err := resources.EnsureResources(opts)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return ensureimpl.NewEnsurer().Ensure(opts.Top.Ctx, valet, cfg)
 }
 
 func LoadEnv(ctx context.Context) error {

@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -22,8 +21,5 @@ func ExecuteCmdStdIn(stdIn, filepath string, args ...string) (string, error) {
 		}
 	}
 	out, err := cmd.CombinedOutput()
-	if err != nil {
-		err = fmt.Errorf("%s (%v)", out, err)
-	}
 	return string(out), err
 }

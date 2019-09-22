@@ -5,23 +5,15 @@ import (
 	"context"
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/osutils"
-	"github.com/solo-io/valet/cli/options"
+	"github.com/solo-io/valet/cli/api"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 	"net/http"
 	"net/url"
 )
 
-type ClusterConfig struct {
-	Cluster   *options.Cluster   `yaml:"cluster"`
-	Gloo      *options.Gloo      `yaml:"gloo"`
-	Workflows []options.Workflow `yaml:"workflows"`
-	Demos     *options.Demos     `yaml:"demos"`
-	Resources []string           `yaml:"resources"`
-}
-
-func LoadConfig(ctx context.Context, path string) (*ClusterConfig, error) {
-	var c ClusterConfig
+func LoadConfig(ctx context.Context, path string) (*api.EnsureConfig, error) {
+	var c api.EnsureConfig
 
 	bytes, err := loadBytesFromPath(ctx, path)
 	if err != nil {
@@ -41,24 +33,21 @@ func LoadConfig(ctx context.Context, path string) (*ClusterConfig, error) {
 
 func loadBytesFromPath(ctx context.Context, path string) ([]byte, error) {
 	if isValidUrl(path) {
-		bytes, err := loadBytesFromUrl(path)
+		contents, err := loadBytesFromUrl(path)
 		if err == nil {
-			return bytes, nil
+			return contents, nil
 		}
-		contextutils.LoggerFrom(ctx).Warnw("Could not read url, trying to read file",
-			zap.Error(err),
-			zap.String("path", path))
 	}
 
 	osClient := osutils.NewOsClient()
-	bytes, err := osClient.ReadFile(path)
+	contents, err := osClient.ReadFile(path)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Could not read file",
 			zap.Error(err),
 			zap.String("path", path))
 		return nil, err
 	}
-	return bytes, nil
+	return contents, nil
 }
 
 func loadBytesFromUrl(path string) ([]byte, error) {

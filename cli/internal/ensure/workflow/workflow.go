@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 var _ WorkflowRunner = new(workflowRunner)
@@ -124,6 +125,7 @@ func (w *workflowRunner) getGlooUrlAndCurlWithRetry(ctx context.Context, curl *a
 	if err != nil {
 		if retries > 0 {
 			w.glooUrl = ""
+			time.Sleep(3 * time.Second)
 			return w.getGlooUrlAndCurlWithRetry(ctx, curl, retries-1)
 		}
 	}

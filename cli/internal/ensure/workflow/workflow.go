@@ -48,15 +48,13 @@ func (w *workflowRunner) Run(ctx context.Context, workflowPath string) error {
 		}
 	}
 	contextutils.LoggerFrom(ctx).Infow("Workflow passed, cleaning up resources")
-	for _, step := range workflow.Steps {
-		if err := w.cleanupStep(ctx, step); err != nil {
-			return err
-		}
+	if err := w.cleanupResources(ctx); err != nil {
+		return err
 	}
 	return nil
 }
 
-func (w *workflowRunner) cleanupStep(ctx context.Context, step api.Step) error {
+func (w *workflowRunner) cleanupResources(ctx context.Context) error {
 	for k, v  := range w.resources {
 		if v {
 			// resource was not deleted, clean up

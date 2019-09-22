@@ -1,64 +1,71 @@
-package ensure
+package api
 
 import (
 	"bytes"
 	"context"
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/osutils"
-	"github.com/solo-io/valet/cli/options"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 	"net/http"
 	"net/url"
 )
 
-type ClusterConfig struct {
-	Cluster   *options.Cluster   `yaml:"cluster"`
-	Gloo      *options.Gloo      `yaml:"gloo"`
-	Workflows []options.Workflow `yaml:"workflows"`
-	Demos     *options.Demos     `yaml:"demos"`
-	Resources []string           `yaml:"resources"`
-}
+func LoadConfig(ctx context.Context, path string) (*EnsureConfig, error) {
+	var c EnsureConfig
 
-func LoadConfig(ctx context.Context, path string) (*ClusterConfig, error) {
-	var c ClusterConfig
-
-	bytes, err := loadBytesFromPath(ctx, path)
+	b, err := loadBytesFromPath(ctx, path)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := yaml.UnmarshalStrict(bytes, &c); err != nil {
+	if err := yaml.UnmarshalStrict(b, &c); err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Failed to unmarshal file",
 			zap.Error(err),
 			zap.String("path", path),
-			zap.ByteString("bytes", bytes))
+			zap.ByteString("bytes", b))
 		return nil, err
 	}
 
 	return &c, nil
 }
 
+func LoadWorkflow(ctx context.Context, path string) (*Workflow, error) {
+	var w Workflow
+
+	b, err := loadBytesFromPath(ctx, path)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := yaml.UnmarshalStrict(b, &w); err != nil {
+		contextutils.LoggerFrom(ctx).Errorw("Failed to unmarshal file",
+			zap.Error(err),
+			zap.String("path", path),
+			zap.ByteString("bytes", b))
+		return nil, err
+	}
+
+	return &w, nil
+}
+
 func loadBytesFromPath(ctx context.Context, path string) ([]byte, error) {
 	if isValidUrl(path) {
-		bytes, err := loadBytesFromUrl(path)
+		contents, err := loadBytesFromUrl(path)
 		if err == nil {
-			return bytes, nil
+			return contents, nil
 		}
-		contextutils.LoggerFrom(ctx).Warnw("Could not read url, trying to read file",
-			zap.Error(err),
-			zap.String("path", path))
 	}
 
 	osClient := osutils.NewOsClient()
-	bytes, err := osClient.ReadFile(path)
+	contents, err := osClient.ReadFile(path)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Could not read file",
 			zap.Error(err),
 			zap.String("path", path))
 		return nil, err
 	}
-	return bytes, nil
+	return contents, nil
 }
 
 func loadBytesFromUrl(path string) ([]byte, error) {

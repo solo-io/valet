@@ -1,14 +1,13 @@
 package teardown
 
 import (
-	"github.com/pkg/errors"
 	"github.com/solo-io/go-utils/cliutils"
+	"github.com/solo-io/valet/cli/api"
 	"github.com/solo-io/valet/cli/cmd/ensure"
-	"github.com/solo-io/valet/cli/cmd/ensure/cluster/gke"
-	"github.com/solo-io/valet/cli/cmd/ensure/cluster/minikube"
+	"github.com/solo-io/valet/cli/internal/ensure/cluster/gke"
+	"github.com/solo-io/valet/cli/internal/ensure/cluster/minikube"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 )
 
 func Teardown(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
@@ -22,12 +21,12 @@ func Teardown(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra
 
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	cmd.PersistentFlags().StringVarP(&opts.Ensure.File, "file", "f", "", "path to file containing config to ensure")
-	cmd.PersistentFlags().StringVarP(&opts.Ensure.Cluster.GKE.Name, "gke-cluster-name", "", "", "GKE cluster name to use")
+	cmd.PersistentFlags().StringVarP(&opts.Ensure.GkeClusterName, "gke-cluster-name", "", "", "GKE cluster name to use")
 	return cmd
 }
 
 func teardown(opts *options.Options) error {
-	cfg, err := ensure.LoadConfig(opts.Top.Ctx, opts.Ensure.File)
+	cfg, err := api.LoadConfig(opts.Top.Ctx, opts.Ensure.File)
 	if err != nil {
 		return err
 	}
@@ -37,25 +36,18 @@ func teardown(opts *options.Options) error {
 	}
 
 	if cfg.Cluster != nil {
-		gkeName := opts.Ensure.Cluster.GKE.Name
-		opts.Ensure.Cluster.GKE = cfg.Cluster.GKE
-		if gkeName != "" {
-			opts.Ensure.Cluster.GKE.Name = gkeName
-		}
-		opts.Ensure.Cluster.Type = cfg.Cluster.Type
-		opts.Ensure.Cluster.Minikube = cfg.Cluster.Minikube
-
-		if opts.Ensure.Cluster.Type == "gke" {
-			cluster, err := gke.NewGkeClusterFromOpts(opts.Top.Ctx, opts.Ensure.Cluster)
+		if cfg.Cluster.GKE != nil {
+			if opts.Ensure.GkeClusterName != "" {
+				cfg.Cluster.GKE.Name = opts.Ensure.GkeClusterName
+			}
+			cluster, err := gke.NewGkeClusterFromOpts(opts.Top.Ctx, cfg.Cluster.GKE)
 			if err != nil {
 				return err
 			}
 			return cluster.Destroy(opts.Top.Ctx)
-		} else if opts.Ensure.Cluster.Type == "minikube" {
-			cluster := minikube.NewMinikubeClusterFromOpts(opts.Ensure.Cluster)
+		} else if cfg.Cluster.Minikube != nil {
+			cluster := minikube.NewMinikubeClusterFromOpts(cfg.Cluster.Minikube)
 			return cluster.Destroy(opts.Top.Ctx)
-		} else {
-			return errors.Errorf("unknown type", zap.String("type", opts.Ensure.Cluster.Type))
 		}
 	}
 	return nil

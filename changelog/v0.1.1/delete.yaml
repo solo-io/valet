@@ -1,0 +1,4 @@
+changelog:
+  - type: FIX
+    issueLink: https://github.com/solo-io/valet/issues/37
+    description: Only try cleaning up files that weren't cleaned up during the workflow.

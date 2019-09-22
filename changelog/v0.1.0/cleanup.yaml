@@ -10,3 +10,6 @@ changelog:
   - type: BREAKING_CHANGE
     description: Split workflows into separate files.
     issueLink: https://github.com/solo-io/valet/issues/35
+  - type: NEW_FEATURE
+    description: Add delete option for a workflow step.
+    issueLink: https://github.com/solo-io/valet/issues/35

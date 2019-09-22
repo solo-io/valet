@@ -1,34 +1,52 @@
-package ensure
+package api
 
 import (
 	"bytes"
 	"context"
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/osutils"
-	"github.com/solo-io/valet/cli/api"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 	"net/http"
 	"net/url"
 )
 
-func LoadConfig(ctx context.Context, path string) (*api.EnsureConfig, error) {
-	var c api.EnsureConfig
+func LoadConfig(ctx context.Context, path string) (*EnsureConfig, error) {
+	var c EnsureConfig
 
-	bytes, err := loadBytesFromPath(ctx, path)
+	b, err := loadBytesFromPath(ctx, path)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := yaml.UnmarshalStrict(bytes, &c); err != nil {
+	if err := yaml.UnmarshalStrict(b, &c); err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Failed to unmarshal file",
 			zap.Error(err),
 			zap.String("path", path),
-			zap.ByteString("bytes", bytes))
+			zap.ByteString("bytes", b))
 		return nil, err
 	}
 
 	return &c, nil
+}
+
+func LoadWorkflow(ctx context.Context, path string) (*Workflow, error) {
+	var w Workflow
+
+	b, err := loadBytesFromPath(ctx, path)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := yaml.UnmarshalStrict(b, &w); err != nil {
+		contextutils.LoggerFrom(ctx).Errorw("Failed to unmarshal file",
+			zap.Error(err),
+			zap.String("path", path),
+			zap.ByteString("bytes", b))
+		return nil, err
+	}
+
+	return &w, nil
 }
 
 func loadBytesFromPath(ctx context.Context, path string) ([]byte, error) {

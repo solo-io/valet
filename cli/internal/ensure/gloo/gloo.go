@@ -130,15 +130,14 @@ func (m *glooManager) installGloo(ctx context.Context) error {
 	contextutils.LoggerFrom(ctx).Infow("Running glooctl install")
 	args := []string{"install", "gateway"}
 	if m.gloo.Enterprise {
-
 		args = append(args, "enterprise", "--license-key", m.gloo.LicenseKey)
 	}
 	if m.valet.LocalArtifactsDir != "" && m.gloo.Version != "" {
 		var helmChart string
 		if m.gloo.Enterprise {
-			helmChart = fmt.Sprintf("_artifacts/gloo-%s.tgz", m.gloo.Version)
-		} else {
 			helmChart = fmt.Sprintf("_artifacts/gloo-ee-%s.tgz", m.gloo.Version)
+		} else {
+			helmChart = fmt.Sprintf("_artifacts/gloo-%s.tgz", m.gloo.Version)
 		}
 		args = append(args, "-f", helmChart)
 		contextutils.LoggerFrom(ctx).Infow("Using helm chart from local artifacts", zap.String("helmChart", helmChart))
@@ -158,7 +157,7 @@ func (m *glooManager) installGloo(ctx context.Context) error {
 		return MustProvideVersionError
 	}
 
-	if m.gloo.Version != "" {
+	if m.gloo.Version != "" && !m.valet.ValetArtifacts && m.valet.LocalArtifactsDir == "" {
 		var helmChart string
 		if m.gloo.Enterprise {
 			helmChart = fmt.Sprintf("https://storage.googleapis.com/gloo-ee-helm/charts/gloo-ee-%s.tgz", m.gloo.Version)

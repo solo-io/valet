@@ -1,3 +1,12 @@
 changelog:
   - type: NON_USER_FACING
     description: Large refactor to clean up cruft and less useful commands since it's an API break. 
+  - type: NEW_FEATURE
+    description: Use open source glooctl for managing open source and enterprise gloo.
+    issueLink: https://github.com/solo-io/valet/issues/34
+  - type: NEW_FEATURE
+    description: Clean up resources created after a workflow ends.
+    issueLink: https://github.com/solo-io/valet/issues/35
+  - type: BREAKING_CHANGE
+    description: Split workflows into separate files.
+    issueLink: https://github.com/solo-io/valet/issues/35

@@ -1,11 +1,11 @@
 package api
 
 type EnsureConfig struct {
-	Cluster   *Cluster   `yaml:"cluster"`
-	Gloo      *Gloo      `yaml:"gloo"`
-	Workflows []Workflow `yaml:"workflows"`
-	Demos     *Demos     `yaml:"demos"`
-	Resources []string   `yaml:"resources"`
+	Cluster   *Cluster `yaml:"cluster"`
+	Gloo      *Gloo    `yaml:"gloo"`
+	Workflows []string `yaml:"workflows"`
+	Demos     *Demos   `yaml:"demos"`
+	Resources []string `yaml:"resources"`
 }
 
 // Ensure the cluster is running with the desired specification. This will
@@ -86,8 +86,9 @@ type Workflow struct {
 }
 
 type Step struct {
-	Apply string `yaml:"apply"`
-	Curl  *Curl  `yaml:"curl"`
+	Apply  string `yaml:"apply"`
+	Delete string `yaml:"delete"`
+	Curl   *Curl  `yaml:"curl"`
 }
 
 type Curl struct {

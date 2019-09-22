@@ -18,7 +18,7 @@ import (
 var _ WorkflowRunner = new(workflowRunner)
 
 type WorkflowRunner interface {
-	Run(ctx context.Context, workflow api.Workflow) error
+	Run(ctx context.Context, workflowPath string) error
 }
 
 func NewWorkflowRunner(gloo gloo.GlooManager) WorkflowRunner {
@@ -32,7 +32,12 @@ type workflowRunner struct {
 	glooUrl string
 }
 
-func (w *workflowRunner) Run(ctx context.Context, workflow api.Workflow) error {
+func (w *workflowRunner) Run(ctx context.Context, workflowPath string) error {
+	contextutils.LoggerFrom(ctx).Infow("Loading workflow", zap.String("path", workflowPath))
+	workflow, err := api.LoadWorkflow(ctx, workflowPath)
+	if err != nil {
+		return err
+	}
 	contextutils.LoggerFrom(ctx).Infow("Starting workflow", zap.String("name", workflow.Name))
 	for _, step := range workflow.Steps {
 		if err := w.runStep(ctx, step); err != nil {
@@ -60,6 +65,12 @@ func (w *workflowRunner) cleanupStep(ctx context.Context, step api.Step) error {
 func (w *workflowRunner) runStep(ctx context.Context, step api.Step) error {
 	if step.Apply != "" {
 		if err := apply(ctx, step.Apply); err != nil {
+			return err
+		}
+	}
+
+	if step.Delete != "" {
+		if err := kubectlDelete(ctx, step.Delete); err != nil {
 			return err
 		}
 	}

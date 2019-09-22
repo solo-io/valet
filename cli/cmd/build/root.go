@@ -27,9 +27,6 @@ var (
 	CouldNotCreateManifestsError = func(err error) error {
 		return errors.Wrapf(err, "Could not create charts and manifests")
 	}
-	FailedToSyncArtifactsError = func(err error) error {
-		return errors.Wrapf(err, "Failed to sync artifacts to bucket")
-	}
 )
 
 func Build(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {

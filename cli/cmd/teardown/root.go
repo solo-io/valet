@@ -2,6 +2,7 @@ package teardown
 
 import (
 	"github.com/solo-io/go-utils/cliutils"
+	"github.com/solo-io/valet/cli/api"
 	"github.com/solo-io/valet/cli/cmd/ensure"
 	"github.com/solo-io/valet/cli/internal/ensure/cluster/gke"
 	"github.com/solo-io/valet/cli/internal/ensure/cluster/minikube"
@@ -25,7 +26,7 @@ func Teardown(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra
 }
 
 func teardown(opts *options.Options) error {
-	cfg, err := ensure.LoadConfig(opts.Top.Ctx, opts.Ensure.File)
+	cfg, err := api.LoadConfig(opts.Top.Ctx, opts.Ensure.File)
 	if err != nil {
 		return err
 	}

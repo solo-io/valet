@@ -41,7 +41,7 @@ func ensure(opts *options.Options) error {
 		return MustProvideFileError
 	}
 
-	cfg, err := LoadConfig(opts.Top.Ctx, opts.Ensure.File)
+	cfg, err := api.LoadConfig(opts.Top.Ctx, opts.Ensure.File)
 	if err != nil {
 		return err
 	}

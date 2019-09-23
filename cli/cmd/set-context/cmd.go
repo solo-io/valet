@@ -27,7 +27,6 @@ func SetContext(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cob
 
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	cmd.PersistentFlags().StringVarP(&opts.Ensure.File, "file", "f", "", "path to file containing config to ensure")
-	cmd.PersistentFlags().BoolVarP(&opts.Ensure.ValetArtifacts, "valet-artifacts", "", false, "use valet artifacts (in google storage)")
 	cmd.PersistentFlags().StringVarP(&opts.Ensure.GkeClusterName, "gke-cluster-name", "", "", "GKE cluster name to use")
 	return cmd
 }

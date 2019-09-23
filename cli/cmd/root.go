@@ -5,6 +5,7 @@ import (
 	"github.com/solo-io/valet/cli/cmd/build"
 	"github.com/solo-io/valet/cli/cmd/config"
 	"github.com/solo-io/valet/cli/cmd/ensure"
+	set_context "github.com/solo-io/valet/cli/cmd/set-context"
 	"github.com/solo-io/valet/cli/cmd/teardown"
 	"github.com/solo-io/valet/cli/options"
 
@@ -41,6 +42,7 @@ func ValetCli(version string) *cobra.Command {
 			teardown.Teardown(opts),
 			config.Config(opts),
 			build.Build(opts),
+			set_context.SetContext(opts),
 		)
 	}
 

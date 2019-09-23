@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 var _ WorkflowRunner = new(workflowRunner)
@@ -124,6 +125,8 @@ func (w *workflowRunner) getGlooUrlAndCurlWithRetry(ctx context.Context, curl *a
 	if err != nil {
 		if retries > 0 {
 			w.glooUrl = ""
+			contextutils.LoggerFrom(ctx).Infow("Retrying after 3 second sleep")
+			time.Sleep(3 * time.Second)
 			return w.getGlooUrlAndCurlWithRetry(ctx, curl, retries-1)
 		}
 	}
@@ -158,7 +161,8 @@ func (w *workflowRunner) doCurl(ctx context.Context, curl *api.Curl) error {
 	contextutils.LoggerFrom(ctx).Infow("Curling",
 		zap.String("url", fullUrl),
 		zap.Any("headers", req.Header),
-		zap.String("host", req.Host))
+		zap.String("host", req.Host),
+		zap.Int("expectedStatus", curl.StatusCode))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -172,6 +176,7 @@ func (w *workflowRunner) doCurl(ctx context.Context, curl *api.Curl) error {
 	}
 
 	if curl.StatusCode != resp.StatusCode {
+		contextutils.LoggerFrom(ctx).Warnw("Curl got unexpected status code", zap.String("url", fullUrl), zap.String("host", req.Host), zap.Int("expected", curl.StatusCode), zap.Int("actual", resp.StatusCode))
 		return errors.Errorf("Unexpected status code %d", resp.StatusCode)
 	} else {
 		contextutils.LoggerFrom(ctx).Infow("Curl got expected status code", zap.Int("statusCode", resp.StatusCode))

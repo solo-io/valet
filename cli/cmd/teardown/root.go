@@ -4,6 +4,7 @@ import (
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/valet/cli/api"
 	"github.com/solo-io/valet/cli/cmd/ensure"
+	set_context "github.com/solo-io/valet/cli/cmd/set-context"
 	"github.com/solo-io/valet/cli/internal/ensure/cluster/gke"
 	"github.com/solo-io/valet/cli/internal/ensure/cluster/minikube"
 	"github.com/solo-io/valet/cli/options"
@@ -26,6 +27,9 @@ func Teardown(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra
 }
 
 func teardown(opts *options.Options) error {
+	if opts.Ensure.File == "" {
+		return ensure.MustProvideFileError
+	}
 	cfg, err := api.LoadConfig(opts.Top.Ctx, opts.Ensure.File)
 	if err != nil {
 		return err
@@ -40,6 +44,9 @@ func teardown(opts *options.Options) error {
 			if opts.Ensure.GkeClusterName != "" {
 				cfg.Cluster.GKE.Name = opts.Ensure.GkeClusterName
 			}
+			if cfg.Cluster.GKE.Name == "" {
+				return set_context.MustSpecifyClusterError
+			}
 			cluster, err := gke.NewGkeClusterFromOpts(opts.Top.Ctx, cfg.Cluster.GKE)
 			if err != nil {
 				return err
@@ -50,5 +57,5 @@ func teardown(opts *options.Options) error {
 			return cluster.Destroy(opts.Top.Ctx)
 		}
 	}
-	return nil
+	return set_context.MustSpecifyClusterError
 }

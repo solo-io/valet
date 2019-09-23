@@ -21,7 +21,7 @@ steps:
       - 'TAGGED_VERSION=$TAG_NAME'
     args: ['docker-push']
     secretEnv: ['QUAY_IO_PASSWORD']
-TYPO
+
 secrets:
   - kmsKeyName: projects/solo-public/locations/global/keyRings/build/cryptoKeys/build-key
     secretEnv:

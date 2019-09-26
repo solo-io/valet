@@ -1,0 +1,4 @@
+changelog:
+  - type: NEW_FEATURE
+    issueLink: https://github.com/solo-io/valet/issues/1
+    description: Add support for cert-manager deployment as part of `valet ensure`. 

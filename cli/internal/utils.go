@@ -33,3 +33,25 @@ func CreateDomain(ctx context.Context, appName, hostedZone string) (string, erro
 	domain = strings.TrimSuffix(domain, ".")
 	return domain, nil
 }
+
+func CreateCert(name, namespace, domain string) string {
+	return fmt.Sprintf(`
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: %s
+  namespace: %s
+spec:
+  secretName: %s
+  dnsNames:
+    - %s
+  acme:
+    config:
+      - dns01:
+          provider: route53
+        domains:
+          - %s
+  issuerRef:
+    name: letsencrypt-dns-prod
+    kind: ClusterIssuer`, name, namespace, domain, domain, domain)
+}

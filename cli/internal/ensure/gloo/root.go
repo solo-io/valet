@@ -25,6 +25,7 @@ func EnsureGloo(ctx context.Context, glooManager GlooManager, gloo *api.Gloo) er
 		vsCreator := NewKubectlUiVirtualServiceCreator()
 		return vsCreator.Create(ctx, *gloo.UiVirtualService)
 	}
+
 	return nil
 }
 

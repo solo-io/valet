@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/api"
+	cert_manager "github.com/solo-io/valet/cli/internal/ensure/cert-manager"
 	"github.com/solo-io/valet/cli/internal/ensure/cluster/gke"
 	"github.com/solo-io/valet/cli/internal/ensure/cluster/minikube"
 	"github.com/solo-io/valet/cli/internal/ensure/demo/petclinic"
@@ -42,6 +43,12 @@ func (e *ensurer) Ensure(ctx context.Context, valet *api.Valet, cfg *api.EnsureC
 
 		if clusterErr != nil {
 			return clusterErr
+		}
+	}
+
+	if cfg.CertManager != nil {
+		if err := cert_manager.EnsureCertManager(ctx, cfg.CertManager); err != nil {
+			return err
 		}
 	}
 

@@ -33,7 +33,6 @@ spec:
   virtualHost:
     domains:
       - "*"
-    name: gloo-system.glooui
     routes:
       - matcher:
           prefix: /
@@ -80,7 +79,27 @@ func (k *kubectlUiVirtualServiceCreator) Create(ctx context.Context, glooui api.
 		return err
 	}
 
-	return patchGloouiWithDomain(ctx, domain)
+	err = patchGloouiWithDomain(ctx, domain)
+	if err != nil {
+		return err
+	}
+
+	if glooui.DNS.Cert != nil {
+		err = createCertForDomain(ctx, "glooui", "gloo-system", domain)
+		if err != nil {
+			return err
+		}
+		err = patchGloouiWithSsl(ctx, domain)
+	}
+
+	return err
+}
+
+func createCertForDomain(ctx context.Context, name, namespace, domain string) error {
+	contextutils.LoggerFrom(ctx).Infow("Creating cert")
+	cert := internal.CreateCert(name, namespace, domain)
+	_, err := internal.ExecuteCmdStdIn(cert, "kubectl", "apply", "-f", "-")
+	return err
 }
 
 func patchGloouiWithDomain(ctx context.Context, domain string) error {
@@ -90,6 +109,24 @@ func patchGloouiWithDomain(ctx context.Context, domain string) error {
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Error patching glooui virtualservice",
 			zap.Error(err), zap.String("out", out), zap.String("domain", domain))
+		return err
+	}
+	return nil
+}
+
+func patchGloouiWithSsl(ctx context.Context, domain string) error {
+	contextutils.LoggerFrom(ctx).Infow("Patching glooui ssl config")
+	patchStr := fmt.Sprintf(`spec:
+  sslConfig:
+    secretRef:
+      name: %s
+      namespace: gloo-system
+    sniDomains:
+    - %s`, domain, domain)
+	out, err := internal.ExecuteCmd("kubectl", "patch", "vs", "glooui", "-n", "gloo-system", "--patch", patchStr, "--type=merge")
+	if err != nil {
+		contextutils.LoggerFrom(ctx).Errorw("Error patching glooui ssl config",
+			zap.Error(err), zap.String("out", out))
 		return err
 	}
 	return nil

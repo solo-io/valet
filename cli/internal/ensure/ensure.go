@@ -10,6 +10,7 @@ import (
 	"github.com/solo-io/valet/cli/internal/ensure/demo/petclinic"
 	"github.com/solo-io/valet/cli/internal/ensure/gloo"
 	"github.com/solo-io/valet/cli/internal/ensure/resources"
+	"github.com/solo-io/valet/cli/internal/ensure/smh"
 	"github.com/solo-io/valet/cli/internal/ensure/workflow"
 )
 
@@ -67,6 +68,12 @@ func (e *ensurer) Ensure(ctx context.Context, valet *api.Valet, cfg *api.EnsureC
 		}
 		workflowRunner := workflow.NewWorkflowRunner(glooManager)
 		if err := workflowRunner.Run(ctx, work); err != nil {
+			return err
+		}
+	}
+
+	if cfg.ServiceMeshHub != nil {
+		if err := smh.EnsureServiceMeshHub(ctx, cfg.ServiceMeshHub); err != nil {
 			return err
 		}
 	}

@@ -1,0 +1,4 @@
+changelog:
+  - type: NEW_FEATURE
+    issueLink: https://github.com/solo-io/valet/issues/43
+    description: Add support for deploying a specific or the latest version of Service Mesh Hub with valet. 

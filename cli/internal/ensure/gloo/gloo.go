@@ -6,6 +6,7 @@ import (
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/api"
+	"github.com/solo-io/valet/cli/internal"
 	"go.uber.org/zap"
 )
 
@@ -100,7 +101,7 @@ func (m *glooManager) Uninstall(ctx context.Context) error {
 }
 
 func (m *glooManager) glooInstalled(ctx context.Context, version string) (bool, error) {
-	active, err := namespaceIsActive(ctx, DefaultNamespace)
+	active, err := internal.NamespaceIsActive(ctx, DefaultNamespace)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Error checking if namespace is active", zap.Error(err))
 		return false, err
@@ -174,7 +175,7 @@ func (m *glooManager) installGloo(ctx context.Context) error {
 			zap.String("out", out))
 		return err
 	}
-	return waitUntilPodsRunning(ctx)
+	return internal.WaitUntilPodsRunning(ctx, DefaultNamespace)
 }
 
 

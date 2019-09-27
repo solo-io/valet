@@ -4,6 +4,7 @@ type EnsureConfig struct {
 	Cluster     *Cluster     `yaml:"cluster"`
 	Gloo        *Gloo        `yaml:"gloo"`
 	CertManager *CertManager `yaml:"certManager"`
+	ServiceMeshHub *ServiceMeshHub `yaml:"serviceMeshHub"`
 	Workflows   []string     `yaml:"workflows"`
 	Demos       *Demos       `yaml:"demos"`
 	Resources   []string     `yaml:"resources"`
@@ -46,9 +47,7 @@ type Gloo struct {
 	UiVirtualService *UiVirtualService `yaml:"uiVirtualService"`
 }
 
-type Cert struct {
-
-}
+type Cert struct {}
 
 type Artifact struct {
 	Path string
@@ -79,8 +78,7 @@ type DNS struct {
 	Cert *Cert `yaml:"cert"`
 }
 
-type CertManager struct {
-}
+type CertManager struct {}
 
 type Demos struct {
 	Petclinic *Petclinic `yaml:"petclinic"`
@@ -114,4 +112,10 @@ type Valet struct {
 	// If set, use this directory on the local filesystem to find product artifact.
 	// This directory is used even if valet artifacts is set to true (it will not download from Google).
 	LocalArtifactsDir string
+}
+
+type ServiceMeshHub struct {
+	// Optional version; if omitted, latest version is used. Versions should not start with "v".
+	// For example, version = 1.2.3; tag = v1.2.3
+	Version string
 }

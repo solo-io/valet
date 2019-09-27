@@ -32,6 +32,42 @@ func EnsureServiceMeshHub(ctx context.Context, serviceMeshHub *api.ServiceMeshHu
 		contextutils.LoggerFrom(ctx).Errorw("Error determining version to install", zap.Error(err))
 		return err
 	}
+
+	installed, err := smhInstalled(ctx, version)
+	if err != nil {
+		return err
+	}
+	if !installed {
+		return installServiceMeshHub(ctx, version)
+	}
+	return nil
+}
+
+func smhInstalled(ctx context.Context, version string) (bool, error) {
+	active, err := internal.NamespaceIsActive(ctx, SmMarketplaceNamespace)
+	if err != nil {
+		contextutils.LoggerFrom(ctx).Errorw("Error checking if namespace is active", zap.Error(err))
+		return false, err
+	}
+	if !active {
+		contextutils.LoggerFrom(ctx).Infow("sm-marketplace namespace does not exist.")
+		return false, nil
+	}
+
+	ok, err := internal.PodsReadyAndVersionsMatch(ctx, SmMarketplaceNamespace, "app=sm-marketplace", version)
+	if err != nil {
+		contextutils.LoggerFrom(ctx).Errorw("Error checking pods and containers", zap.Error(err))
+		return false, err
+	}
+	if !ok {
+		contextutils.LoggerFrom(ctx).Infow("service mesh hub pods not running with expected version")
+		return false, nil
+	}
+	contextutils.LoggerFrom(ctx).Infow("service mesh hub installed at desired version")
+	return true, nil
+}
+
+func installServiceMeshHub(ctx context.Context, version string) error {
 	contextutils.LoggerFrom(ctx).Infof("Preparing to install version %s", version)
 
 	if err := addHelmRepo(ctx); err != nil {

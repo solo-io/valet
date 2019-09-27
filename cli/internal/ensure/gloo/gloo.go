@@ -114,7 +114,7 @@ func (m *glooManager) glooInstalled(ctx context.Context, version string) (bool, 
 		// For local artifacts where we don't know the version, start with blank slate
 		return false, m.Uninstall(ctx)
 	}
-	ok, err := podsReadyAndVersionsMatch(ctx, DefaultNamespace, GlooSelector, version)
+	ok, err := internal.PodsReadyAndVersionsMatch(ctx, DefaultNamespace, GlooSelector, version)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Error checking pods and containers", zap.Error(err))
 		return false, err

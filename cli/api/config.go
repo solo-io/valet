@@ -5,14 +5,15 @@ import (
 	"context"
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/osutils"
+	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 	"net/http"
 	"net/url"
 )
 
-func LoadConfig(ctx context.Context, path string) (*EnsureConfig, error) {
-	var c EnsureConfig
+func LoadConfig(ctx context.Context, path string) (*resource.Config, error) {
+	var c resource.Config
 
 	b, err := loadBytesFromPath(ctx, path)
 	if err != nil {

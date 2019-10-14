@@ -1,13 +1,30 @@
 package api
 
 type EnsureConfig struct {
-	Cluster     *Cluster     `yaml:"cluster"`
-	Gloo        *Gloo        `yaml:"gloo"`
-	CertManager *CertManager `yaml:"certManager"`
+	Cluster        *Cluster        `yaml:"cluster"`
+	Namespaces     []Namespace     `yaml:"namespaces"`
+	Secrets        []Secret        `yaml:"secrets"`
+	Gloo           *Gloo           `yaml:"gloo"`
+	CertManager    *CertManager    `yaml:"certManager"`
 	ServiceMeshHub *ServiceMeshHub `yaml:"serviceMeshHub"`
-	Workflows   []string     `yaml:"workflows"`
-	Demos       *Demos       `yaml:"demos"`
-	Resources   []string     `yaml:"resources"`
+	Workflows      []string        `yaml:"workflows"`
+	Demos          *Demos          `yaml:"demos"`
+	Resources      []string        `yaml:"resources"`
+}
+
+type Namespace struct {
+	Name   string
+	Labels map[string]string
+}
+
+type Secret struct {
+	Entries map[string]SecretValue `yaml:"entries"`
+}
+
+// One of EnvVar or Path should be set
+type SecretValue struct {
+	EnvVar string `yaml:"envVar"`// from-literal
+	Path   string `yaml:"path"`// from-file
 }
 
 // Ensure the cluster is running with the desired specification. This will
@@ -47,7 +64,7 @@ type Gloo struct {
 	UiVirtualService *UiVirtualService `yaml:"uiVirtualService"`
 }
 
-type Cert struct {}
+type Cert struct{}
 
 type Artifact struct {
 	Path string
@@ -78,7 +95,7 @@ type DNS struct {
 	Cert *Cert `yaml:"cert"`
 }
 
-type CertManager struct {}
+type CertManager struct{}
 
 type Demos struct {
 	Petclinic *Petclinic `yaml:"petclinic"`

@@ -20,9 +20,9 @@ const (
 	AwsSecretAccessKeySecretVar = "secret_access_key"
 )
 
-func RunAll(cmds ...*cmd.Command) error {
+func RunAll(ctx context.Context, cmds ...*cmd.Command) error {
 	for _, command := range cmds {
-		if err := command.Run(); err != nil {
+		if err := command.Run(ctx); err != nil {
 			return err
 		}
 	}

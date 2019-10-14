@@ -1,6 +1,9 @@
 package cmd
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
 type helm Command
 
@@ -17,12 +20,12 @@ func (h *helm) Command() *Command {
 	}
 }
 
-func (h *helm) Run() error {
-	return h.Command().Run()
+func (h *helm) Run(ctx context.Context) error {
+	return h.Command().Run(ctx)
 }
 
-func (h *helm) Output() (string, error) {
-	return h.Command().Output()
+func (h *helm) Output(ctx context.Context) (string, error) {
+	return h.Command().Output(ctx)
 }
 
 func (h *helm) AddRepo(repoName, repoUrl string) *helm {

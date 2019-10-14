@@ -1,5 +1,7 @@
 package cmd
 
+import "context"
+
 type Glooctl Command
 
 func (g *Glooctl) With(args ...string) *Glooctl {
@@ -15,12 +17,12 @@ func (g *Glooctl) Command() *Command {
 	}
 }
 
-func (g *Glooctl) Run() error {
-	return g.Command().Run()
+func (g *Glooctl) Run(ctx context.Context) error {
+	return g.Command().Run(ctx)
 }
 
-func (g *Glooctl) Output() (string, error) {
-	return g.Command().Output()
+func (g *Glooctl) Output(ctx context.Context) (string, error) {
+	return g.Command().Output(ctx)
 }
 
 func (g *Glooctl) UninstallAll() *Glooctl {

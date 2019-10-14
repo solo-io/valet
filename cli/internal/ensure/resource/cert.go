@@ -14,10 +14,10 @@ type Cert struct {
 
 func (c *Cert) Ensure(ctx context.Context) error {
 	cert := internal.CreateCert(c.Name, c.Namespace, c.Domain)
-	return cmd.Kubectl().ApplyStdIn(cert).Run()
+	return cmd.Kubectl().ApplyStdIn(cert).Run(ctx)
 }
 
 func (c *Cert) Teardown(ctx context.Context) error {
 	cert := internal.CreateCert(c.Name, c.Namespace, c.Domain)
-	return cmd.Kubectl().DeleteStdIn(cert).Run()
+	return cmd.Kubectl().DeleteStdIn(cert).Run(ctx)
 }

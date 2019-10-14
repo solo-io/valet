@@ -40,7 +40,7 @@ func (c *ClusterIssuer) Ensure(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return cmd.Kubectl().ApplyStdIn(issuer).Run()
+	return cmd.Kubectl().ApplyStdIn(issuer).Run(ctx)
 }
 
 func (c *ClusterIssuer) Teardown(ctx context.Context) error {
@@ -48,7 +48,7 @@ func (c *ClusterIssuer) Teardown(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return cmd.Kubectl().DeleteStdIn(issuer).Run()
+	return cmd.Kubectl().DeleteStdIn(issuer).Run(ctx)
 }
 
 func getIssuer() (string, error) {

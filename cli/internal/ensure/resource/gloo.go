@@ -176,7 +176,7 @@ func (g *Gloo) installGloo(ctx context.Context) error {
 		contextutils.LoggerFrom(ctx).Errorw("Failed to construct glooctlCmd", zap.Error(err))
 		return err
 	}
-	out, err := glooctlCmd.Output()
+	out, err := glooctlCmd.Output(ctx)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Failed to install gloo",
 			zap.Error(err),
@@ -194,7 +194,7 @@ func (g *Gloo) uninstall(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return glooctlCmd.UninstallAll().Run()
+	return glooctlCmd.UninstallAll().Run(ctx)
 }
 
 func (g *Gloo) Teardown(ctx context.Context) error {
@@ -273,9 +273,9 @@ func (a *AWS) Ensure(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		err = glooctlCmd.GetUpstream(AwsUpstreamName).Run()
+		err = glooctlCmd.GetUpstream(AwsUpstreamName).Run(ctx)
 		if err != nil {
-			err = glooctlCmd.CreateUpstream(AwsUpstreamName).AwsSecretName(AwsSecretName).Run()
+			err = glooctlCmd.CreateUpstream(AwsUpstreamName).AwsSecretName(AwsSecretName).Run(ctx)
 			if err != nil {
 				return err
 			}

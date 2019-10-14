@@ -135,7 +135,7 @@ func (g *Glooctl) GetProxyAddress(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	address, err := command.ProxyAddress().Output()
+	address, err := command.ProxyAddress().Output(ctx)
 	if err != nil {
 		return "", err
 	}

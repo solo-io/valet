@@ -35,7 +35,7 @@ func getFiles() []string {
 }
 
 func (p *Petclinic) Ensure(ctx context.Context) error {
-	if err := cmd.KubectlApplyAllFiles(getFiles()); err != nil {
+	if err := cmd.KubectlApplyAllFiles(ctx, getFiles()); err != nil {
 		return err
 	}
 	if p.DNS != nil {
@@ -64,7 +64,7 @@ func (p *Petclinic) Ensure(ctx context.Context) error {
 }
 
 func (p *Petclinic) Teardown(ctx context.Context) error {
-	if err := cmd.KubectlDeleteAllFiles(getFiles()); err != nil {
+	if err := cmd.KubectlDeleteAllFiles(ctx, getFiles()); err != nil {
 		return err
 	}
 	return nil
@@ -77,7 +77,7 @@ func patchPetclinicVsWithDomain(ctx context.Context, domain string) error {
 		Kubectl("patch", "vs", PetclinicVirtualServiceName).
 		Namespace(PetclinicVirtualServiceNamespace).
 		JsonPatch(patchStr).
-		Output()
+		Output(ctx)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Error patching petclinic virtualservice",
 			zap.Error(err), zap.String("out", out), zap.String("domain", domain))

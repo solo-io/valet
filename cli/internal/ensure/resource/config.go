@@ -65,7 +65,7 @@ func (c *Config) Ensure(ctx context.Context) error {
 		}
 	}
 	for _, resource := range c.Resources {
-		if err := cmd.Kubectl().ApplyFile(resource).Run(); err != nil {
+		if err := cmd.Kubectl().ApplyFile(resource).Run(ctx); err != nil {
 			return err
 		}
 	}

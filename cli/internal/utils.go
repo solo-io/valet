@@ -4,18 +4,13 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
-	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"go.uber.org/zap"
 	"strings"
 )
 
 func GetCurrentContextName(ctx context.Context) (string, error) {
-	contextutils.LoggerFrom(ctx).Infow("Getting current context name")
-	out, err := cmd.Kubectl().CurrentContext().Output()
+	out, err := cmd.Kubectl().CurrentContext().Output(ctx)
 	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Error getting current context name",
-			zap.Error(err), zap.String("out", out))
 		return "", err
 	}
 	return strings.TrimSpace(out), nil

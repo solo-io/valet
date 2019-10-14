@@ -36,9 +36,9 @@ func (s *Secret) Ensure(ctx context.Context) error {
 			command = command.With(fromLiteral)
 		}
 	}
-	return command.DryRunAndApply()
+	return command.DryRunAndApply(ctx)
 }
 
 func (s *Secret) Teardown(ctx context.Context) error {
-	return cmd.Kubectl().Delete(secret).WithName(s.Name).Run()
+	return cmd.Kubectl().Delete(secret).WithName(s.Name).Run(ctx)
 }

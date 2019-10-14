@@ -13,12 +13,12 @@ type Step struct {
 
 func (s *Step) Ensure(ctx context.Context) error {
 	if s.Apply != "" {
-		if err := cmd.Kubectl().ApplyFile(s.Apply).Run(); err != nil {
+		if err := cmd.Kubectl().ApplyFile(s.Apply).Run(ctx); err != nil {
 			return err
 		}
 	}
 	if s.Delete != "" {
-		if err := cmd.Kubectl().DeleteFile(s.Delete).Run(); err != nil {
+		if err := cmd.Kubectl().DeleteFile(s.Delete).Run(ctx); err != nil {
 			return err
 		}
 	}

@@ -15,11 +15,11 @@ type Resources struct {
 }
 
 func (r *Resources) Ensure(ctx context.Context) error {
-	return cmd.KubectlApplyAllFiles(r.Paths)
+	return cmd.KubectlApplyAllFiles(ctx, r.Paths)
 }
 
 func (r *Resources) Teardown(ctx context.Context) error {
-	return cmd.KubectlDeleteAllFiles(r.Paths)
+	return cmd.KubectlDeleteAllFiles(ctx, r.Paths)
 }
 
 

@@ -1,6 +1,9 @@
 package cmd
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
 type minikube Command
 
@@ -41,8 +44,8 @@ func (m *minikube) Command() *Command {
 	}
 }
 
-func (m *minikube) Run() error {
-	return m.Command().Run()
+func (m *minikube) Run(ctx context.Context) error {
+	return m.Command().Run(ctx)
 }
 
 func Minikube(args ...string) *minikube {

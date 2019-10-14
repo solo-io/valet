@@ -99,13 +99,13 @@ func installServiceMeshHub(ctx context.Context, version string) error {
 func renderAndApplyManifest(ctx context.Context, chartDir string) error {
 	contextutils.LoggerFrom(ctx).Infow("Rendering and applying manifest for service mesh hub")
 	// helm template --set namespace.create=true ~/.helm/untar/sm-marketplace/0.2.3/sm-marketplace/
-	out, err := cmd.Helm().Template().Namespace(SmMarketplaceNamespace).Set("namespace.create=true").Target(chartDir).Output()
+	out, err := cmd.Helm().Template().Namespace(SmMarketplaceNamespace).Set("namespace.create=true").Target(chartDir).Output(ctx)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Error rendering manifest", zap.Error(err), zap.String("out", out))
 		return err
 	}
 
-	out, err = cmd.Kubectl().ApplyStdIn(out).Output()
+	out, err = cmd.Kubectl().ApplyStdIn(out).Output(ctx)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Error applying manifest", zap.Error(err), zap.String("out", out))
 	}
@@ -114,7 +114,7 @@ func renderAndApplyManifest(ctx context.Context, chartDir string) error {
 
 func addHelmRepo(ctx context.Context) error {
 	contextutils.LoggerFrom(ctx).Infow("Adding helm repo")
-	out, err := cmd.Helm().AddRepo(SmMarketplaceHelmRepoName, SmMarketplaceHelmRepoUrl).Output()
+	out, err := cmd.Helm().AddRepo(SmMarketplaceHelmRepoName, SmMarketplaceHelmRepoUrl).Output(ctx)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Error trying to add repo", zap.Error(err), zap.String("out", out))
 	}
@@ -137,7 +137,7 @@ func fetchAndUntarChart(ctx context.Context, version string) (string, error) {
 		Fetch(SmMarketplaceHelmRepoName, SmMarketplaceHelmRepoUrl).
 		Version(version).
 		UntarToDir(untarDir).
-		Output()
+		Output(ctx)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Error trying to untar helm chart", zap.Error(err), zap.String("out", out))
 		return "", err

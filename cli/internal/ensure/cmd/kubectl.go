@@ -1,5 +1,7 @@
 package cmd
 
+import "context"
+
 type kubectl Command
 
 func (k *kubectl) With(args ...string) *kubectl {
@@ -72,8 +74,8 @@ func (k *kubectl) Command() *Command {
 	}
 }
 
-func (k *kubectl) Run() error {
-	return k.Command().Run()
+func (k *kubectl) Run(ctx context.Context) error {
+	return k.Command().Run(ctx)
 }
 
 func (k *kubectl) UseContext(context string) *kubectl {
@@ -84,34 +86,34 @@ func (k *kubectl) CurrentContext() *kubectl {
 	return k.With("config", "current-context")
 }
 
-func (k *kubectl) Output() (string, error) {
-	return k.Command().Output()
+func (k *kubectl) Output(ctx context.Context) (string, error) {
+	return k.Command().Output(ctx)
 }
 
-func (k *kubectl) DryRunAndApply() error {
-	out, err := k.DryRun().OutYaml().Command().Output()
+func (k *kubectl) DryRunAndApply(ctx context.Context) error {
+	out, err := k.DryRun().OutYaml().Output(ctx)
 	if err != nil {
 		return err
 	}
-	return Kubectl().ApplyStdIn(out).Command().Run()
+	return Kubectl().ApplyStdIn(out).Run(ctx)
 }
 
 func (k *kubectl) JsonPatch(jsonPatch string) *kubectl {
 	return k.With("--type=json", jsonPatch)
 }
 
-func KubectlDeleteAllFiles(files []string) error {
+func KubectlDeleteAllFiles(ctx context.Context, files []string) error {
 	for _, file := range files {
-		if err := Kubectl().ApplyFile(file).Run(); err != nil {
+		if err := Kubectl().ApplyFile(file).Run(ctx); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func KubectlApplyAllFiles(files []string) error {
+func KubectlApplyAllFiles(ctx context.Context, files []string) error {
 	for _, file := range files {
-		if err := Kubectl().ApplyFile(file).Run(); err != nil {
+		if err := Kubectl().ApplyFile(file).Run(ctx); err != nil {
 			return err
 		}
 	}

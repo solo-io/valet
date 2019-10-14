@@ -1,6 +1,9 @@
 package cmd
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
 type gcloud Command
 
@@ -38,12 +41,12 @@ func (g *gcloud) Command() *Command {
 	}
 }
 
-func (g *gcloud) Run() error {
-	return g.Command().Run()
+func (g *gcloud) Run(ctx context.Context) error {
+	return g.Command().Run(ctx)
 }
 
-func (g *gcloud) Output() (string, error) {
-	return g.Command().Output()
+func (g *gcloud) Output(ctx context.Context) (string, error) {
+	return g.Command().Output(ctx)
 }
 
 func Gcloud(args ...string) *gcloud {

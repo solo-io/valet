@@ -5,14 +5,12 @@ import (
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/api"
 	"github.com/solo-io/valet/cli/cmd/ensure"
-	"github.com/solo-io/valet/cli/internal/ensure/cluster/gke"
-	"github.com/solo-io/valet/cli/internal/ensure/cluster/minikube"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 )
 
 var (
-	MustProvideFileError = errors.Errorf("Must provide file option")
+	MustProvideFileError    = errors.Errorf("Must provide file option")
 	MustSpecifyClusterError = errors.Errorf("Must specify cluster")
 )
 
@@ -42,21 +40,17 @@ func setContext(opts *options.Options) error {
 	if err := ensure.LoadEnv(opts.Top.Ctx); err != nil {
 		return err
 	}
-	if cfg.Cluster.Minikube != nil {
-		cluster := minikube.NewMinikubeClusterFromOpts(cfg.Cluster.Minikube)
-		return cluster.SetKubeContext(opts.Top.Ctx)
-	} else if cfg.Cluster.GKE != nil {
+	if cfg.Cluster == nil {
+		return MustSpecifyClusterError
+	}
+
+	if cfg.Cluster.GKE != nil {
 		if opts.Ensure.GkeClusterName != "" {
 			cfg.Cluster.GKE.Name = opts.Ensure.GkeClusterName
 		}
 		if cfg.Cluster.GKE.Name == "" {
 			return MustSpecifyClusterError
 		}
-		cluster, err := gke.NewGkeClusterFromOpts(opts.Top.Ctx, cfg.Cluster.GKE)
-		if err != nil {
-			return err
-		}
-		return cluster.SetKubeContext(opts.Top.Ctx)
 	}
-	return MustSpecifyClusterError
+	return cfg.Cluster.SetContext(opts.Top.Ctx)
 }

@@ -64,8 +64,12 @@ func (k *kubectl) ApplyFile(path string) *kubectl {
 	return k.Apply().File(path)
 }
 
-func (k *kubectl) Command() Command {
-	return Command(*k)
+func (k *kubectl) Command() *Command {
+	return &Command{
+		Name:  k.Name,
+		Args:  k.Args,
+		StdIn: k.StdIn,
+	}
 }
 
 func (k *kubectl) Run() error {

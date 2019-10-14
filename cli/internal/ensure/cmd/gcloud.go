@@ -30,8 +30,12 @@ func (g *gcloud) WithStdIn(stdIn string) *gcloud {
 	return g
 }
 
-func (g *gcloud) Command() Command {
-	return Command(*g)
+func (g *gcloud) Command() *Command {
+	return &Command{
+		Name:  g.Name,
+		Args:  g.Args,
+		StdIn: g.StdIn,
+	}
 }
 
 func (g *gcloud) Run() error {

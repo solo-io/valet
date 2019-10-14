@@ -9,7 +9,6 @@ import (
 
 	"context"
 	"github.com/solo-io/go-utils/contextutils"
-	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/iam/v1"
@@ -18,9 +17,9 @@ import (
 )
 
 type GkeClient interface {
-	Create(ctx context.Context, gke *resource.GKE) error
-	Destroy(ctx context.Context, gke *resource.GKE) error
-	IsRunning(ctx context.Context, gke *resource.GKE) (bool, error)
+	Create(ctx context.Context, name, project, zone string) error
+	Destroy(ctx context.Context, name, project, zone string) error
+	IsRunning(ctx context.Context, name, project, zone string) (bool, error)
 }
 
 var _ GkeClient = new(gkeClient)
@@ -54,12 +53,12 @@ func getClusterManagerClient(ctx context.Context) (*container.ClusterManagerClie
 	return client, nil
 }
 
-func (c *gkeClient) IsRunning(ctx context.Context, gke *resource.GKE) (bool, error) {
-	cluster, err := c.getCluster(ctx, gke)
+func (c *gkeClient) IsRunning(ctx context.Context, name, project, zone string) (bool, error) {
+	cluster, err := c.getCluster(ctx, name, project, zone)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Error checking cluster status",
 			zap.Error(err),
-			zap.String("clusterName", getClusterIdentifier(gke)))
+			zap.String("clusterName", getClusterIdentifier(name, project, zone)))
 		return false, err
 	} else if cluster == nil {
 		contextutils.LoggerFrom(ctx).Infow("Cluster not running")
@@ -68,8 +67,8 @@ func (c *gkeClient) IsRunning(ctx context.Context, gke *resource.GKE) (bool, err
 	return cluster.GetStatus() == container2.Cluster_RUNNING, nil
 }
 
-func (c *gkeClient) getCluster(ctx context.Context, gke *resource.GKE) (*container2.Cluster, error) {
-	cluster, err := c.client.GetCluster(ctx, &container2.GetClusterRequest{Name: getClusterIdentifier(gke)})
+func (c *gkeClient) getCluster(ctx context.Context, name, project, zone string) (*container2.Cluster, error) {
+	cluster, err := c.client.GetCluster(ctx, &container2.GetClusterRequest{Name: getClusterIdentifier(name, project, zone)})
 	if err != nil {
 		st, ok := status.FromError(err)
 		if ok && st.Code() == codes.NotFound {
@@ -79,15 +78,15 @@ func (c *gkeClient) getCluster(ctx context.Context, gke *resource.GKE) (*contain
 		// Use st.Message() and st.Code()
 		contextutils.LoggerFrom(ctx).Errorw("Error getting cluster",
 			zap.Error(err),
-			zap.String("clusterName", getClusterIdentifier(gke)))
+			zap.String("clusterName", getClusterIdentifier(name, project, zone)))
 		return nil, err
 	}
 	return cluster, nil
 }
 
 
-func (c *gkeClient) Create(ctx context.Context, gke *resource.GKE) error {
-	contextutils.LoggerFrom(ctx).Infow("Creating cluster", zap.String("name", gke.Name))
+func (c *gkeClient) Create(ctx context.Context,name, project, zone string) error {
+	contextutils.LoggerFrom(ctx).Infow("Creating cluster", zap.String("name", name))
 	nodePool := container2.NodePool{
 		Name:             "pool-1",
 		InitialNodeCount: 1,
@@ -104,14 +103,14 @@ func (c *gkeClient) Create(ctx context.Context, gke *resource.GKE) error {
 		},
 	}
 	clusterToCreate := container2.Cluster{
-		Name:      gke.Name,
+		Name:      name,
 		NodePools: []*container2.NodePool{&nodePool},
 		ResourceLabels: map[string]string{
 			"creator": "valet",
 		},
 	}
 	req := container2.CreateClusterRequest{
-		Parent:  getParent(gke),
+		Parent:  getParent(project, zone),
 		Cluster: &clusterToCreate,
 	}
 	operation, err := c.client.CreateCluster(ctx, &req)
@@ -120,17 +119,17 @@ func (c *gkeClient) Create(ctx context.Context, gke *resource.GKE) error {
 		return err
 	}
 	contextutils.LoggerFrom(ctx).Infow("Create cluster led to operation", zap.Any("operation", operation))
-	err = c.waitForOperation(ctx, getOperationIdentifier(gke, operation.Name))
+	err = c.waitForOperation(ctx, getOperationIdentifier(project, zone, operation.Name))
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Error waiting for cluster creation", zap.Error(err))
 	}
 	return err
 }
 
-func (c *gkeClient) Destroy(ctx context.Context, gke *resource.GKE) error {
-	contextutils.LoggerFrom(ctx).Infow("Deleting cluster", zap.String("name", gke.Name))
+func (c *gkeClient) Destroy(ctx context.Context, name, project, zone string) error {
+	contextutils.LoggerFrom(ctx).Infow("Deleting cluster", zap.String("name", name))
 	req := container2.DeleteClusterRequest{
-		Name: getClusterIdentifier(gke),
+		Name: getClusterIdentifier(name, project, zone),
 	}
 	operation, err := c.client.DeleteCluster(ctx, &req)
 	if err != nil {
@@ -138,7 +137,7 @@ func (c *gkeClient) Destroy(ctx context.Context, gke *resource.GKE) error {
 		return err
 	}
 	contextutils.LoggerFrom(ctx).Infow("Delete cluster led to operation", zap.Any("operation", operation))
-	err = c.waitForOperation(ctx, getOperationIdentifier(gke, operation.Name))
+	err = c.waitForOperation(ctx, getOperationIdentifier(project, zone, operation.Name))
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Error waiting for cluster to be deleted", zap.Error(err))
 	}
@@ -166,14 +165,14 @@ func (c *gkeClient) waitForOperation(ctx context.Context, operationId string) er
 	panic("Operation status unknown")
 }
 
-func getParent(config *resource.GKE) string {
-	return fmt.Sprintf("projects/%s/locations/%s", config.Project, config.Location)
+func getParent(project, zone string) string {
+	return fmt.Sprintf("projects/%s/locations/%s", project, zone)
 }
 
-func getClusterIdentifier(config *resource.GKE) string {
-	return fmt.Sprintf("%s/clusters/%s", getParent(config), config.Name)
+func getClusterIdentifier(name, project, zone string) string {
+	return fmt.Sprintf("%s/clusters/%s", getParent(project, zone), name)
 }
 
-func getOperationIdentifier(config *resource.GKE, opName string) string {
-	return fmt.Sprintf("%s/operations/%s", getParent(config), opName)
+func getOperationIdentifier(project, zone, opName string) string {
+	return fmt.Sprintf("%s/operations/%s", getParent(project, zone), opName)
 }

@@ -31,8 +31,8 @@ func LoadConfig(ctx context.Context, path string) (*resource.Config, error) {
 	return &c, nil
 }
 
-func LoadWorkflow(ctx context.Context, path string) (*Workflow, error) {
-	var w Workflow
+func LoadWorkflow(ctx context.Context, path string) (*resource.Workflow, error) {
+	var w resource.Workflow
 
 	b, err := loadBytesFromPath(ctx, path)
 	if err != nil {

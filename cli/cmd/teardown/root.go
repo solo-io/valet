@@ -4,9 +4,6 @@ import (
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/valet/cli/api"
 	"github.com/solo-io/valet/cli/cmd/ensure"
-	set_context "github.com/solo-io/valet/cli/cmd/set-context"
-	"github.com/solo-io/valet/cli/internal/ensure/cluster/gke"
-	"github.com/solo-io/valet/cli/internal/ensure/cluster/minikube"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 )
@@ -44,18 +41,7 @@ func teardown(opts *options.Options) error {
 			if opts.Ensure.GkeClusterName != "" {
 				cfg.Cluster.GKE.Name = opts.Ensure.GkeClusterName
 			}
-			if cfg.Cluster.GKE.Name == "" {
-				return set_context.MustSpecifyClusterError
-			}
-			cluster, err := gke.NewGkeClusterFromOpts(opts.Top.Ctx, cfg.Cluster.GKE)
-			if err != nil {
-				return err
-			}
-			return cluster.Destroy(opts.Top.Ctx)
-		} else if cfg.Cluster.Minikube != nil {
-			cluster := minikube.NewMinikubeClusterFromOpts(cfg.Cluster.Minikube)
-			return cluster.Destroy(opts.Top.Ctx)
 		}
 	}
-	return set_context.MustSpecifyClusterError
+	return cfg.Teardown(opts.Top.Ctx)
 }

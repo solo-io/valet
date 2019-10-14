@@ -19,14 +19,14 @@ func (g *GKE) Ensure(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	running, err := gkeClient.IsRunning(ctx, g)
+	running, err := gkeClient.IsRunning(ctx, g.Name, g.Project, g.Location)
 	if err != nil {
 		return err
 	}
 	if running {
 		return g.SetContext(ctx)
 	} else {
-		return gkeClient.Create(ctx, g)
+		return gkeClient.Create(ctx, g.Name, g.Project, g.Location)
 	}
 }
 
@@ -39,5 +39,5 @@ func (g *GKE) Teardown(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return gkeClient.Destroy(ctx, g)
+	return gkeClient.Destroy(ctx, g.Name, g.Project, g.Location)
 }

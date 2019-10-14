@@ -69,7 +69,7 @@ func (c *Curl) doCurl(ctx context.Context) error {
 	}
 
 	if c.StatusCode != resp.StatusCode {
-		contextutils.LoggerFrom(ctx).Warnw("Curl got unexpected status code", zap.String("url", fullUrl), zap.String("host", req.Host), zap.Int("expected", curl.StatusCode), zap.Int("actual", resp.StatusCode))
+		contextutils.LoggerFrom(ctx).Warnw("Curl got unexpected status code", zap.String("url", fullUrl), zap.String("host", req.Host), zap.Int("expected", c.StatusCode), zap.Int("actual", resp.StatusCode))
 		return errors.Errorf("Unexpected status code %d", resp.StatusCode)
 	} else {
 		contextutils.LoggerFrom(ctx).Infow("Curl got expected status code", zap.Int("statusCode", resp.StatusCode))

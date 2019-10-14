@@ -49,10 +49,3 @@ func (c *Command) With(args ...string) *Command {
 	return c
 }
 
-func NewCommand(cmd string, args ...string) *Command {
-	return &Command{
-		Name:  cmd,
-		Args: args,
-	}
-}
-

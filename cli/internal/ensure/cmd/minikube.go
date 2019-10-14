@@ -28,13 +28,17 @@ func (m *minikube) KubeVersion(kubeVersion string) *minikube {
 	return m.With(fmt.Sprintf("--kubernetes-version=%s", kubeVersion))
 }
 
-func (m *minikube) With(args... string) *minikube {
+func (m *minikube) With(args ...string) *minikube {
 	m.Args = append(m.Args, args...)
 	return m
 }
 
-func (m *minikube) Command() Command {
-	return Command(*m)
+func (m *minikube) Command() *Command {
+	return &Command{
+		Name:  m.Name,
+		Args:  m.Args,
+		StdIn: m.StdIn,
+	}
 }
 
 func (m *minikube) Run() error {

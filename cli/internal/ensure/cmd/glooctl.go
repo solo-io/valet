@@ -2,13 +2,17 @@ package cmd
 
 type Glooctl Command
 
-func (g *Glooctl) With(args... string) *Glooctl {
+func (g *Glooctl) With(args ...string) *Glooctl {
 	g.Args = append(g.Args, args...)
 	return g
 }
 
-func (g *Glooctl) Command() Command {
-	return Command(*g)
+func (g *Glooctl) Command() *Command {
+	return &Command{
+		Name:  g.Name,
+		Args:  g.Args,
+		StdIn: g.StdIn,
+	}
 }
 
 func (g *Glooctl) Run() error {

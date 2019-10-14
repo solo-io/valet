@@ -4,13 +4,17 @@ import "fmt"
 
 type helm Command
 
-func (h *helm) With(args... string) *helm {
+func (h *helm) With(args ...string) *helm {
 	h.Args = append(h.Args, args...)
 	return h
 }
 
-func (h *helm) Command() Command {
-	return Command(*h)
+func (h *helm) Command() *Command {
+	return &Command{
+		Name:  h.Name,
+		Args:  h.Args,
+		StdIn: h.StdIn,
+	}
 }
 
 func (h *helm) Run() error {
@@ -53,7 +57,7 @@ func (h *helm) UntarToDir(untarDir string) *helm {
 	return h.With("--untar", "--untardir", untarDir)
 }
 
-func Helm(args... string) *helm {
+func Helm(args ...string) *helm {
 	return &helm{
 		Name: "helm",
 		Args: args,

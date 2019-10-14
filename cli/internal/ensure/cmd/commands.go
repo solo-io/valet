@@ -25,6 +25,7 @@ type Command struct {
 	StdIn string
 
 	RedactedArgs []string
+	SwallowErrorLog bool
 }
 
 func (c *Command) Run(ctx context.Context) error {
@@ -33,12 +34,14 @@ func (c *Command) Run(ctx context.Context) error {
 }
 
 func (c *Command) Output(ctx context.Context) (string, error) {
-	contextutils.LoggerFrom(ctx).Infow("Running command")
+	c.logCommand(ctx)
 	cmd := exec.Command(c.Name, c.Args...)
 	cmd.Stdin = strings.NewReader(c.StdIn)
 	bytes, err := cmd.Output()
 	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Error running command", zap.Error(err), zap.String("out", string(bytes)))
+		if !c.SwallowErrorLog {
+			contextutils.LoggerFrom(ctx).Errorw("Error running command", zap.Error(err), zap.String("out", string(bytes)))
+		}
 		return "", CommandError(err)
 	}
 	return string(bytes), nil

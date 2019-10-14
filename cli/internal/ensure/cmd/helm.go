@@ -14,9 +14,10 @@ func (h *helm) With(args ...string) *helm {
 
 func (h *helm) Command() *Command {
 	return &Command{
-		Name:  h.Name,
-		Args:  h.Args,
-		StdIn: h.StdIn,
+		Name:         h.Name,
+		Args:         h.Args,
+		StdIn:        h.StdIn,
+		RedactedArgs: h.RedactedArgs,
 	}
 }
 

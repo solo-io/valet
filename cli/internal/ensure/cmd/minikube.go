@@ -36,11 +36,18 @@ func (m *minikube) With(args ...string) *minikube {
 	return m
 }
 
+func (m *minikube) SwallowError() *minikube {
+	m.SwallowErrorLog = true
+	return m
+}
+
 func (m *minikube) Command() *Command {
 	return &Command{
-		Name:  m.Name,
-		Args:  m.Args,
-		StdIn: m.StdIn,
+		Name:         m.Name,
+		Args:         m.Args,
+		StdIn:        m.StdIn,
+		RedactedArgs: m.RedactedArgs,
+		SwallowErrorLog: m.SwallowErrorLog,
 	}
 }
 

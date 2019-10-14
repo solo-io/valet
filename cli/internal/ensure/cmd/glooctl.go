@@ -11,9 +11,10 @@ func (g *Glooctl) With(args ...string) *Glooctl {
 
 func (g *Glooctl) Command() *Command {
 	return &Command{
-		Name:  g.Name,
-		Args:  g.Args,
-		StdIn: g.StdIn,
+		Name:         g.Name,
+		Args:         g.Args,
+		StdIn:        g.StdIn,
+		RedactedArgs: g.RedactedArgs,
 	}
 }
 
@@ -27,6 +28,15 @@ func (g *Glooctl) Output(ctx context.Context) (string, error) {
 
 func (g *Glooctl) UninstallAll() *Glooctl {
 	return g.With("uninstall", "--all")
+}
+
+func (g *Glooctl) LicenseKey(licenseKey string) *Glooctl {
+	return g.With("--license-key", licenseKey).Redact(licenseKey)
+}
+
+func (g *Glooctl) Redact(arg string) *Glooctl {
+	g.RedactedArgs = append(g.RedactedArgs, arg)
+	return g
 }
 
 func (g *Glooctl) ProxyUrl() *Glooctl {

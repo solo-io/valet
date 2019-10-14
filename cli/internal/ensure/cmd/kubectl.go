@@ -68,9 +68,10 @@ func (k *kubectl) ApplyFile(path string) *kubectl {
 
 func (k *kubectl) Command() *Command {
 	return &Command{
-		Name:  k.Name,
-		Args:  k.Args,
-		StdIn: k.StdIn,
+		Name:         k.Name,
+		Args:         k.Args,
+		StdIn:        k.StdIn,
+		RedactedArgs: k.RedactedArgs,
 	}
 }
 

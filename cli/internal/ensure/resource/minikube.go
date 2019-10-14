@@ -17,14 +17,12 @@ var _ ClusterResource = new(Minikube)
 type Minikube struct {}
 
 func (m *Minikube) Ensure(ctx context.Context) error {
-	err := cmd.Minikube().Status().Run(ctx)
-	if err == nil {
+	// If minikube status seems healthy, just set context and return
+	if err := cmd.Minikube().Status().SwallowError().Run(ctx); err == nil {
 		return m.SetContext(ctx)
 	}
-	return RunAll(
-		ctx,
-		cmd.Minikube().Delete().Command(),
-		cmd.Minikube().Start().Cpus(DefaultCpus).Memory(DefaultMemory).KubeVersion(DefaultKubeVersion).Command())
+	_ = cmd.Minikube().Delete().SwallowError().Run(ctx)
+	return cmd.Minikube().Start().Cpus(DefaultCpus).Memory(DefaultMemory).KubeVersion(DefaultKubeVersion).Run(ctx)
 }
 
 func (m *Minikube) SetContext(ctx context.Context) error {
@@ -32,7 +30,7 @@ func (m *Minikube) SetContext(ctx context.Context) error {
 }
 
 func (m *Minikube) Teardown(ctx context.Context) error {
-	return cmd.Minikube().Delete().Run(ctx)
+	return cmd.Minikube().Delete().SwallowError().Run(ctx)
 }
 
 

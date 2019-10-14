@@ -176,7 +176,7 @@ func (g *Gloo) installGloo(ctx context.Context) error {
 		contextutils.LoggerFrom(ctx).Errorw("Failed to construct glooctlCmd", zap.Error(err))
 		return err
 	}
-	out, err := glooctlCmd.Output(ctx)
+	out, err := glooctlCmd.With(args...).Redact(g.LicenseKey).Output(ctx)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("Failed to install gloo",
 			zap.Error(err),

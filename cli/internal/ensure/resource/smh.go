@@ -16,8 +16,8 @@ const (
 	SmMarketplaceOwner         = "solo-io"
 	SmMarketplaceRepo          = "sm-marketplace"
 	SmMarketplaceHelmRepoUrl   = "https://storage.googleapis.com/sm-marketplace-helm/"
-	SmMarketplaceHelmRepoName  = "sm-marketplace"
 	SmMarketplaceHelmChartName = "sm-marketplace"
+	SmMarketplaceHelmRepoName  = "sm-marketplace"
 	SmMarketplaceNamespace     = "sm-marketplace"
 )
 
@@ -134,7 +134,7 @@ func fetchAndUntarChart(ctx context.Context, version string) (string, error) {
 	}
 	out, err := cmd.
 		Helm().
-		Fetch(SmMarketplaceHelmRepoName, SmMarketplaceHelmRepoUrl).
+		Fetch(SmMarketplaceHelmRepoName, SmMarketplaceHelmChartName).
 		Version(version).
 		UntarToDir(untarDir).
 		Output(ctx)

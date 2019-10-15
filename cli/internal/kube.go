@@ -14,7 +14,7 @@ import (
 )
 
 func WaitUntilPodsRunning(ctx context.Context, namespace string) error {
-	contextutils.LoggerFrom(ctx).Infow("Waiting for pods")
+	contextutils.LoggerFrom(ctx).Infow("waiting for pods")
 	kubeClient, err := kube.KubeClient()
 	if err != nil {
 		return err
@@ -71,11 +71,11 @@ func NamespaceIsActive(ctx context.Context, namespace string) (bool, error) {
 		if kubeerrs.IsNotFound(err) {
 			return false, nil
 		}
-		contextutils.LoggerFrom(ctx).Errorw("Error trying to get namespace", zap.Error(err), zap.String("ns", namespace))
+		contextutils.LoggerFrom(ctx).Errorw("error trying to get namespace", zap.Error(err), zap.String("ns", namespace))
 		return false, err
 	}
 	if ns.Status.Phase != v12.NamespaceActive {
-		contextutils.LoggerFrom(ctx).Errorw("Namespace is not active", zap.Any("phase", ns.Status.Phase))
+		contextutils.LoggerFrom(ctx).Errorw("namespace is not active", zap.Any("phase", ns.Status.Phase))
 	}
 	return true, nil
 }
@@ -87,17 +87,17 @@ func PodsReadyAndVersionsMatch(ctx context.Context, namespace, selector, version
 	}
 	pods, err := kubeClient.CoreV1().Pods(namespace).List(v1.ListOptions{LabelSelector: selector})
 	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Error listing pods", zap.Error(err))
+		contextutils.LoggerFrom(ctx).Errorw("error listing pods", zap.Error(err))
 		return false, err
 	}
 	if len(pods.Items) == 0 {
-		contextutils.LoggerFrom(ctx).Infow("No pods")
+		contextutils.LoggerFrom(ctx).Infow("no pods")
 		return false, nil
 	}
 	for _, pod := range pods.Items {
 		for _, cond := range pod.Status.Conditions {
 			if cond.Type == v12.ContainersReady && cond.Status != v12.ConditionTrue {
-				contextutils.LoggerFrom(ctx).Infow("Pods not ready")
+				contextutils.LoggerFrom(ctx).Infow("pods not ready")
 				return false, nil
 			}
 		}
@@ -110,7 +110,7 @@ func PodsReadyAndVersionsMatch(ctx context.Context, namespace, selector, version
 			}
 		}
 	}
-	contextutils.LoggerFrom(ctx).Warnw("Detected install, but did not find any containers with the expected version",
+	contextutils.LoggerFrom(ctx).Warnw("detected install, but did not find any containers with the expected version",
 		zap.String("expected", version))
 	return false, nil
 }

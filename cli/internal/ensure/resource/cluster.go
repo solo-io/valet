@@ -3,11 +3,12 @@ package resource
 import (
 	"context"
 	"github.com/solo-io/go-utils/errors"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
 type ClusterResource interface {
 	Resource
-	SetContext(ctx context.Context) error
+	SetContext(ctx context.Context, command cmd.Factory) error
 }
 
 var (
@@ -21,32 +22,32 @@ type Cluster struct {
 	GKE      *GKE      `yaml:"gke"`
 }
 
-func (c *Cluster) SetContext(ctx context.Context) error {
+func (c *Cluster) SetContext(ctx context.Context, command cmd.Factory) error {
 	if c.Minikube != nil {
-		return c.Minikube.SetContext(ctx)
+		return c.Minikube.SetContext(ctx, command)
 	}
 	if c.GKE != nil {
-		return c.GKE.SetContext(ctx)
+		return c.GKE.SetContext(ctx, command)
 	}
 	return NoClusterDefinedError
 }
 
-func (c *Cluster) Ensure(ctx context.Context) error {
+func (c *Cluster) Ensure(ctx context.Context, command cmd.Factory) error {
 	if c.Minikube != nil {
-		return c.Minikube.Ensure(ctx)
+		return c.Minikube.Ensure(ctx, command)
 	}
 	if c.GKE != nil {
-		return c.GKE.Ensure(ctx)
+		return c.GKE.Ensure(ctx, command)
 	}
 	return nil
 }
 
-func (c *Cluster) Teardown(ctx context.Context) error {
+func (c *Cluster) Teardown(ctx context.Context, command cmd.Factory) error {
 	if c.Minikube != nil {
-		return c.Minikube.Teardown(ctx)
+		return c.Minikube.Teardown(ctx, command)
 	}
 	if c.GKE != nil {
-		return c.GKE.Teardown(ctx)
+		return c.GKE.Teardown(ctx, command)
 	}
 	return nil
 }

@@ -35,10 +35,11 @@ func (g *gcloud) WithStdIn(stdIn string) *gcloud {
 
 func (g *gcloud) Command() *Command {
 	return &Command{
-		Name:         g.Name,
-		Args:         g.Args,
-		StdIn:        g.StdIn,
-		RedactedArgs: g.RedactedArgs,
+		Name:            g.Name,
+		Args:            g.Args,
+		StdIn:           g.StdIn,
+		Redactions:      g.Redactions,
+		SwallowErrorLog: g.SwallowErrorLog,
 	}
 }
 

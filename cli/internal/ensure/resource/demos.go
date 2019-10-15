@@ -1,28 +1,26 @@
 package resource
 
-import "context"
+import (
+	"context"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
+)
 
 type Demos struct {
 	Petclinic *Petclinic `yaml:"petclinic"`
-
-	Glooctl *Glooctl
 }
 
-func (d *Demos) Ensure(ctx context.Context) error {
+func (d *Demos) Ensure(ctx context.Context, command cmd.Factory) error {
 	if d.Petclinic != nil {
-		if d.Glooctl != nil {
-			d.Petclinic.Glooctl = d.Glooctl
-		}
-		if err := d.Petclinic.Ensure(ctx); err != nil {
+		if err := d.Petclinic.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (d *Demos) Teardown(ctx context.Context) error {
+func (d *Demos) Teardown(ctx context.Context, command cmd.Factory) error {
 	if d.Petclinic != nil {
-		if err := d.Petclinic.Teardown(ctx); err != nil {
+		if err := d.Petclinic.Teardown(ctx, command); err != nil {
 			return err
 		}
 	}

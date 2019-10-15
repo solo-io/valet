@@ -12,12 +12,14 @@ type Cert struct {
 	Domain    string `yaml:"domain"`
 }
 
-func (c *Cert) Ensure(ctx context.Context) error {
-	cert := internal.CreateCert(c.Name, c.Namespace, c.Domain)
-	return cmd.Kubectl().ApplyStdIn(cert).Run(ctx)
+func (c *Cert) Ensure(ctx context.Context, command cmd.Factory) error {
+	return command.Kubectl().ApplyStdIn(c.getCertYaml()).Run(ctx)
 }
 
-func (c *Cert) Teardown(ctx context.Context) error {
-	cert := internal.CreateCert(c.Name, c.Namespace, c.Domain)
-	return cmd.Kubectl().DeleteStdIn(cert).Run(ctx)
+func (c *Cert) Teardown(ctx context.Context, command cmd.Factory) error {
+	return command.Kubectl().DeleteStdIn(c.getCertYaml()).Run(ctx)
+}
+
+func (c *Cert) getCertYaml() string {
+	return internal.CreateCertString(c.Name, c.Namespace, c.Domain)
 }

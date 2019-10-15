@@ -72,7 +72,7 @@ func (c *gkeClient) getCluster(ctx context.Context, name, project, zone string) 
 	if err != nil {
 		st, ok := status.FromError(err)
 		if ok && st.Code() == codes.NotFound {
-			contextutils.LoggerFrom(ctx).Infow("Cluster not found")
+			contextutils.LoggerFrom(ctx).Infow("cluster not found")
 			return nil, nil
 		}
 		// Use st.Message() and st.Code()

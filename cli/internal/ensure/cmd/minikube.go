@@ -43,10 +43,10 @@ func (m *minikube) SwallowError() *minikube {
 
 func (m *minikube) Command() *Command {
 	return &Command{
-		Name:         m.Name,
-		Args:         m.Args,
-		StdIn:        m.StdIn,
-		RedactedArgs: m.RedactedArgs,
+		Name:            m.Name,
+		Args:            m.Args,
+		StdIn:           m.StdIn,
+		Redactions:      m.Redactions,
 		SwallowErrorLog: m.SwallowErrorLog,
 	}
 }

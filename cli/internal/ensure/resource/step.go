@@ -11,24 +11,24 @@ type Step struct {
 	Curl   *Curl  `yaml:"curl"`
 }
 
-func (s *Step) Ensure(ctx context.Context) error {
+func (s *Step) Ensure(ctx context.Context, command cmd.Factory) error {
 	if s.Apply != "" {
-		if err := cmd.Kubectl().ApplyFile(s.Apply).Run(ctx); err != nil {
+		if err := command.Kubectl().ApplyFile(s.Apply).Run(ctx); err != nil {
 			return err
 		}
 	}
 	if s.Delete != "" {
-		if err := cmd.Kubectl().DeleteFile(s.Delete).Run(ctx); err != nil {
+		if err := command.Kubectl().DeleteFile(s.Delete).Run(ctx); err != nil {
 			return err
 		}
 	}
 	if s.Curl != nil {
-		return s.Curl.Ensure(ctx)
+		return s.Curl.Ensure(ctx, command)
 	}
 	return nil
 }
 
-func (s *Step) Teardown(ctx context.Context) error {
+func (s *Step) Teardown(ctx context.Context, command cmd.Factory) error {
 	return nil
 }
 

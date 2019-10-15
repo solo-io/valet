@@ -3,6 +3,7 @@ package resource
 import (
 	"context"
 	"github.com/solo-io/valet/cli/internal/ensure/client"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
 type DNS struct {
@@ -16,7 +17,7 @@ type DNS struct {
 	IP         string `yaml:"ip"`
 }
 
-func (d *DNS) Ensure(ctx context.Context) error {
+func (d *DNS) Ensure(ctx context.Context, command cmd.Factory) error {
 	awsClient, err := client.NewAwsDnsClient()
 	if err != nil {
 		return err
@@ -24,6 +25,6 @@ func (d *DNS) Ensure(ctx context.Context) error {
 	return awsClient.CreateMapping(ctx, d.HostedZone, d.Domain, d.IP)
 }
 
-func (d *DNS) Teardown(ctx context.Context) error {
+func (d *DNS) Teardown(ctx context.Context, command cmd.Factory) error {
 	return nil
 }

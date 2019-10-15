@@ -25,20 +25,22 @@ type SecretValue struct {
 	File   string `yaml:"file"`
 }
 
-func (s *Secret) Ensure(ctx context.Context) error {
-	command := cmd.Kubectl().Create(secret).With(generic).WithName(s.Name).Namespace(s.Namespace)
+func (s *Secret) Ensure(ctx context.Context, command cmd.Factory) error {
+	toRun := command.Kubectl().Create(secret).With(generic).WithName(s.Name).Namespace(s.Namespace)
 	for name, v := range s.Entries {
 		if v.File != "" {
 			fromFile := fmt.Sprintf("--from-file=%s=%s", name, v.File)
-			command = command.With(fromFile)
+			toRun = toRun.With(fromFile)
 		} else if v.EnvVar != "" {
-			fromLiteral := fmt.Sprintf("--from-literal=%s=%s", name, os.Getenv(v.EnvVar))
-			command = command.With(fromLiteral)
+			template := "--from-literal=%s=%s"
+			fromLiteral := fmt.Sprintf(template, name, os.Getenv(v.EnvVar))
+			fromLiteralRedacted := fmt.Sprintf(template, name, cmd.Redacted)
+			toRun = toRun.With(fromLiteral).Redact(fromLiteral, fromLiteralRedacted)
 		}
 	}
-	return command.DryRunAndApply(ctx)
+	return toRun.DryRunAndApply(ctx, command)
 }
 
-func (s *Secret) Teardown(ctx context.Context) error {
-	return cmd.Kubectl().Delete(secret).WithName(s.Name).Run(ctx)
+func (s *Secret) Teardown(ctx context.Context, command cmd.Factory) error {
+	return command.Kubectl().Delete(secret).WithName(s.Name).Run(ctx)
 }

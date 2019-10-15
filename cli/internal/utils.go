@@ -16,7 +16,7 @@ func GetCurrentContextName(ctx context.Context) (string, error) {
 	return strings.TrimSpace(out), nil
 }
 
-func CreateDomain(ctx context.Context, appName, hostedZone string) (string, error) {
+func CreateDomainString(ctx context.Context, appName, hostedZone string) (string, error) {
 	currentContext, err := GetCurrentContextName(ctx)
 	if err != nil {
 		return "", err
@@ -30,7 +30,7 @@ func CreateDomain(ctx context.Context, appName, hostedZone string) (string, erro
 	return domain, nil
 }
 
-func CreateCert(name, namespace, domain string) string {
+func CreateCertString(name, namespace, domain string) string {
 	return fmt.Sprintf(`
 apiVersion: certmanager.k8s.io/v1alpha1
 kind: Certificate

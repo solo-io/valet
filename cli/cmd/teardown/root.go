@@ -4,6 +4,7 @@ import (
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/valet/cli/api"
 	"github.com/solo-io/valet/cli/cmd/ensure"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 )
@@ -43,5 +44,6 @@ func teardown(opts *options.Options) error {
 			}
 		}
 	}
-	return cfg.Teardown(opts.Top.Ctx)
+	command := cmd.CommandFactory{}
+	return cfg.Teardown(opts.Top.Ctx, &command)
 }

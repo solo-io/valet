@@ -24,31 +24,31 @@ var (
 type CertManager struct {
 }
 
-func (c *CertManager) Ensure(ctx context.Context) error {
-	return EnsureAll(ctx, manifest, awsSecret, clusterIssuer)
+func (c *CertManager) Ensure(ctx context.Context, command cmd.Factory) error {
+	return EnsureAll(ctx, command, manifest, awsSecret, clusterIssuer)
 }
 
-func (c *CertManager) Teardown(ctx context.Context) error {
-	return TeardownAll(ctx, manifest, awsSecret, clusterIssuer)
+func (c *CertManager) Teardown(ctx context.Context, command cmd.Factory) error {
+	return TeardownAll(ctx, command, manifest, awsSecret, clusterIssuer)
 }
 
 type ClusterIssuer struct {
 }
 
-func (c *ClusterIssuer) Ensure(ctx context.Context) error {
+func (c *ClusterIssuer) Ensure(ctx context.Context, command cmd.Factory) error {
 	issuer, err := getIssuer()
 	if err != nil {
 		return err
 	}
-	return cmd.Kubectl().ApplyStdIn(issuer).Run(ctx)
+	return command.Kubectl().ApplyStdIn(issuer).Run(ctx)
 }
 
-func (c *ClusterIssuer) Teardown(ctx context.Context) error {
+func (c *ClusterIssuer) Teardown(ctx context.Context, command cmd.Factory) error {
 	issuer, err := getIssuer()
 	if err != nil {
 		return err
 	}
-	return cmd.Kubectl().DeleteStdIn(issuer).Run(ctx)
+	return command.Kubectl().DeleteStdIn(issuer).Run(ctx)
 }
 
 func getIssuer() (string, error) {

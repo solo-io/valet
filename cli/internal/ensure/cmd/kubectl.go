@@ -66,12 +66,20 @@ func (k *kubectl) ApplyFile(path string) *kubectl {
 	return k.Apply().File(path)
 }
 
+func (k *kubectl) Redact(unredacted, redacted string) *kubectl {
+	if k.Redactions == nil {
+		k.Redactions = make(map[string]string)
+	}
+	k.Redactions[unredacted] = redacted
+	return k
+}
+
 func (k *kubectl) Command() *Command {
 	return &Command{
-		Name:         k.Name,
-		Args:         k.Args,
-		StdIn:        k.StdIn,
-		RedactedArgs: k.RedactedArgs,
+		Name:       k.Name,
+		Args:       k.Args,
+		StdIn:      k.StdIn,
+		Redactions: k.Redactions,
 	}
 }
 
@@ -91,34 +99,16 @@ func (k *kubectl) Output(ctx context.Context) (string, error) {
 	return k.Command().Output(ctx)
 }
 
-func (k *kubectl) DryRunAndApply(ctx context.Context) error {
+func (k *kubectl) DryRunAndApply(ctx context.Context, command Factory) error {
 	out, err := k.DryRun().OutYaml().Output(ctx)
 	if err != nil {
 		return err
 	}
-	return Kubectl().ApplyStdIn(out).Run(ctx)
+	return command.Kubectl().ApplyStdIn(out).Run(ctx)
 }
 
 func (k *kubectl) JsonPatch(jsonPatch string) *kubectl {
 	return k.With("--type=json", jsonPatch)
-}
-
-func KubectlDeleteAllFiles(ctx context.Context, files []string) error {
-	for _, file := range files {
-		if err := Kubectl().ApplyFile(file).Run(ctx); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func KubectlApplyAllFiles(ctx context.Context, files []string) error {
-	for _, file := range files {
-		if err := Kubectl().ApplyFile(file).Run(ctx); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func Kubectl(args ...string) *kubectl {

@@ -17,50 +17,52 @@ type Config struct {
 	Resources      []string        `yaml:"resources"`
 }
 
-func (c *Config) Ensure(ctx context.Context) error {
+func (c *Config) Ensure(ctx context.Context, command cmd.Factory) error {
 	if c.Cluster != nil {
-		if err := c.Cluster.Ensure(ctx); err != nil {
+		if err := c.Cluster.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
 	for _, ns := range c.Namespaces {
-		if err := ns.Ensure(ctx); err != nil {
+		if err := ns.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
 	for _, secret := range c.Secrets {
-		if err := secret.Ensure(ctx); err != nil {
+		if err := secret.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
 	if c.CertManager != nil {
-		if err := c.CertManager.Ensure(ctx); err != nil {
+		if err := c.CertManager.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
+	proxyUrl := ""
 	if c.Gloo != nil {
-		if err := c.Gloo.Ensure(ctx); err != nil {
+		if err := c.Gloo.Ensure(ctx, command); err != nil {
 			return err
 		}
+		proxyAddress, err := c.Gloo.GetProxyAddress(ctx, command)
+		if err != nil {
+			return err
+		}
+		proxyUrl = proxyAddress
 	}
 	if c.ServiceMeshHub != nil {
-		if err := c.ServiceMeshHub.Ensure(ctx); err != nil {
+		if err := c.ServiceMeshHub.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
-	proxyAddress, err := c.Gloo.GetProxyAddress(ctx)
-	if err != nil {
-		return err
-	}
+
 	for _, workflow := range c.Workflows {
-		workflow.URL = proxyAddress
-		if err := workflow.Ensure(ctx); err != nil {
+		workflow.URL = proxyUrl
+		if err := workflow.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
 	if c.Demos != nil {
-		c.Demos.Glooctl = c.Gloo.glooctl
-		if err := c.Demos.Ensure(ctx); err != nil {
+		if err := c.Demos.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
@@ -72,8 +74,11 @@ func (c *Config) Ensure(ctx context.Context) error {
 	return nil
 }
 
-func (c *Config) Teardown(ctx context.Context) error {
-	panic("implement me")
+func (c *Config) Teardown(ctx context.Context, command cmd.Factory) error {
+	if c.Cluster == nil {
+		panic("implement me")
+	}
+	return c.Cluster.Teardown(ctx, command)
 }
 
 

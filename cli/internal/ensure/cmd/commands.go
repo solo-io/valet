@@ -11,6 +11,7 @@ import (
 
 const (
 	Redacted = "REDACTED"
+	Empty    = "EMPTY"
 )
 
 var (
@@ -24,7 +25,7 @@ type Command struct {
 	Args  []string
 	StdIn string
 
-	RedactedArgs []string
+	Redactions      map[string]string
 	SwallowErrorLog bool
 }
 
@@ -37,10 +38,10 @@ func (c *Command) Output(ctx context.Context) (string, error) {
 	c.logCommand(ctx)
 	cmd := exec.Command(c.Name, c.Args...)
 	cmd.Stdin = strings.NewReader(c.StdIn)
-	bytes, err := cmd.Output()
+	bytes, err := cmd.CombinedOutput()
 	if err != nil {
 		if !c.SwallowErrorLog {
-			contextutils.LoggerFrom(ctx).Errorw("Error running command", zap.Error(err), zap.String("out", string(bytes)))
+			contextutils.LoggerFrom(ctx).Errorw("error running command", zap.Error(err), zap.String("out", string(bytes)))
 		}
 		return "", CommandError(err)
 	}
@@ -51,23 +52,23 @@ func (c *Command) logCommand(ctx context.Context) {
 	var parts []string
 	parts = append(parts, c.Name)
 	for _, arg := range c.Args {
-		logArg := true
-		for _, redacted := range c.RedactedArgs {
-			if arg == redacted {
-				logArg = false
+		processed := arg
+		for unredacted, redacted := range c.Redactions {
+			if arg == unredacted {
+				processed = redacted
 				break
 			}
 		}
-		if logArg {
-			parts = append(parts, arg)
-		} else {
-			parts = append(parts, Redacted)
+		if arg == "" {
+			processed = Empty
+		} else if processed == "" {
+			processed = Redacted
 		}
+		parts = append(parts, processed)
 	}
 	command := strings.Join(parts, " ")
 	contextutils.LoggerFrom(ctx).Infow("running command",
-		zap.String("command", command),
-		zap.String("stdIn", c.StdIn))
+		zap.String("command", command))
 }
 
 func (c *Command) WithStdIn(stdIn string) *Command {
@@ -80,7 +81,10 @@ func (c *Command) With(args ...string) *Command {
 	return c
 }
 
-func (c *Command) Redact(args ...string) *Command {
-	c.RedactedArgs = append(c.RedactedArgs, args...)
+func (c *Command) Redact(unredacted, redacted string) *Command {
+	if c.Redactions == nil {
+		c.Redactions = make(map[string]string)
+	}
+	c.Redactions[unredacted] = redacted
 	return c
 }

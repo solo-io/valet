@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/errors"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
@@ -23,14 +24,14 @@ type Curl struct {
 	URL        string
 }
 
-func (c *Curl) Ensure(ctx context.Context) error {
+func (c *Curl) Ensure(ctx context.Context, command cmd.Factory) error {
 	if c.URL == "" {
 		return NoUrlSetError
 	}
 	return c.doCurl(ctx)
 }
 
-func (c *Curl) Teardown(ctx context.Context) error {
+func (c *Curl) Teardown(ctx context.Context, command cmd.Factory) error {
 	return nil
 }
 

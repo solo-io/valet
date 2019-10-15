@@ -5,6 +5,7 @@ import (
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/api"
 	"github.com/solo-io/valet/cli/cmd/ensure"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 )
@@ -52,5 +53,6 @@ func setContext(opts *options.Options) error {
 			return MustSpecifyClusterError
 		}
 	}
-	return cfg.Cluster.SetContext(opts.Top.Ctx)
+	command := cmd.CommandFactory{}
+	return cfg.Cluster.SetContext(opts.Top.Ctx, &command)
 }

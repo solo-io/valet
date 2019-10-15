@@ -20,27 +20,18 @@ const (
 	AwsSecretAccessKeySecretVar = "secret_access_key"
 )
 
-func RunAll(ctx context.Context, cmds ...*cmd.Command) error {
-	for _, command := range cmds {
-		if err := command.Run(ctx); err != nil {
+func EnsureAll(ctx context.Context, command cmd.Factory, resources ...Resource) error {
+	for _, resource := range resources {
+		if err := resource.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func EnsureAll(ctx context.Context, resources ...Resource) error {
+func TeardownAll(ctx context.Context, command cmd.Factory, resources ...Resource) error {
 	for _, resource := range resources {
-		if err := resource.Ensure(ctx); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func TeardownAll(ctx context.Context, resources ...Resource) error {
-	for _, resource := range resources {
-		if err := resource.Teardown(ctx); err != nil {
+		if err := resource.Teardown(ctx, command); err != nil {
 			return err
 		}
 	}

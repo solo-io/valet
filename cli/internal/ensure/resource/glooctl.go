@@ -12,7 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 )
 
 const (
@@ -31,28 +30,17 @@ type Glooctl struct {
 	LocalArtifactsDir string `yaml:"localArtifactsDir"`
 	ValetArtifacts bool   `yaml:"valetArtifacts"`
 	Enterprise        bool   `yaml:"enterprise"`
-
-	localPath string
 }
 
-func (g *Glooctl) Command() (*cmd.Glooctl, error) {
-	if g.localPath == "" {
-		return nil, GlooctlNotEnsuredError
-	}
-	return &cmd.Glooctl{
-		Name: g.localPath,
-	}, nil
-}
-
-func (g *Glooctl) Ensure(ctx context.Context) error {
+func (g *Glooctl) Ensure(ctx context.Context, command cmd.Factory) error {
 	if g.LocalArtifactsDir != "" {
 		// try to use local artifact if it exists
 		glooctlPath := filepath.Join(g.LocalArtifactsDir, getAssetName())
 		if _, err := os.Stat(glooctlPath); err == nil {
-			g.localPath = glooctlPath
+			command.SetGlooctlPath(glooctlPath)
 			return nil
 		} else if !os.IsNotExist(err) {
-			contextutils.LoggerFrom(ctx).Errorw("Error checking if glooctl was in artifacts directory", zap.Error(err))
+			contextutils.LoggerFrom(ctx).Errorw("error checking if glooctl was in artifacts directory", zap.Error(err))
 			return err
 		}
 	}
@@ -72,12 +60,11 @@ func (g *Glooctl) Ensure(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	g.localPath = localPath
-	if _, err := os.Stat(g.localPath); err == nil {
-		contextutils.LoggerFrom(ctx).Infow("Glooctl already exists", zap.String("localPath", localPath))
+	command.SetGlooctlPath(localPath)
+	if _, err := os.Stat(localPath); err == nil {
+		contextutils.LoggerFrom(ctx).Infow("glooctl already exists", zap.String("localPath", localPath))
 		return nil
 	}
-
 	if g.ValetArtifacts {
 		return g.ensureFromValet(ctx, glooctlVersion, localPath)
 	}
@@ -85,7 +72,6 @@ func (g *Glooctl) Ensure(ctx context.Context) error {
 }
 
 func (g *Glooctl) ensureFromGithub(ctx context.Context, version, localPath string) error {
-
 	githubClient := githubutils.GetClientWithOrWithoutToken(ctx)
 	downloader := client.NewGithubArtifactDownloader(githubClient, GlooRepo, "v"+version)
 	return downloader.Download(ctx, getAssetName(), localPath)
@@ -128,28 +114,4 @@ func getLatestTag(ctx context.Context, repo string) (string, error) {
 		return "", wrapped
 	}
 	return release.GetTagName(), nil
-}
-
-func (g *Glooctl) GetProxyAddress(ctx context.Context) (string, error) {
-	command, err := g.Command()
-	if err != nil {
-		return "", err
-	}
-	address, err := command.ProxyAddress().Output(ctx)
-	if err != nil {
-		return "", err
-	}
-	return address, nil
-}
-
-func (g *Glooctl) GetProxyIp(ctx context.Context) (string, error) {
-	address, err := g.GetProxyAddress(ctx)
-	if err != nil {
-		return "", err
-	}
-	portIndex := strings.Index(address, ":")
-	if portIndex >= 0 {
-		address = address[:portIndex]
-	}
-	return address, nil
 }

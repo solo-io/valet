@@ -6,7 +6,9 @@ import (
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"go.uber.org/zap"
+	"os"
 )
 
 const (
@@ -16,6 +18,7 @@ const (
 	GlooSelector       = "gloo"
 	AwsSecretName      = "aws-creds"
 	AwsUpstreamName    = "aws"
+	LicenseKeyEnvVar   = "LICENSE_KEY"
 )
 
 var (
@@ -33,21 +36,18 @@ type Gloo struct {
 	LicenseKey        string            `yaml:"licenseKey"`
 	UiVirtualService  *UiVirtualService `yaml:"uiVirtualService"`
 	AWS               AWS               `yaml:"aws"`
-
-	glooctl *Glooctl
 }
 
-func (g *Gloo) Ensure(ctx context.Context) error {
+func (g *Gloo) Ensure(ctx context.Context, command cmd.Factory) error {
 	glooctl := g.getGlooctl(ctx)
-	if err := glooctl.Ensure(ctx); err != nil {
+	if err := glooctl.Ensure(ctx, command); err != nil {
 		return err
 	}
-	g.glooctl = glooctl
 	version, err := g.getVersion(ctx)
 	if err != nil {
 		return err
 	}
-	glooInstalled, err := g.glooInstalled(ctx, version)
+	glooInstalled, err := g.glooInstalled(ctx, command, version)
 	if err != nil {
 		return err
 	}
@@ -55,14 +55,18 @@ func (g *Gloo) Ensure(ctx context.Context) error {
 		return nil
 	}
 
-	err = g.installGloo(ctx)
+	if g.LicenseKey == "" {
+		g.LicenseKey = os.Getenv(LicenseKeyEnvVar)
+	}
+
+	err = g.installGloo(ctx, command)
 	if err != nil {
 		return err
 	}
 
 	if g.UiVirtualService != nil {
 		if g.UiVirtualService.DNS != nil {
-			proxyIp, err := g.glooctl.GetProxyIp(ctx)
+			proxyIp, err := command.Glooctl().GetProxyIp(ctx)
 			if err != nil {
 				return err
 			}
@@ -70,8 +74,7 @@ func (g *Gloo) Ensure(ctx context.Context) error {
 		}
 	}
 
-	g.AWS.Glooctl = g.glooctl
-	if err = g.AWS.Ensure(ctx); err != nil {
+	if err = g.AWS.Ensure(ctx, command); err != nil {
 		return err
 	}
 
@@ -103,35 +106,34 @@ func (g *Gloo) getVersion(ctx context.Context) (string, error) {
 	return version, nil
 }
 
-func (g *Gloo) glooInstalled(ctx context.Context, version string) (bool, error) {
+func (g *Gloo) glooInstalled(ctx context.Context, command cmd.Factory, version string) (bool, error) {
 	active, err := internal.NamespaceIsActive(ctx, DefaultNamespace)
 	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Error checking if namespace is active", zap.Error(err))
+		contextutils.LoggerFrom(ctx).Errorw("error checking if namespace is active", zap.Error(err))
 		return false, err
 	}
 	if !active {
-		contextutils.LoggerFrom(ctx).Infow("Gloo namespace does not exist.")
+		contextutils.LoggerFrom(ctx).Infow("gloo namespace does not exist.")
 		return false, nil
 	}
 	if g.LocalArtifactsDir != "" && g.Version == "" {
 		// For local artifacts where we don't know the version, start with blank slate
-		return false, g.uninstall(ctx)
+		return false, g.uninstall(ctx, command)
 	}
 	ok, err := internal.PodsReadyAndVersionsMatch(ctx, DefaultNamespace, GlooSelector, version)
 	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Error checking pods and containers", zap.Error(err))
+		contextutils.LoggerFrom(ctx).Errorw("error checking pods and containers", zap.Error(err))
 		return false, err
 	}
 	if !ok {
-		contextutils.LoggerFrom(ctx).Infow("Gloo pods not running with expected version, uninstalling")
-		return false, g.uninstall(ctx)
+		contextutils.LoggerFrom(ctx).Infow("uninstalling existing gloo")
+		return false, g.uninstall(ctx, command)
 	}
-	contextutils.LoggerFrom(ctx).Infow("Gloo installed at desired version")
+	contextutils.LoggerFrom(ctx).Infow("gloo installed at desired version")
 	return true, nil
 }
 
-func (g *Gloo) installGloo(ctx context.Context) error {
-	contextutils.LoggerFrom(ctx).Infow("Running glooctl install")
+func (g *Gloo) installGloo(ctx context.Context, command cmd.Factory) error {
 	args := []string{"install", "gateway"}
 	if g.Enterprise {
 		args = append(args, "enterprise", "--license-key", g.LicenseKey)
@@ -144,7 +146,6 @@ func (g *Gloo) installGloo(ctx context.Context) error {
 			helmChart = fmt.Sprintf("_artifacts/gloo-%s.tgz", g.Version)
 		}
 		args = append(args, "-f", helmChart)
-		contextutils.LoggerFrom(ctx).Infow("Using helm chart from local artifacts", zap.String("helmChart", helmChart))
 	} else if g.LocalArtifactsDir != "" {
 		return MustProvideVersionError
 	}
@@ -156,7 +157,6 @@ func (g *Gloo) installGloo(ctx context.Context) error {
 			helmChart = fmt.Sprintf("https://storage.googleapis.com/valet/artifacts/solo-projects/%s/gloo-ee-%s.tgz", g.Version, g.Version)
 		}
 		args = append(args, "-f", helmChart)
-		contextutils.LoggerFrom(ctx).Infow("Using helm chart from valet artifacts", zap.String("helmChart", helmChart))
 	} else if g.ValetArtifacts {
 		return MustProvideVersionError
 	}
@@ -169,16 +169,10 @@ func (g *Gloo) installGloo(ctx context.Context) error {
 			helmChart = fmt.Sprintf("https://storage.googleapis.com/solo-public-helm/charts/gloo-%s.tgz", g.Version)
 		}
 		args = append(args, "-f", helmChart)
-		contextutils.LoggerFrom(ctx).Infow("Using helm chart from release artifacts", zap.String("helmChart", helmChart))
 	}
-	glooctlCmd, err := g.glooctl.Command()
+	out, err := command.Glooctl().With(args...).Redact(g.LicenseKey, cmd.Redacted).Output(ctx)
 	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Failed to construct glooctlCmd", zap.Error(err))
-		return err
-	}
-	out, err := glooctlCmd.With(args...).Redact(g.LicenseKey).Output(ctx)
-	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Failed to install gloo",
+		contextutils.LoggerFrom(ctx).Errorw("failed to install gloo",
 			zap.Error(err),
 			zap.String("out", out))
 		return err
@@ -186,45 +180,41 @@ func (g *Gloo) installGloo(ctx context.Context) error {
 	return internal.WaitUntilPodsRunning(ctx, DefaultNamespace)
 }
 
-func (g *Gloo) uninstall(ctx context.Context) error {
-	if g.glooctl == nil {
+func (g *Gloo) uninstall(ctx context.Context, command cmd.Factory) error {
+	if command.Glooctl() == nil {
 		return GlooctlNotEnsuredError
 	}
-	glooctlCmd, err := g.glooctl.Command()
-	if err != nil {
-		return err
-	}
-	return glooctlCmd.UninstallAll().Run(ctx)
+	return command.Glooctl().UninstallAll().Run(ctx)
 }
 
-func (g *Gloo) Teardown(ctx context.Context) error {
-	if g.glooctl == nil {
-		g.glooctl = g.getGlooctl(ctx)
-		if err := g.glooctl.Ensure(ctx); err != nil {
+func (g *Gloo) Teardown(ctx context.Context, command cmd.Factory) error {
+	if command.Glooctl() == nil {
+		glooctl := g.getGlooctl(ctx)
+		if err := glooctl.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
-	return g.uninstall(ctx)
+	return g.uninstall(ctx, command)
 }
 
-func (g *Gloo) GetProxyIp(ctx context.Context) (string, error) {
-	if g.glooctl == nil {
-		g.glooctl = g.getGlooctl(ctx)
-		if err := g.glooctl.Ensure(ctx); err != nil {
+func (g *Gloo) GetProxyIp(ctx context.Context, command cmd.Factory) (string, error) {
+	if command.Glooctl() == nil {
+		glooctl := g.getGlooctl(ctx)
+		if err := glooctl.Ensure(ctx, command); err != nil {
 			return "", err
 		}
 	}
-	return g.glooctl.GetProxyIp(ctx)
+	return command.Glooctl().GetProxyIp(ctx)
 }
 
-func (g *Gloo) GetProxyAddress(ctx context.Context) (string, error) {
-	if g.glooctl == nil {
-		g.glooctl = g.getGlooctl(ctx)
-		if err := g.glooctl.Ensure(ctx); err != nil {
+func (g *Gloo) GetProxyAddress(ctx context.Context, command cmd.Factory) (string, error) {
+	if command.Glooctl() == nil {
+		glooctl := g.getGlooctl(ctx)
+		if err := glooctl.Ensure(ctx, command); err != nil {
 			return "", err
 		}
 	}
-	return g.glooctl.GetProxyAddress(ctx)
+	return command.Glooctl().ProxyAddress().Output(ctx)
 }
 
 type UiVirtualService struct {
@@ -233,18 +223,18 @@ type UiVirtualService struct {
 	DNS *DNS `yaml:"dns"`
 }
 
-func (u *UiVirtualService) Ensure(ctx context.Context) error {
+func (u *UiVirtualService) Ensure(ctx context.Context, command cmd.Factory) error {
 	if u.DNS != nil {
-		if err := u.DNS.Ensure(ctx); err != nil {
+		if err := u.DNS.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (u *UiVirtualService) Teardown(ctx context.Context) error {
+func (u *UiVirtualService) Teardown(ctx context.Context, command cmd.Factory) error {
 	if u.DNS != nil {
-		if err := u.DNS.Teardown(ctx); err != nil {
+		if err := u.DNS.Teardown(ctx, command); err != nil {
 			return err
 		}
 	}
@@ -254,28 +244,22 @@ func (u *UiVirtualService) Teardown(ctx context.Context) error {
 type AWS struct {
 	Secret   bool `yaml:"secret"`
 	Upstream bool `yaml:"upstream"`
-
-	Glooctl *Glooctl
 }
 
-func (a *AWS) Ensure(ctx context.Context) error {
+func (a *AWS) Ensure(ctx context.Context, command cmd.Factory) error {
 	if a.Secret {
-		secret := AwsSecret(AwsSecretName, DefaultNamespace)
-		if err := secret.Ensure(ctx); err != nil {
+		secret := AwsSecret(DefaultNamespace, AwsSecretName)
+		if err := secret.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
 	if a.Upstream {
-		if a.Glooctl == nil {
+		if command.Glooctl() == nil {
 			return GlooctlNotProvidedError
 		}
-		glooctlCmd, err := a.Glooctl.Command()
+		err := command.Glooctl().GetUpstream(AwsUpstreamName).SwallowError().Run(ctx)
 		if err != nil {
-			return err
-		}
-		err = glooctlCmd.GetUpstream(AwsUpstreamName).Run(ctx)
-		if err != nil {
-			err = glooctlCmd.CreateUpstream(AwsUpstreamName).AwsSecretName(AwsSecretName).Run(ctx)
+			err = command.Glooctl().CreateUpstream(AwsUpstreamName).AwsSecretName(AwsSecretName).With("--name", AwsUpstreamName).Run(ctx)
 			if err != nil {
 				return err
 			}

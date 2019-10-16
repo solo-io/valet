@@ -2,118 +2,100 @@ package cmd
 
 import "context"
 
-type kubectl Command
+type Kubectl struct {
+	cmd *Command
+}
 
-func (k *kubectl) With(args ...string) *kubectl {
-	k.Args = append(k.Args, args...)
+func (k *Kubectl) Cmd() *Command {
+	return k.cmd
+}
+
+func (k *Kubectl) With(args... string) *Kubectl {
+	k.cmd = k.cmd.With(args...)
 	return k
 }
 
-func (k *kubectl) WithStdIn(stdIn string) *kubectl {
-	k.StdIn = stdIn
+func (k *Kubectl) WithStdIn(stdIn string) *Kubectl {
+	k.cmd.StdIn = stdIn
 	return k
 }
 
-func (k *kubectl) File(file string) *kubectl {
+func (k *Kubectl) File(file string) *Kubectl {
 	return k.With("-f", file)
 }
 
-func (k *kubectl) WithName(name string) *kubectl {
+func (k *Kubectl) WithName(name string) *Kubectl {
 	return k.With(name)
 }
 
-func (k *kubectl) Namespace(ns string) *kubectl {
+func (k *Kubectl) Namespace(ns string) *Kubectl {
 	return k.With("-n", ns)
 }
 
-func (k *kubectl) DryRun() *kubectl {
+func (k *Kubectl) DryRun() *Kubectl {
 	return k.With("--dry-run")
 }
 
-func (k *kubectl) OutYaml() *kubectl {
+func (k *Kubectl) OutYaml() *Kubectl {
 	return k.With("-oyaml")
 }
 
-func (k *kubectl) IgnoreNotFound() *kubectl {
+func (k *Kubectl) IgnoreNotFound() *Kubectl {
 	return k.With("--ignore-not-found")
 }
 
-func (k *kubectl) Create(typeToCreate string) *kubectl {
+func (k *Kubectl) Create(typeToCreate string) *Kubectl {
 	return k.With("create", typeToCreate)
 }
 
-func (k *kubectl) Delete(typeToDelete string) *kubectl {
+func (k *Kubectl) Delete(typeToDelete string) *Kubectl {
 	return k.With("delete", typeToDelete)
 }
 
-func (k *kubectl) DeleteFile(path string) *kubectl {
-	return k.With("delete").File(path)
-}
-
-func (k *kubectl) DeleteStdIn(stdIn string) *kubectl {
-	return k.DeleteFile("-").WithStdIn(stdIn)
-}
-
-func (k *kubectl) Apply() *kubectl {
+func (k *Kubectl) Apply() *Kubectl {
 	return k.With("apply")
 }
 
-func (k *kubectl) ApplyStdIn(stdIn string) *kubectl {
+func (k *Kubectl) ApplyStdIn(stdIn string) *Kubectl {
 	return k.Apply().File("-").WithStdIn(stdIn)
 }
 
-func (k *kubectl) ApplyFile(path string) *kubectl {
+func (k *Kubectl) ApplyFile(path string) *Kubectl {
 	return k.Apply().File(path)
 }
 
-func (k *kubectl) Redact(unredacted, redacted string) *kubectl {
-	if k.Redactions == nil {
-		k.Redactions = make(map[string]string)
+func (k *Kubectl) Redact(unredacted, redacted string) *Kubectl {
+	if k.cmd.Redactions == nil {
+		k.cmd.Redactions = make(map[string]string)
 	}
-	k.Redactions[unredacted] = redacted
+	k.cmd.Redactions[unredacted] = redacted
 	return k
 }
 
-func (k *kubectl) Command() *Command {
-	return &Command{
-		Name:       k.Name,
-		Args:       k.Args,
-		StdIn:      k.StdIn,
-		Redactions: k.Redactions,
-	}
-}
-
-func (k *kubectl) Run(ctx context.Context) error {
-	return k.Command().Run(ctx)
-}
-
-func (k *kubectl) UseContext(context string) *kubectl {
+func (k *Kubectl) UseContext(context string) *Kubectl {
 	return k.With("config", "use-context", context)
 }
 
-func (k *kubectl) CurrentContext() *kubectl {
+func (k *Kubectl) CurrentContext() *Kubectl {
 	return k.With("config", "current-context")
 }
 
-func (k *kubectl) Output(ctx context.Context) (string, error) {
-	return k.Command().Output(ctx)
-}
-
-func (k *kubectl) DryRunAndApply(ctx context.Context, command Factory) error {
-	out, err := k.DryRun().OutYaml().Output(ctx)
+func (k *Kubectl) DryRunAndApply(ctx context.Context, command Factory) error {
+	out, err := k.DryRun().OutYaml().Cmd().Output(ctx)
 	if err != nil {
 		return err
 	}
-	return command.Kubectl().ApplyStdIn(out).Run(ctx)
+	return command.Kubectl().ApplyStdIn(out).Cmd().Run(ctx)
 }
 
-func (k *kubectl) JsonPatch(jsonPatch string) *kubectl {
+func (k *Kubectl) JsonPatch(jsonPatch string) *Kubectl {
 	return k.With("--type=json", jsonPatch)
 }
 
-func Kubectl(args ...string) *kubectl {
-	return &kubectl{
-		Name: "kubectl",
-		Args: args,
-	}
+func (k *Kubectl) DeleteFile(path string) *Kubectl {
+	return k.With("delete", "-f", path)
+}
+
+func (k *Kubectl) DeleteStdIn(stdIn string) *Kubectl {
+	return k.DeleteFile("-").WithStdIn(stdIn)
 }

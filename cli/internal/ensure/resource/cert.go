@@ -13,13 +13,13 @@ type Cert struct {
 }
 
 func (c *Cert) Ensure(ctx context.Context, command cmd.Factory) error {
-	return command.Kubectl().ApplyStdIn(c.getCertYaml()).Run(ctx)
+	return command.Kubectl().ApplyStdIn(c.GetCertYaml()).Cmd().Run(ctx)
 }
 
 func (c *Cert) Teardown(ctx context.Context, command cmd.Factory) error {
-	return command.Kubectl().DeleteStdIn(c.getCertYaml()).Run(ctx)
+	return command.Kubectl().DeleteStdIn(c.GetCertYaml()).Cmd().Run(ctx)
 }
 
-func (c *Cert) getCertYaml() string {
+func (c *Cert) GetCertYaml() string {
 	return internal.CreateCertString(c.Name, c.Namespace, c.Domain)
 }

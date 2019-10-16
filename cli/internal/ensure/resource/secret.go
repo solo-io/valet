@@ -42,5 +42,5 @@ func (s *Secret) Ensure(ctx context.Context, command cmd.Factory) error {
 }
 
 func (s *Secret) Teardown(ctx context.Context, command cmd.Factory) error {
-	return command.Kubectl().Delete(secret).WithName(s.Name).Run(ctx)
+	return command.Kubectl().Delete(secret).WithName(s.Name).Cmd().Run(ctx)
 }

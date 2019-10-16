@@ -18,19 +18,19 @@ type Minikube struct {}
 
 func (m *Minikube) Ensure(ctx context.Context, command cmd.Factory) error {
 	// If minikube status seems healthy, just set context and return
-	if err := cmd.Minikube().Status().SwallowError().Run(ctx); err == nil {
+	if err := command.Minikube().Status().SwallowError().Cmd().Run(ctx); err == nil {
 		return m.SetContext(ctx, command)
 	}
-	_ = cmd.Minikube().Delete().SwallowError().Run(ctx)
-	return cmd.Minikube().Start().Cpus(DefaultCpus).Memory(DefaultMemory).KubeVersion(DefaultKubeVersion).Run(ctx)
+	_ = command.Minikube().Delete().SwallowError().Cmd().Run(ctx)
+	return command.Minikube().Start().Cpus(DefaultCpus).Memory(DefaultMemory).KubeVersion(DefaultKubeVersion).Cmd().Run(ctx)
 }
 
 func (m *Minikube) SetContext(ctx context.Context, command cmd.Factory) error {
-	return cmd.Kubectl().UseContext(MinikubeContext).Run(ctx)
+	return command.Kubectl().UseContext(MinikubeContext).Cmd().Run(ctx)
 }
 
 func (m *Minikube) Teardown(ctx context.Context, command cmd.Factory) error {
-	return cmd.Minikube().Delete().SwallowError().Run(ctx)
+	return command.Minikube().Delete().SwallowError().Cmd().Run(ctx)
 }
 
 

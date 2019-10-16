@@ -32,7 +32,7 @@ func (g *GKE) Ensure(ctx context.Context, command cmd.Factory) error {
 }
 
 func (g *GKE) SetContext(ctx context.Context, command cmd.Factory) error {
-	return command.Gcloud().GetCredentials().Project(g.Project).Zone(g.Location).WithName(g.Name).Run(ctx)
+	return command.Gcloud().GetCredentials().Project(g.Project).Zone(g.Location).WithName(g.Name).Cmd().Run(ctx)
 }
 
 func (g *GKE) Teardown(ctx context.Context, command cmd.Factory) error {

@@ -5,34 +5,22 @@ import (
 	"strings"
 )
 
-type Glooctl Command
-
-func (g *Glooctl) With(args ...string) *Glooctl {
-	g.Args = append(g.Args, args...)
-	return g
+type Glooctl struct {
+	cmd *Command
 }
 
-func (g *Glooctl) Command() *Command {
-	return &Command{
-		Name:            g.Name,
-		Args:            g.Args,
-		StdIn:           g.StdIn,
-		Redactions:      g.Redactions,
-		SwallowErrorLog: g.SwallowErrorLog,
-	}
+func (g *Glooctl) Cmd() *Command {
+	return g.cmd
 }
 
 func (g *Glooctl) SwallowError() *Glooctl {
-	g.SwallowErrorLog = true
+	g.cmd.SwallowErrorLog = true
 	return g
 }
 
-func (g *Glooctl) Run(ctx context.Context) error {
-	return g.Command().Run(ctx)
-}
-
-func (g *Glooctl) Output(ctx context.Context) (string, error) {
-	return g.Command().Output(ctx)
+func (g *Glooctl) With(args... string) *Glooctl {
+	g.cmd = g.cmd.With(args...)
+	return g
 }
 
 func (g *Glooctl) UninstallAll() *Glooctl {
@@ -44,10 +32,10 @@ func (g *Glooctl) LicenseKey(licenseKey string) *Glooctl {
 }
 
 func (g *Glooctl) Redact(unredacted, redacted string) *Glooctl {
-	if g.Redactions == nil {
-		g.Redactions = make(map[string]string)
+	if g.cmd.Redactions == nil {
+		g.cmd.Redactions = make(map[string]string)
 	}
-	g.Redactions[unredacted] = redacted
+	g.cmd.Redactions[unredacted] = redacted
 	return g
 }
 
@@ -60,7 +48,7 @@ func (g *Glooctl) ProxyAddress() *Glooctl {
 }
 
 func (g *Glooctl) GetProxyIp(ctx context.Context) (string, error) {
-	address, err := g.ProxyAddress().Output(ctx)
+	address, err := g.ProxyAddress().Cmd().Output(ctx)
 	if err != nil {
 		return "", err
 	}

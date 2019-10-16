@@ -41,7 +41,7 @@ func (p *Petclinic) Ensure(ctx context.Context, command cmd.Factory) error {
 		}
 		p.DNS.IP = proxyIp
 		if p.DNS.Domain == "" {
-			domain, err := internal.CreateDomainString(ctx, PetclinicDemoName, p.DNS.HostedZone)
+			domain, err := internal.CreateDomainString(ctx, command, PetclinicDemoName, p.DNS.HostedZone)
 			if err != nil {
 				return err
 			}
@@ -68,5 +68,6 @@ func patchPetclinicVsWithDomain(ctx context.Context, command cmd.Factory, domain
 		With("patch", "vs", PetclinicVirtualServiceName).
 		Namespace(PetclinicVirtualServiceNamespace).
 		JsonPatch(patchStr).
+		Cmd().
 		Run(ctx)
 }

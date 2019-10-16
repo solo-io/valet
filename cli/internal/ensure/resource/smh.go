@@ -98,13 +98,13 @@ func installServiceMeshHub(ctx context.Context, command cmd.Factory, version str
 
 func renderAndApplyManifest(ctx context.Context, command cmd.Factory, chartDir string) error {
 	contextutils.LoggerFrom(ctx).Infow("rendering and applying manifest for service mesh hub")
-	out, err := command.Helm().Template().Namespace(SmMarketplaceNamespace).Set("namespace.create=true").Target(chartDir).Output(ctx)
+	out, err := command.Helm().Template().Namespace(SmMarketplaceNamespace).Set("namespace.create=true").Target(chartDir).Cmd().Output(ctx)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("error rendering manifest", zap.Error(err), zap.String("out", out))
 		return err
 	}
 
-	out, err = command.Kubectl().ApplyStdIn(out).Output(ctx)
+	out, err = command.Kubectl().ApplyStdIn(out).Cmd().Output(ctx)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("error applying manifest", zap.Error(err), zap.String("out", out))
 	}
@@ -112,7 +112,7 @@ func renderAndApplyManifest(ctx context.Context, command cmd.Factory, chartDir s
 }
 
 func addHelmRepo(ctx context.Context, command cmd.Factory) error {
-	return command.Helm().AddRepo(SmMarketplaceHelmRepoName, SmMarketplaceHelmRepoUrl).Run(ctx)
+	return command.Helm().AddRepo(SmMarketplaceHelmRepoName, SmMarketplaceHelmRepoUrl).Cmd().Run(ctx)
 }
 
 func fetchAndUntarChart(ctx context.Context, command cmd.Factory, version string) (string, error) {
@@ -130,6 +130,7 @@ func fetchAndUntarChart(ctx context.Context, command cmd.Factory, version string
 		Fetch(SmMarketplaceHelmRepoName, SmMarketplaceHelmChartName).
 		Version(version).
 		UntarToDir(untarDir).
+		Cmd().
 		Output(ctx)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("error trying to untar helm chart", zap.Error(err), zap.String("out", out))

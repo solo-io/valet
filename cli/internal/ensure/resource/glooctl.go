@@ -37,7 +37,7 @@ func (g *Glooctl) Ensure(ctx context.Context, command cmd.Factory) error {
 		// try to use local artifact if it exists
 		glooctlPath := filepath.Join(g.LocalArtifactsDir, getAssetName())
 		if _, err := os.Stat(glooctlPath); err == nil {
-			command.SetGlooctlPath(glooctlPath)
+			command.SetLocalPath(cmd.GlooctlCmd, glooctlPath)
 			return nil
 		} else if !os.IsNotExist(err) {
 			contextutils.LoggerFrom(ctx).Errorw("error checking if glooctl was in artifacts directory", zap.Error(err))
@@ -60,7 +60,7 @@ func (g *Glooctl) Ensure(ctx context.Context, command cmd.Factory) error {
 	if err != nil {
 		return err
 	}
-	command.SetGlooctlPath(localPath)
+	command.SetLocalPath(cmd.GlooctlCmd, localPath)
 	if _, err := os.Stat(localPath); err == nil {
 		contextutils.LoggerFrom(ctx).Infow("glooctl already exists", zap.String("localPath", localPath))
 		return nil

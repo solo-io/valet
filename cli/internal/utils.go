@@ -8,16 +8,16 @@ import (
 	"strings"
 )
 
-func GetCurrentContextName(ctx context.Context) (string, error) {
-	out, err := cmd.Kubectl().CurrentContext().Output(ctx)
+func GetCurrentContextName(ctx context.Context, command cmd.Factory) (string, error) {
+	out, err := command.Kubectl().CurrentContext().Cmd().Output(ctx)
 	if err != nil {
 		return "", err
 	}
 	return strings.TrimSpace(out), nil
 }
 
-func CreateDomainString(ctx context.Context, appName, hostedZone string) (string, error) {
-	currentContext, err := GetCurrentContextName(ctx)
+func CreateDomainString(ctx context.Context, command cmd.Factory, appName, hostedZone string) (string, error) {
+	currentContext, err := GetCurrentContextName(ctx, command)
 	if err != nil {
 		return "", err
 	}

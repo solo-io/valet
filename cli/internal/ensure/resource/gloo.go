@@ -170,7 +170,7 @@ func (g *Gloo) installGloo(ctx context.Context, command cmd.Factory) error {
 		}
 		args = append(args, "-f", helmChart)
 	}
-	out, err := command.Glooctl().With(args...).Redact(g.LicenseKey, cmd.Redacted).Output(ctx)
+	out, err := command.Glooctl().With(args...).Redact(g.LicenseKey, cmd.Redacted).Cmd().Output(ctx)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("failed to install gloo",
 			zap.Error(err),
@@ -184,7 +184,7 @@ func (g *Gloo) uninstall(ctx context.Context, command cmd.Factory) error {
 	if command.Glooctl() == nil {
 		return GlooctlNotEnsuredError
 	}
-	return command.Glooctl().UninstallAll().Run(ctx)
+	return command.Glooctl().UninstallAll().Cmd().Run(ctx)
 }
 
 func (g *Gloo) Teardown(ctx context.Context, command cmd.Factory) error {
@@ -214,7 +214,7 @@ func (g *Gloo) GetProxyAddress(ctx context.Context, command cmd.Factory) (string
 			return "", err
 		}
 	}
-	return command.Glooctl().ProxyAddress().Output(ctx)
+	return command.Glooctl().ProxyAddress().Cmd().Output(ctx)
 }
 
 type UiVirtualService struct {
@@ -257,9 +257,9 @@ func (a *AWS) Ensure(ctx context.Context, command cmd.Factory) error {
 		if command.Glooctl() == nil {
 			return GlooctlNotProvidedError
 		}
-		err := command.Glooctl().GetUpstream(AwsUpstreamName).SwallowError().Run(ctx)
+		err := command.Glooctl().GetUpstream(AwsUpstreamName).SwallowError().Cmd().Run(ctx)
 		if err != nil {
-			err = command.Glooctl().CreateUpstream(AwsUpstreamName).AwsSecretName(AwsSecretName).With("--name", AwsUpstreamName).Run(ctx)
+			err = command.Glooctl().CreateUpstream(AwsUpstreamName).AwsSecretName(AwsSecretName).With("--name", AwsUpstreamName).Cmd().Run(ctx)
 			if err != nil {
 				return err
 			}

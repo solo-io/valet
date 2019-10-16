@@ -1,46 +1,73 @@
 package cmd
 
+const (
+	GlooctlCmd = "glooctl"
+)
+
 type Factory interface {
-	SetGlooctlPath(path string)
+	SetLocalPath(path, localPath string)
 	Glooctl() *Glooctl
-	Kubectl() *kubectl
-	Gcloud() *gcloud
-	Minikube() *minikube
-	Helm() *helm
+	Kubectl() *Kubectl
+	Gcloud() *Gcloud
+	Minikube() *Minikube
+	Helm() *Helm
 }
 
 type CommandFactory struct {
-	GlooctlLocalPath string
+	LocalPathOverride map[string]string
+	CommandRunner     CommandRunner
+}
+
+func (c *CommandFactory) getLocalPath(path string) string {
+	if c.LocalPathOverride == nil {
+		return path
+	}
+	if localPath, ok := c.LocalPathOverride[path]; ok {
+		return localPath
+	}
+	return path
+}
+
+func (c *CommandFactory) getCommand(path string) *Command {
+	return &Command{
+		Name: path,
+		CommandRunner: c.CommandRunner,
+	}
 }
 
 func (c *CommandFactory) Glooctl() *Glooctl {
-	if c.GlooctlLocalPath == "" {
-		return nil
-	}
 	return &Glooctl{
-		Name: c.GlooctlLocalPath,
+		cmd: c.getCommand(GlooctlCmd),
 	}
 }
 
-func (c *CommandFactory) SetGlooctlPath(path string) {
-	c.GlooctlLocalPath = path
+func (c *CommandFactory) SetLocalPath(path, localPath string) {
+	if c.LocalPathOverride == nil {
+		c.LocalPathOverride = make(map[string]string)
+	}
+	c.LocalPathOverride[path] = localPath
 }
 
-func (c *CommandFactory) Kubectl() *kubectl {
-	return Kubectl()
+func (c *CommandFactory) Kubectl() *Kubectl {
+	return &Kubectl{
+		cmd: c.getCommand("kubectl"),
+	}
 }
 
-func (c *CommandFactory) Gcloud() *gcloud {
-	return Gcloud()
+func (c *CommandFactory) Gcloud() *Gcloud {
+	return &Gcloud{
+		cmd: c.getCommand("gcloud"),
+	}
 }
 
-func (c *CommandFactory) Minikube() *minikube {
-	return Minikube()
+func (c *CommandFactory) Minikube() *Minikube {
+	return &Minikube{
+		cmd: c.getCommand("minikube"),
+	}
 }
 
-func (c *CommandFactory) Helm() *helm {
-	return Helm()
+func (c *CommandFactory) Helm() *Helm {
+	return &Helm{
+		cmd: c.getCommand("helm"),
+	}
 }
-
-
-

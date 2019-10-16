@@ -12,9 +12,9 @@ type Manifest struct {
 }
 
 func (m *Manifest) Ensure(ctx context.Context, command cmd.Factory) error {
-	return command.Kubectl().Apply().File(m.Path).Run(ctx)
+	return command.Kubectl().Apply().File(m.Path).Cmd().Run(ctx)
 }
 
 func (m *Manifest) Teardown(ctx context.Context, command cmd.Factory) error {
-	return command.Kubectl().DeleteFile(m.Path).Run(ctx)
+	return command.Kubectl().DeleteFile(m.Path).Cmd().Run(ctx)
 }

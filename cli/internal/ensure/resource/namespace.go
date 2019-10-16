@@ -20,5 +20,5 @@ func (n *Namespace) Ensure(ctx context.Context, command cmd.Factory) error {
 }
 
 func (n *Namespace) Teardown(ctx context.Context, command cmd.Factory) error {
-	return command.Kubectl().Delete(ns).WithName(n.Name).Run(ctx)
+	return command.Kubectl().Delete(ns).WithName(n.Name).Cmd().Run(ctx)
 }

@@ -1,69 +1,50 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 )
 
-type helm Command
+type Helm struct {
+	cmd *Command
+}
 
-func (h *helm) With(args ...string) *helm {
-	h.Args = append(h.Args, args...)
+func (h *Helm) With(args... string) *Helm {
+	h.cmd = h.cmd.With(args...)
 	return h
 }
 
-func (h *helm) Command() *Command {
-	return &Command{
-		Name:       h.Name,
-		Args:       h.Args,
-		StdIn:      h.StdIn,
-		Redactions: h.Redactions,
-	}
+func (h *Helm) Cmd() *Command {
+	return h.cmd
 }
 
-func (h *helm) Run(ctx context.Context) error {
-	return h.Command().Run(ctx)
-}
-
-func (h *helm) Output(ctx context.Context) (string, error) {
-	return h.Command().Output(ctx)
-}
-
-func (h *helm) AddRepo(repoName, repoUrl string) *helm {
+func (h *Helm) AddRepo(repoName, repoUrl string) *Helm {
 	return h.With("repo", "add", repoName, repoUrl)
 }
 
-func (h *helm) Template() *helm {
+func (h *Helm) Template() *Helm {
 	return h.With("template")
 }
 
-func (h *helm) Namespace(namespace string) *helm {
+func (h *Helm) Namespace(namespace string) *Helm {
 	return h.With("--namespace", namespace)
 }
 
-func (h *helm) Set(set string) *helm {
+func (h *Helm) Set(set string) *Helm {
 	return h.With("--set", set)
 }
 
-func (h *helm) Target(target string) *helm {
+func (h *Helm) Target(target string) *Helm {
 	return h.With(target)
 }
 
-func (h *helm) Fetch(repoName, chartName string) *helm {
+func (h *Helm) Fetch(repoName, chartName string) *Helm {
 	return h.With("fetch", fmt.Sprintf("%s/%s", repoName, chartName))
 }
 
-func (h *helm) Version(version string) *helm {
+func (h *Helm) Version(version string) *Helm {
 	return h.With("--version", version)
 }
 
-func (h *helm) UntarToDir(untarDir string) *helm {
+func (h *Helm) UntarToDir(untarDir string) *Helm {
 	return h.With("--untar", "--untardir", untarDir)
-}
-
-func Helm(args ...string) *helm {
-	return &helm{
-		Name: "helm",
-		Args: args,
-	}
 }

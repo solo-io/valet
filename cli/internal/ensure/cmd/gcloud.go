@@ -1,59 +1,34 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 )
 
-type gcloud Command
+type Gcloud struct {
+	cmd *Command
+}
 
-func (g *gcloud) GetCredentials() *gcloud {
+func (g *Gcloud) Cmd() *Command {
+	return g.cmd
+}
+
+func (g *Gcloud) With(args... string) *Gcloud {
+	g.cmd = g.cmd.With(args...)
+	return g
+}
+
+func (g *Gcloud) GetCredentials() *Gcloud {
 	return g.With("container", "clusters", "get-credentials")
 }
 
-func (g *gcloud) Project(project string) *gcloud {
+func (g *Gcloud) Project(project string) *Gcloud {
 	return g.With(fmt.Sprintf("--project=%s", project))
 }
 
-func (g *gcloud) Zone(zone string) *gcloud {
+func (g *Gcloud) Zone(zone string) *Gcloud {
 	return g.With(fmt.Sprintf("--zone=%s", zone))
 }
 
-func (g *gcloud) WithName(name string) *gcloud {
+func (g *Gcloud) WithName(name string) *Gcloud {
 	return g.With(name)
-}
-
-func (g *gcloud) With(args ...string) *gcloud {
-	g.Args = append(g.Args, args...)
-	return g
-}
-
-func (g *gcloud) WithStdIn(stdIn string) *gcloud {
-	g.StdIn = stdIn
-	return g
-}
-
-func (g *gcloud) Command() *Command {
-	return &Command{
-		Name:            g.Name,
-		Args:            g.Args,
-		StdIn:           g.StdIn,
-		Redactions:      g.Redactions,
-		SwallowErrorLog: g.SwallowErrorLog,
-	}
-}
-
-func (g *gcloud) Run(ctx context.Context) error {
-	return g.Command().Run(ctx)
-}
-
-func (g *gcloud) Output(ctx context.Context) (string, error) {
-	return g.Command().Output(ctx)
-}
-
-func Gcloud(args ...string) *gcloud {
-	return &gcloud{
-		Name: "gcloud",
-		Args: args,
-	}
 }

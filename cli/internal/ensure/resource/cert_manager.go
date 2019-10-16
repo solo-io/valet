@@ -13,23 +13,27 @@ const (
 	IssuerName               = "letsencrypt-dns-prod"
 )
 
-var (
-	_ Resource = new(CertManager)
-
-	manifest      = &Manifest{Path: CertManagerManifest}
-	awsSecret     = AwsSecret(CertManagerNamespace, CertManagerAwsSecretName)
-	clusterIssuer = &ClusterIssuer{}
-)
-
 type CertManager struct {
 }
 
+func (c *CertManager) GetManifest() *Manifest {
+	return &Manifest{Path: CertManagerManifest}
+}
+
+func (c *CertManager) GetAwsSecret() *Secret {
+	return AwsSecret(CertManagerNamespace, CertManagerAwsSecretName)
+}
+
+func (c *CertManager) GetClusterIssuer() *ClusterIssuer {
+	return &ClusterIssuer{}
+}
+
 func (c *CertManager) Ensure(ctx context.Context, command cmd.Factory) error {
-	return EnsureAll(ctx, command, manifest, awsSecret, clusterIssuer)
+	return EnsureAll(ctx, command, c.GetManifest(), c.GetAwsSecret(), c.GetClusterIssuer())
 }
 
 func (c *CertManager) Teardown(ctx context.Context, command cmd.Factory) error {
-	return TeardownAll(ctx, command, manifest, awsSecret, clusterIssuer)
+	return TeardownAll(ctx, command, c.GetClusterIssuer(), c.GetAwsSecret(), c.GetManifest())
 }
 
 type ClusterIssuer struct {
@@ -40,7 +44,7 @@ func (c *ClusterIssuer) Ensure(ctx context.Context, command cmd.Factory) error {
 	if err != nil {
 		return err
 	}
-	return command.Kubectl().ApplyStdIn(issuer).Run(ctx)
+	return command.Kubectl().ApplyStdIn(issuer).Cmd().Run(ctx)
 }
 
 func (c *ClusterIssuer) Teardown(ctx context.Context, command cmd.Factory) error {
@@ -48,7 +52,7 @@ func (c *ClusterIssuer) Teardown(ctx context.Context, command cmd.Factory) error
 	if err != nil {
 		return err
 	}
-	return command.Kubectl().DeleteStdIn(issuer).Run(ctx)
+	return command.Kubectl().DeleteStdIn(issuer).Cmd().Run(ctx)
 }
 
 func getIssuer() (string, error) {

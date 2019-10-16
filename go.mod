@@ -6,7 +6,10 @@ require (
 	cloud.google.com/go v0.43.0
 	github.com/aws/aws-sdk-go v1.21.10
 	github.com/ghodss/yaml v1.0.0
+	github.com/golang/mock v1.3.1
 	github.com/google/go-github v17.0.0+incompatible
+	github.com/onsi/ginkgo v1.8.0
+	github.com/onsi/gomega v1.5.0
 	github.com/solo-io/go-utils v0.9.17
 	github.com/spf13/cobra v0.0.3
 	go.uber.org/zap v1.9.1

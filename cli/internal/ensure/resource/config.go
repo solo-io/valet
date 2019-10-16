@@ -75,10 +75,15 @@ func (c *Config) Ensure(ctx context.Context, command cmd.Factory) error {
 }
 
 func (c *Config) Teardown(ctx context.Context, command cmd.Factory) error {
-	if c.Cluster == nil {
-		panic("implement me")
+	if c.Cluster != nil {
+		return c.Cluster.Teardown(ctx, command)
 	}
-	return c.Cluster.Teardown(ctx, command)
+	if c.CertManager != nil {
+		if err := c.CertManager.Teardown(ctx, command); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 

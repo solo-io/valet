@@ -1,4 +1,8 @@
 steps:
+  - name: 'quay.io/solo-io/valet:0.1.4'
+    args: ['--version']
+    id: 'valet-load-container'
+    waitFor: ['-']
   - name: gcr.io/cloud-builders/gsutil
     entrypoint: 'bash'
     args: ['-c', 'mkdir -p /go/pkg && cd /go/pkg && gsutil cat gs://$PROJECT_ID-cache/valet/valet-mod.tar.gz | tar -xzf -']
@@ -6,6 +10,7 @@ steps:
       - name: 'gopath'
         path: '/go/pkg'
     id: 'untar-mod-cache'
+    waitFor: ['-']
 
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
@@ -24,21 +29,21 @@ steps:
       - 'HELM_HOME=/root/.helm'
     volumes: *vol
     id: 'valet-build'
-    waitFor: ['docker-login']
+    waitFor: ['docker-login', 'valet-load-container']
 
   - name: 'quay.io/solo-io/valet:0.1.4'
-    args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/cluster.yaml', '--gke-cluster-name', '$BUILD_ID']
+    args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/cluster.yaml', '--gke-cluster-name', 'valet-test']
     id: 'valet-ensure-cluster'
-    waitFor: ['untar-mod-cache']
+    waitFor: ['untar-mod-cache', 'valet-load-container']
 
   - name: 'quay.io/solo-io/valet:0.1.4'
-    args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/all.yaml', '--gke-cluster-name', '$BUILD_ID']
+    args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/all.yaml', '--gke-cluster-name', 'valet-test']
     id: 'valet-ensure-valet'
     secretEnv: ['GITHUB_TOKEN', 'LICENSE_KEY', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY']
     waitFor: ['valet-build', 'valet-ensure-cluster']
 
   - name: 'quay.io/solo-io/valet:0.1.4'
-    args: ['teardown', '-f', 'cli/internal/ensure/test/fixtures/all.yaml', '--gke-cluster-name', '$BUILD_ID']
+    args: ['teardown', '-f', 'cli/internal/ensure/test/fixtures/all.yaml', '--gke-cluster-name', 'valet-test']
     id: 'valet-teardown'
     waitFor: ['valet-ensure-valet']
 

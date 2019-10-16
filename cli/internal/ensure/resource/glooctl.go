@@ -28,7 +28,7 @@ var (
 type Glooctl struct {
 	Version           string `yaml:"version"`
 	LocalArtifactsDir string `yaml:"localArtifactsDir"`
-	ValetArtifacts bool   `yaml:"valetArtifacts"`
+	ValetArtifacts    bool   `yaml:"valetArtifacts"`
 	Enterprise        bool   `yaml:"enterprise"`
 }
 

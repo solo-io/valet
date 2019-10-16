@@ -1,5 +1,7 @@
 package cmd
 
+import "fmt"
+
 const (
 	GlooctlCmd = "glooctl"
 )
@@ -30,7 +32,7 @@ func (c *CommandFactory) getLocalPath(path string) string {
 
 func (c *CommandFactory) getCommand(path string) *Command {
 	return &Command{
-		Name: path,
+		Name: c.getLocalPath(path),
 		CommandRunner: c.CommandRunner,
 	}
 }
@@ -42,6 +44,7 @@ func (c *CommandFactory) Glooctl() *Glooctl {
 }
 
 func (c *CommandFactory) SetLocalPath(path, localPath string) {
+	fmt.Printf("Setting local path override %s -> %s", path, localPath)
 	if c.LocalPathOverride == nil {
 		c.LocalPathOverride = make(map[string]string)
 	}

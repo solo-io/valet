@@ -25,7 +25,7 @@ func (r *Resources) Ensure(ctx context.Context, command cmd.Factory) error {
 
 func (r *Resources) Teardown(ctx context.Context, command cmd.Factory) error {
 	for _, path := range r.Paths {
-		if err := command.Kubectl().DeleteFile(path).Cmd().Run(ctx); err != nil {
+		if err := command.Kubectl().DeleteFile(path).IgnoreNotFound().Cmd().Run(ctx); err != nil {
 			return err
 		}
 	}

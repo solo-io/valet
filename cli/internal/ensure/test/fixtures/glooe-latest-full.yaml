@@ -1,0 +1,8 @@
+gloo:
+  enterprise: true
+  uiVirtualService:
+    dns:
+      hostedZone: corp.solo.io.
+  aws:
+    secret: true
+    upstream: true

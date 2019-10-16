@@ -52,7 +52,7 @@ func (c *ClusterIssuer) Teardown(ctx context.Context, command cmd.Factory) error
 	if err != nil {
 		return err
 	}
-	return command.Kubectl().DeleteStdIn(issuer).Cmd().Run(ctx)
+	return command.Kubectl().DeleteStdIn(issuer).IgnoreNotFound().Cmd().Run(ctx)
 }
 
 func getIssuer() (string, error) {

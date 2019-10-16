@@ -83,6 +83,31 @@ func (c *Config) Teardown(ctx context.Context, command cmd.Factory) error {
 			return err
 		}
 	}
+	if c.Demos != nil {
+		if err := c.Demos.Teardown(ctx, command); err != nil {
+			return err
+		}
+	}
+	for _, namespace := range c.Namespaces {
+		if err := namespace.Teardown(ctx, command); err != nil {
+			return err
+		}
+	}
+	if c.ServiceMeshHub != nil {
+		if err := c.ServiceMeshHub.Teardown(ctx, command); err != nil {
+			return err
+		}
+	}
+	for _, secret := range c.Secrets {
+		if err := secret.Teardown(ctx, command); err != nil {
+			return err
+		}
+	}
+	if c.Gloo != nil {
+		if err := c.Gloo.Teardown(ctx, command); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

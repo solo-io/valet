@@ -51,17 +51,15 @@ func (g *Gloo) Ensure(ctx context.Context, command cmd.Factory) error {
 	if err != nil {
 		return err
 	}
-	if glooInstalled {
-		return nil
-	}
+	if !glooInstalled {
+		if g.LicenseKey == "" {
+			g.LicenseKey = os.Getenv(LicenseKeyEnvVar)
+		}
 
-	if g.LicenseKey == "" {
-		g.LicenseKey = os.Getenv(LicenseKeyEnvVar)
-	}
-
-	err = g.installGloo(ctx, command)
-	if err != nil {
-		return err
+		err = g.installGloo(ctx, command)
+		if err != nil {
+			return err
+		}
 	}
 
 	if g.UiVirtualService != nil {
@@ -188,11 +186,9 @@ func (g *Gloo) uninstall(ctx context.Context, command cmd.Factory) error {
 }
 
 func (g *Gloo) Teardown(ctx context.Context, command cmd.Factory) error {
-	if command.Glooctl() == nil {
-		glooctl := g.getGlooctl(ctx)
-		if err := glooctl.Ensure(ctx, command); err != nil {
-			return err
-		}
+	glooctl := g.getGlooctl(ctx)
+	if err := glooctl.Ensure(ctx, command); err != nil {
+		return err
 	}
 	return g.uninstall(ctx, command)
 }
@@ -217,6 +213,25 @@ func (g *Gloo) GetProxyAddress(ctx context.Context, command cmd.Factory) (string
 	return command.Glooctl().ProxyAddress().Cmd().Output(ctx)
 }
 
+const GlooUiVirtualService = `
+apiVersion: gateway.solo.io/v1
+kind: VirtualService
+metadata:
+  name: glooui
+  namespace: gloo-system
+spec:
+  virtualHost:
+    domains:
+      - "*"
+    routes:
+      - matcher:
+          prefix: /
+        routeAction:
+          single:
+            upstream:
+              name: gloo-system-apiserver-ui-8080
+              namespace: gloo-system`
+
 type UiVirtualService struct {
 	// If nil, the default domain "*" is used. Otherwise, a DNS entry is created in Route53
 	// with the provided DNS configuration.
@@ -224,11 +239,25 @@ type UiVirtualService struct {
 }
 
 func (u *UiVirtualService) Ensure(ctx context.Context, command cmd.Factory) error {
+	if err := command.Kubectl().ApplyStdIn(GlooUiVirtualService).Cmd().Run(ctx); err != nil {
+		return err
+	}
 	if u.DNS != nil {
 		if err := u.DNS.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
+
+	if err := patchGloouiWithDomain(ctx, command, u.DNS.Domain); err != nil {
+		return err
+	}
+
+	if u.DNS.Cert != nil {
+		if err := patchGloouiWithSsl(ctx, command, u.DNS.Domain); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -270,4 +299,22 @@ func (a *AWS) Ensure(ctx context.Context, command cmd.Factory) error {
 
 func (a *AWS) Teardown(ctx context.Context) error {
 	panic("implement me")
+}
+
+func patchGloouiWithDomain(ctx context.Context, command cmd.Factory, domain string) error {
+	contextutils.LoggerFrom(ctx).Infow("Patching glooui domain")
+	patchStr := fmt.Sprintf("-p=[{\"op\":\"add\",\"path\":\"/spec/virtualHost/domains\",\"value\":[\"%s\"]}]", domain)
+	return command.Kubectl().With("patch", "vs", "glooui").Namespace("gloo-system").JsonPatch(patchStr).Cmd().Run(ctx)
+}
+
+func patchGloouiWithSsl(ctx context.Context, command cmd.Factory, domain string) error {
+	contextutils.LoggerFrom(ctx).Infow("Patching glooui ssl config")
+	patchStr := fmt.Sprintf(`spec:
+  sslConfig:
+    secretRef:
+      name: %s
+      namespace: gloo-system
+    sniDomains:
+    - %s`, domain, domain)
+	return command.Kubectl().With("patch", "vs", "glooui").Namespace("gloo-system").With("--patch", patchStr, "--type=merge").Cmd().Run(ctx)
 }

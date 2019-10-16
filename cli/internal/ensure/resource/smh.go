@@ -32,6 +32,19 @@ type ServiceMeshHub struct {
 }
 
 func (s *ServiceMeshHub) Teardown(ctx context.Context, command cmd.Factory) error {
+	version, err := s.getVersion(ctx)
+	if err != nil {
+		contextutils.LoggerFrom(ctx).Errorw("error determining version to install", zap.Error(err))
+		return err
+	}
+
+	installed, err := smhInstalled(ctx, version)
+	if err != nil {
+		return err
+	}
+	if installed {
+		return uninstallServiceMeshHub(ctx, command, version)
+	}
 	return nil
 }
 
@@ -107,6 +120,41 @@ func renderAndApplyManifest(ctx context.Context, command cmd.Factory, chartDir s
 	out, err = command.Kubectl().ApplyStdIn(out).Cmd().Output(ctx)
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("error applying manifest", zap.Error(err), zap.String("out", out))
+	}
+	return err
+}
+
+func uninstallServiceMeshHub(ctx context.Context, command cmd.Factory, version string) error {
+	contextutils.LoggerFrom(ctx).Infof("preparing to uninstall version %s", version)
+
+	if err := addHelmRepo(ctx, command); err != nil {
+		return err
+	}
+
+	untarDir, err := fetchAndUntarChart(ctx, command, version)
+	if err != nil {
+		return err
+	}
+
+	chartDir := filepath.Join(untarDir, SmMarketplaceHelmChartName)
+	if err := renderAndDeleteManifest(ctx, command, chartDir); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func renderAndDeleteManifest(ctx context.Context, command cmd.Factory, chartDir string) error {
+	contextutils.LoggerFrom(ctx).Infow("rendering and deleting manifest for service mesh hub")
+	out, err := command.Helm().Template().Namespace(SmMarketplaceNamespace).Set("namespace.create=true").Target(chartDir).Cmd().Output(ctx)
+	if err != nil {
+		contextutils.LoggerFrom(ctx).Errorw("error rendering manifest", zap.Error(err), zap.String("out", out))
+		return err
+	}
+
+	out, err = command.Kubectl().DeleteStdIn(out).Cmd().Output(ctx)
+	if err != nil {
+		contextutils.LoggerFrom(ctx).Errorw("error deleting manifest", zap.Error(err), zap.String("out", out))
 	}
 	return err
 }

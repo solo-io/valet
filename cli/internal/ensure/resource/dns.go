@@ -15,6 +15,7 @@ type DNS struct {
 	HostedZone string `yaml:"hostedZone"`
 	Domain     string `yaml:"domain"`
 	IP         string `yaml:"ip"`
+	Cert       *Cert   `yaml:"cert"`
 }
 
 func (d *DNS) Ensure(ctx context.Context, command cmd.Factory) error {
@@ -22,9 +23,22 @@ func (d *DNS) Ensure(ctx context.Context, command cmd.Factory) error {
 	if err != nil {
 		return err
 	}
-	return awsClient.CreateMapping(ctx, d.HostedZone, d.Domain, d.IP)
+	if err := awsClient.CreateMapping(ctx, d.HostedZone, d.Domain, d.IP); err != nil {
+		return err
+	}
+	if d.Cert != nil {
+		if err := d.Cert.Ensure(ctx, command); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (d *DNS) Teardown(ctx context.Context, command cmd.Factory) error {
+	if d.Cert != nil {
+		if err := d.Cert.Teardown(ctx, command); err != nil {
+			return err
+		}
+	}
 	return nil
 }

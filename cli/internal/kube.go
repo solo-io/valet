@@ -26,6 +26,9 @@ func WaitUntilPodsRunning(ctx context.Context, namespace string) error {
 			return false, err
 		}
 		for _, pod := range list.Items {
+			if pod.Status.Phase == v12.PodSucceeded {
+				continue
+			}
 			var podReady bool
 			for _, cond := range pod.Status.Conditions {
 				if cond.Type == v12.ContainersReady && cond.Status == v12.ConditionTrue {
@@ -95,6 +98,9 @@ func PodsReadyAndVersionsMatch(ctx context.Context, namespace, selector, version
 		return false, nil
 	}
 	for _, pod := range pods.Items {
+		if pod.Status.Phase == v12.PodSucceeded {
+			continue
+		}
 		for _, cond := range pod.Status.Conditions {
 			if cond.Type == v12.ContainersReady && cond.Status != v12.ConditionTrue {
 				contextutils.LoggerFrom(ctx).Infow("pods not ready")

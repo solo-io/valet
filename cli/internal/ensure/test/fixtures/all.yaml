@@ -1,7 +1,7 @@
 cluster:
   gke:
     location: us-east1
-    project: solo-test-236622
+    project: solo-public
 namespaces:
   - name: test-namespace-1
   - name: test-namespace-2

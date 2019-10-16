@@ -40,5 +40,11 @@ func (g *GKE) Teardown(ctx context.Context, command cmd.Factory) error {
 	if err != nil {
 		return err
 	}
+	running, err := gkeClient.IsRunning(ctx, g.Name, g.Project, g.Location)
+	if err != nil {
+		return err
+	} else if !running {
+		return nil
+	}
 	return gkeClient.Destroy(ctx, g.Name, g.Project, g.Location)
 }

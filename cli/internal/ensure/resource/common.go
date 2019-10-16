@@ -22,6 +22,9 @@ const (
 
 func EnsureAll(ctx context.Context, command cmd.Factory, resources ...Resource) error {
 	for _, resource := range resources {
+		if resource == nil {
+			continue
+		}
 		if err := resource.Ensure(ctx, command); err != nil {
 			return err
 		}
@@ -31,6 +34,9 @@ func EnsureAll(ctx context.Context, command cmd.Factory, resources ...Resource) 
 
 func TeardownAll(ctx context.Context, command cmd.Factory, resources ...Resource) error {
 	for _, resource := range resources {
+		if resource == nil {
+			continue
+		}
 		if err := resource.Teardown(ctx, command); err != nil {
 			return err
 		}

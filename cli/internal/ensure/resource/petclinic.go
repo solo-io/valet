@@ -18,10 +18,10 @@ const (
 var (
 	GlooctlNotProvidedError = errors.Errorf("must provide glooctl")
 	petclinicFiles          = []string{
-		"https://raw.githubusercontent.com/sololabs/demos/master/petclinic_demo/petclinic.yaml",
-		"https://raw.githubusercontent.com/sololabs/demos/master/petclinic_demo/petclinic-vets.yaml",
-		"https://raw.githubusercontent.com/sololabs/demos/master/petclinic_demo/petclinic-db.yaml",
-		"https://raw.githubusercontent.com/sololabs/demos/master/petclinic_demo/petclinic-virtual-service.yaml",
+		"https://raw.githubusercontent.com/sololabs/demos/b523571c66057a5591bce22ad896729f1fee662b/petclinic_demo/petclinic.yaml",
+		"https://raw.githubusercontent.com/sololabs/demos/b523571c66057a5591bce22ad896729f1fee662b/petclinic_demo/petclinic-vets.yaml",
+		"https://raw.githubusercontent.com/sololabs/demos/b523571c66057a5591bce22ad896729f1fee662b/petclinic_demo/petclinic-db.yaml",
+		"https://raw.githubusercontent.com/sololabs/demos/b523571c66057a5591bce22ad896729f1fee662b/petclinic_demo/petclinic-virtual-service.yaml",
 	}
 	petclinicResources = Resources{Paths: petclinicFiles}
 )

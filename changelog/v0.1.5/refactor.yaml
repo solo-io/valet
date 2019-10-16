@@ -1,0 +1,7 @@
+changelog:
+  - type: FIX
+    issueLink: https://github.com/solo-io/valet/issues/46
+    description: Create local directories (.gloo, .valet) if they don't exist.
+  - type: NEW_FEATURE
+    issueLink: https://github.com/solo-io/valet/issues/47
+    description: Added support for ensuring namespaces, secrets, and the petstore demo.

@@ -7,7 +7,7 @@ import (
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/api"
 	"github.com/solo-io/valet/cli/cmd/config"
-	ensureimpl "github.com/solo-io/valet/cli/internal/ensure"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -50,11 +50,6 @@ func ensure(opts *options.Options) error {
 		return err
 	}
 
-	valet := &api.Valet{
-		ValetArtifacts:    opts.Ensure.ValetArtifacts,
-		LocalArtifactsDir: opts.Ensure.LocalArtifactsDir,
-	}
-
 	if cfg.Cluster != nil {
 		if opts.Ensure.GkeClusterName != "" {
 			cfg.Cluster.GKE.Name = opts.Ensure.GkeClusterName
@@ -64,9 +59,12 @@ func ensure(opts *options.Options) error {
 		if opts.Ensure.GlooVersion != "" {
 			cfg.Gloo.Version = opts.Ensure.GlooVersion
 		}
+		cfg.Gloo.ValetArtifacts = opts.Ensure.ValetArtifacts
+		cfg.Gloo.LocalArtifactsDir = opts.Ensure.LocalArtifactsDir
 	}
 
-	return ensureimpl.NewEnsurer().Ensure(opts.Top.Ctx, valet, cfg)
+	command := cmd.CommandFactory{}
+	return cfg.Ensure(opts.Top.Ctx, &command)
 }
 
 func LoadEnv(ctx context.Context) error {

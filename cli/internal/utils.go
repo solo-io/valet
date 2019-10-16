@@ -4,24 +4,20 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
-	"github.com/solo-io/go-utils/contextutils"
-	"go.uber.org/zap"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"strings"
 )
 
-func GetCurrentContextName(ctx context.Context) (string, error) {
-	contextutils.LoggerFrom(ctx).Infow("Getting current context name")
-	out, err := ExecuteCmd("kubectl", "config", "current-context")
+func GetCurrentContextName(ctx context.Context, command cmd.Factory) (string, error) {
+	out, err := command.Kubectl().CurrentContext().Cmd().Output(ctx)
 	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Error getting current context name",
-			zap.Error(err), zap.String("out", out))
 		return "", err
 	}
 	return strings.TrimSpace(out), nil
 }
 
-func CreateDomain(ctx context.Context, appName, hostedZone string) (string, error) {
-	currentContext, err := GetCurrentContextName(ctx)
+func CreateDomainString(ctx context.Context, command cmd.Factory, appName, hostedZone string) (string, error) {
+	currentContext, err := GetCurrentContextName(ctx, command)
 	if err != nil {
 		return "", err
 	}
@@ -34,7 +30,7 @@ func CreateDomain(ctx context.Context, appName, hostedZone string) (string, erro
 	return domain, nil
 }
 
-func CreateCert(name, namespace, domain string) string {
+func CreateCertString(name, namespace, domain string) string {
 	return fmt.Sprintf(`
 apiVersion: certmanager.k8s.io/v1alpha1
 kind: Certificate

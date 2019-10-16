@@ -1,0 +1,4 @@
+namespaces:
+  - name: test-namespace-1
+  - name: test-namespace-2
+  - name: test-namespace-3

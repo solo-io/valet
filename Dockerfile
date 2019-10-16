@@ -24,6 +24,7 @@ RUN apt-get -y update && \
        xenial \
        edge" && \
     apt-get -y update && \
+    apt-get -y install containerd.io=1.2.6-3 && \
     apt-get -y install docker-ce=5:18.09.0~3-0~ubuntu-xenial && \
     curl -sL https://deb.nodesource.com/setup_9.x | bash - && \
     apt-get install -y nodejs npm gcc python2.7 python-dev python-setuptools python-pip && \

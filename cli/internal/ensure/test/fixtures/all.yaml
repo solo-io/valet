@@ -1,6 +1,5 @@
 cluster:
   gke:
-    name: valet-test-1
     location: us-east1
     project: solo-test-236622
 namespaces:
@@ -34,3 +33,4 @@ demos:
   petclinic:
     dns:
       hostedZone: corp.solo.io.
+  petstore: {}

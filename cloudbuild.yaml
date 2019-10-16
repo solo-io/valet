@@ -14,17 +14,31 @@ steps:
     waitFor: ['-']
     id: 'docker-login'
 
-  # Build and push
-  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.1.5'
-    volumes: *vol
+  - name: 'quay.io/solo-io/valet:0.1.4'
+    args: ['build', '-v', 'test-cloudbuild']
     env:
-      - 'TAGGED_VERSION=$TAG_NAME'
-    args: ['docker-push']
-    secretEnv: ['QUAY_IO_PASSWORD']
+      - 'DOCKER_CONFIG=/workspace/docker-config'
+      - 'GOPATH=/workspace/gopath'
+      - 'HELM_HOME=/root/.helm'
+    id: 'valet-build'
+    waitFor: ['docker-login']
+
+  - name: 'quay.io/solo-io/valet:0.1.4'
+    args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/all.yaml', '--gke-cluster-name', 'valet-$COMMIT_SHA']
+    id: 'valet-ensure-valet'
+    waitFor: ['valet-build', 'valet-ensure-cluster']
+
+  - name: 'quay.io/solo-io/valet:0.1.2'
+    args: ['teardown', '-f', 'cli/internal/ensure/test/fixtures/all.yaml', '--gke-cluster-name', 'valet-$COMMIT_SHA']
+    id: 'valet-teardown'
+    waitFor: ['valet-ensure-valet']
 
 secrets:
   - kmsKeyName: projects/solo-public/locations/global/keyRings/build/cryptoKeys/build-key
     secretEnv:
-      QUAY_IO_PASSWORD: CiQABlzmSRx5TcOqbldXa/d/+bkmAfpNAWa3PTS06WvuloZL+vASaQCCPGSGCogonVZVEUNx4G3YJtWi18gSuNx4PvLe08q8xAflTMFkjsyQirAOK3Y2oCvgYwiw/ITcuydjkpMjxDygFyENXS9FKFJoAXHlPQE5qidKr8xxmxF5ezhmjGB0gjyjXIIkbSEnBg==
+      GITHUB_TOKEN: CiQABlzmSYYiveU0gTxGH2139eaBUedjV3vNCxQmJU+nRPlfQ/YSUQCCPGSGzbGp49fwDYuefAx9V94b8mivdp9AqB7zQAa07VtGJmrGdg9ZuhKGFrrgqxwABE0LLVNHyngCSHYSYMH8Vn/mRtT7wQuEHBlKVGtqPw==
+      LICENSE_KEY: CiQABlzmSRdJEuvgFYroRQ/Vhrc7hWRJGL0oh1IATx87+Zdm42gSlQEAgjxkhvAVivUON4YnNGsRXZPG1tEOHWl1DzDHyfa+6gAD5fZsUQnjVqSZMAs18ojBofnGEzRTrv6CtXQGpFBkIrG7nLA4VyOIHl4ss0UWyVtNcGb6FSMpIr9j/d8UrODEoO8C+f21/YMDO7T1fCS3NC7KFvBABM3f0GUVtI6r+//LL0uQuotEMxv+gyywgxU2rhKHSg==
+      AWS_SECRET_ACCESS_KEY: CiQABlzmSQANzc6+9afLmCUyiTF0qYwrC+WB8i/toet94WMH26QSUQCCPGSGd8bak18TDObvnI+NsaIaslKtvAdfUEJ8XeujmfXUhGr69aUIuzhEDZXdRMnUDGcYpxe1qNzawO89dzRGs8hSiL9XHFXR6B9BjB9g1g==
+      AWS_ACCESS_KEY_ID: CiQABlzmSftZa9ES/WKM6/qeTyRV1BBCu14GSjC7vtDiCk1HeL4SPQCCPGSGfwYy0bHyzbeNsU/0rtwwqBRDe1A46A48+ANx7/1KuVsotS1mYLWmoofN+4JBMmA8WafmJcI+3dE=
 
 timeout: 1200s

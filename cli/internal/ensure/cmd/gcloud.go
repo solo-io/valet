@@ -4,6 +4,10 @@ import (
 	"fmt"
 )
 
+const (
+	Decrypt = "decrypt"
+)
+
 type Gcloud struct {
 	cmd *Command
 }
@@ -31,4 +35,32 @@ func (g *Gcloud) Zone(zone string) *Gcloud {
 
 func (g *Gcloud) WithName(name string) *Gcloud {
 	return g.With(name)
+}
+
+func (g *Gcloud) Kms(operation string) *Gcloud {
+	return g.With("kms", operation)
+}
+
+func (g *Gcloud) Ciphertext(cipherText string) *Gcloud {
+	return g.With(fmt.Sprintf("--ciphertext-file=%s", cipherText))
+}
+
+func (g *Gcloud) Plaintext(plainText string) *Gcloud {
+	return g.With(fmt.Sprintf("--plaintext-file=%s", plainText))
+}
+
+func (g *Gcloud) Keyring(keyring string) *Gcloud {
+	return g.With(fmt.Sprintf("--keyring=%s", keyring))
+}
+
+func (g *Gcloud) Key(key string) *Gcloud {
+	return g.With(fmt.Sprintf("--key=%s", key))
+}
+
+func (g *Gcloud) Global() *Gcloud {
+	return g.With("--location=global")
+}
+
+func (g *Gcloud) UnencryptFile(cipherText, plainText, project, keyring, key string) *Gcloud {
+	return g.Kms(Decrypt).Ciphertext(cipherText).Plaintext(plainText).Project(project).Keyring(keyring).Key(key).Global()
 }

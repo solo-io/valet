@@ -1,0 +1,4 @@
+changelog:
+  - type: FIX
+    description: Bump valet container for CI to 0.1.5. Use a cluster name based on `$SHORT_SHA` in CI to support concurrent builds.
+    issueLink: https://github.com/solo-io/valet/issues/49

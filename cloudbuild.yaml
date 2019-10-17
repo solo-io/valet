@@ -1,5 +1,5 @@
 steps:
-  - name: 'quay.io/solo-io/valet:0.1.4-13-ga4cf700'
+  - name: 'quay.io/solo-io/valet:0.1.5'
     args: ['--version']
     id: 'valet-load-container'
     waitFor: ['-']
@@ -21,7 +21,7 @@ steps:
     waitFor: ['-']
     id: 'docker-login'
 
-  - name: 'quay.io/solo-io/valet:0.1.4-13-ga4cf700'
+  - name: 'quay.io/solo-io/valet:0.1.5'
     args: ['build', '-v', 'test-cloudbuild']
     env:
       - 'DOCKER_CONFIG=/workspace/docker-config'
@@ -31,12 +31,12 @@ steps:
     id: 'valet-build'
     waitFor: ['docker-login', 'valet-load-container']
 
-  - name: 'quay.io/solo-io/valet:0.1.4-13-ga4cf700'
+  - name: 'quay.io/solo-io/valet:0.1.5'
     args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/cluster.yaml', '--gke-cluster-name', 'valet-test']
     id: 'valet-ensure-cluster'
     waitFor: ['untar-mod-cache', 'valet-load-container']
 
-  - name: 'quay.io/solo-io/valet:0.1.4-13-ga4cf700'
+  - name: 'quay.io/solo-io/valet:0.1.5'
     args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/all.yaml', '--gke-cluster-name', 'valet-test']
     id: 'valet-ensure-valet'
     env:
@@ -44,7 +44,7 @@ steps:
     secretEnv: ['GITHUB_TOKEN', 'LICENSE_KEY', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY']
     waitFor: ['valet-build', 'valet-ensure-cluster']
 
-  - name: 'quay.io/solo-io/valet:0.1.4-13-ga4cf700'
+  - name: 'quay.io/solo-io/valet:0.1.5'
     args: ['teardown', '-f', 'cli/internal/ensure/test/fixtures/all.yaml', '--gke-cluster-name', 'valet-test']
     id: 'valet-teardown'
     waitFor: ['valet-ensure-valet']

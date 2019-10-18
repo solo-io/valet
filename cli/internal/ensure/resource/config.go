@@ -120,6 +120,11 @@ func (c *Config) Teardown(ctx context.Context, command cmd.Factory) error {
 			return err
 		}
 	}
+	for _, application := range c.Applications {
+		if err := application.Teardown(ctx, command); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

@@ -3,6 +3,7 @@ package resource
 import (
 	"context"
 	"github.com/solo-io/go-utils/contextutils"
+	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"go.uber.org/zap"
@@ -19,6 +20,12 @@ type Application struct {
 	Namespace     string                `yaml:"namespace"`
 	Resources     []ApplicationResource `yaml:"resources"`
 	LabelSelector string                `yaml:"labelSelector"`
+	From          *ApplicationRef       `yaml:"from"`
+}
+
+type ApplicationRef struct {
+	Path string `yaml:"path"`
+	Name string `yaml:"name"`
 }
 
 type HelmChart struct {
@@ -71,16 +78,20 @@ func (a *ApplicationResource) Teardown(ctx context.Context, command cmd.Factory)
 }
 
 func (a *Application) Teardown(ctx context.Context, command cmd.Factory) error {
+	app, err := a.reconcile(ctx, command)
+	if err != nil {
+		return err
+	}
 	var resources []Resource
-	for i := len(a.Resources) - 1; i >= 0; i-- {
-		resources = append(resources, &a.Resources[i])
+	for i := len(app.Resources) - 1; i >= 0; i-- {
+		resources = append(resources, &app.Resources[i])
 	}
 	if err := TeardownAll(ctx, command, resources...); err != nil {
 		return err
 	}
-	if a.Namespace != "" {
+	if app.Namespace != "" {
 		namespace := Namespace{
-			Name: a.Namespace,
+			Name: app.Namespace,
 		}
 		if err := namespace.Teardown(ctx, command); err != nil {
 			return err
@@ -90,26 +101,62 @@ func (a *Application) Teardown(ctx context.Context, command cmd.Factory) error {
 }
 
 func (a *Application) Ensure(ctx context.Context, command cmd.Factory) error {
-	if a.Namespace != "" {
+	app, err := a.reconcile(ctx, command)
+	if err != nil {
+		return err
+	}
+	if app.Namespace != "" {
 		namespace := Namespace{
-			Name: a.Namespace,
+			Name: app.Namespace,
 		}
 		if err := namespace.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
 	var resources []Resource
-	for _, resource := range a.Resources {
+	for _, resource := range app.Resources {
 		r := resource
 		resources = append(resources, &r)
 	}
 	if err := EnsureAll(ctx, command, resources...); err != nil {
 		return err
 	}
-	if a.Namespace == "" {
+	if app.Namespace == "" {
 		return nil
 	}
-	return internal.WaitUntilPodsRunning(ctx, a.Namespace)
+	return internal.WaitUntilPodsRunning(ctx, app.Namespace)
+}
+
+func (a *Application) reconcile(ctx context.Context, command cmd.Factory) (*Application, error) {
+	if a.From == nil {
+		return a, nil
+	}
+	fromConfig, err := LoadConfig(ctx, a.From.Path)
+	if err != nil {
+		return nil, err
+	}
+	var from *Application
+	for _, application := range fromConfig.Applications {
+		if application.Name == a.From.Name {
+			from = &application
+			break
+		}
+	}
+	if from == nil {
+		return nil, errors.Errorf("Could not find parent")
+	}
+
+	if from.From != nil {
+		return nil, errors.Errorf("Recursive chaining not yet implemented")
+	}
+	if a.Namespace != "" {
+		from.Namespace = a.Namespace
+	}
+	from.Resources = append(from.Resources, a.Resources...)
+	if a.LabelSelector != "" {
+		from.LabelSelector = a.LabelSelector
+	}
+	return from, nil
 }
 
 func (h *HelmChart) Ensure(ctx context.Context, command cmd.Factory) error {

@@ -1,0 +1,7 @@
+applications:
+  - name: petclinic-extension
+    from:
+      path: cli/internal/ensure/test/fixtures/applications/petclinic.yaml
+      name: petclinic
+    resources:
+      - path: "https://raw.githubusercontent.com/sololabs/demos/b523571c66057a5591bce22ad896729f1fee662b/petclinic_demo/petstore.yaml"

@@ -5,9 +5,9 @@ import (
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/errors"
-	"github.com/solo-io/valet/cli/api"
 	"github.com/solo-io/valet/cli/cmd/config"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
+	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -41,7 +41,7 @@ func ensure(opts *options.Options) error {
 		return MustProvideFileError
 	}
 
-	cfg, err := api.LoadConfig(opts.Top.Ctx, opts.Ensure.File)
+	cfg, err := resource.LoadConfig(opts.Top.Ctx, opts.Ensure.File)
 	if err != nil {
 		return err
 	}
@@ -52,6 +52,9 @@ func ensure(opts *options.Options) error {
 
 	if cfg.Cluster != nil {
 		if opts.Ensure.GkeClusterName != "" {
+			if len(opts.Ensure.GkeClusterName) > 40 {
+				opts.Ensure.GkeClusterName = opts.Ensure.GkeClusterName[:40]
+			}
 			cfg.Cluster.GKE.Name = opts.Ensure.GkeClusterName
 		}
 	}

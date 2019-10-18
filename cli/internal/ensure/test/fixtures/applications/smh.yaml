@@ -1,0 +1,11 @@
+applications:
+  - name: service-mesh-hub
+    resources:
+      - helmChart:
+          repoUrl: "https://storage.googleapis.com/sm-marketplace-helm/"
+          chartName: sm-marketplace
+          repoName: sm-marketplace
+          version: 0.3.9
+          namespace: sm-marketplace
+          set:
+            - "namespace.create=true"

@@ -1,5 +1,5 @@
 steps:
-  - name: 'quay.io/solo-io/valet:0.1.4-13-ga4cf700'
+  - name: 'quay.io/solo-io/valet:0.1.5-14-gf7fef9c'
     args: ['--version']
     id: 'valet-load-container'
     waitFor: ['-']
@@ -21,31 +21,33 @@ steps:
     waitFor: ['-']
     id: 'docker-login'
 
-  - name: 'quay.io/solo-io/valet:0.1.4-13-ga4cf700'
-    args: ['build', '-v', 'test-cloudbuild']
+  - name: 'quay.io/solo-io/valet:0.1.5-14-gf7fef9c'
+    args: ['build']
     env:
       - 'DOCKER_CONFIG=/workspace/docker-config'
       - 'GOPATH=/workspace/gopath'
       - 'HELM_HOME=/root/.helm'
+      - 'TAGGED_VERSION=$TAG_NAME'
+      - 'COMMIT_SHA=$COMMIT_SHA'
     volumes: *vol
     id: 'valet-build'
     waitFor: ['docker-login', 'valet-load-container']
 
-  - name: 'quay.io/solo-io/valet:0.1.4-13-ga4cf700'
-    args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/cluster.yaml', '--gke-cluster-name', 'valet-test']
+  - name: 'quay.io/solo-io/valet:0.1.5-14-gf7fef9c'
+    args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/cluster.yaml', '--gke-cluster-name', 'valet-$COMMIT_SHA']
     id: 'valet-ensure-cluster'
     waitFor: ['untar-mod-cache', 'valet-load-container']
 
-  - name: 'quay.io/solo-io/valet:0.1.4-13-ga4cf700'
-    args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/all.yaml', '--gke-cluster-name', 'valet-test']
+  - name: 'quay.io/solo-io/valet:0.1.5-14-gf7fef9c'
+    args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/all.yaml', '--gke-cluster-name', 'valet-$COMMIT_SHA']
     id: 'valet-ensure-valet'
     env:
       - 'HELM_HOME=/root/.helm'
     secretEnv: ['GITHUB_TOKEN', 'LICENSE_KEY', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY']
     waitFor: ['valet-build', 'valet-ensure-cluster']
 
-  - name: 'quay.io/solo-io/valet:0.1.4-13-ga4cf700'
-    args: ['teardown', '-f', 'cli/internal/ensure/test/fixtures/all.yaml', '--gke-cluster-name', 'valet-test']
+  - name: 'quay.io/solo-io/valet:0.1.5-14-gf7fef9c'
+    args: ['teardown', '-f', 'cli/internal/ensure/test/fixtures/all.yaml', '--gke-cluster-name', 'valet-$COMMIT_SHA']
     id: 'valet-teardown'
     waitFor: ['valet-ensure-valet']
 

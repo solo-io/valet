@@ -2,35 +2,70 @@ cluster:
   gke:
     location: us-east1
     project: solo-public
-namespaces:
-  - name: test-namespace-1
-  - name: test-namespace-2
-  - name: test-namespace-3
-secrets:
-  - name: test-secret-1
-    namespace: default
-    entries:
-      aws_access_id:
-        envVar: AWS_ACCESS_KEY_ID
-      aws_secret_key:
-        envVar: AWS_SECRET_ACCESS_KEY
-  - name: test-secret-2
-    namespace: default
-    entries:
-      test-file:
-        file: Makefile
 certManager: {}
 gloo:
   enterprise: true
-  uiVirtualService:
-    dns:
-      hostedZone: corp.solo.io.
   aws:
     secret: true
     upstream: true
-serviceMeshHub: {}
-demos:
-  petclinic:
-    dns:
-      hostedZone: corp.solo.io.
-  petstore: {}
+applications:
+  - name: test-namespace-1
+    namespace: test-namespace-1
+  - name: test-namespace-2
+    namespace: test-namespace-2
+  - name: test-namespace-3
+    namespace: test-namespace-3
+  - name: example-secrets
+    resources:
+      - secret:
+          name: test-secret-1
+          namespace: default
+          entries:
+            aws_access_id:
+              envVar: AWS_ACCESS_KEY_ID
+            aws_secret_key:
+              envVar: AWS_SECRET_ACCESS_KEY
+      - secret:
+          name: test-secret-2
+          namespace: default
+          entries:
+            test-file:
+              file: Makefile
+      # Note: this requires valet is configured with GOOGLE_APPLICATION_CREDENTIALS granting
+      # decrypt on the provided project/keyring/key
+      - secret:
+          name: test-secret-3
+          namespace: default
+          entries:
+            test-file:
+              gcloudKmsEncryptedFile:
+                ciphertextFile: test-cloudbuild/ci/id_rsa.enc
+                gcloudProject: solo-public
+                keyring: build
+                key: build-key
+  - name: petclinic
+    resources:
+      - path: "https://raw.githubusercontent.com/sololabs/demos/b523571c66057a5591bce22ad896729f1fee662b/petclinic_demo/petclinic.yaml"
+      - path: "https://raw.githubusercontent.com/sololabs/demos/b523571c66057a5591bce22ad896729f1fee662b/petclinic_demo/petclinic-vets.yaml"
+      - path: "https://raw.githubusercontent.com/sololabs/demos/b523571c66057a5591bce22ad896729f1fee662b/petclinic_demo/petclinic-db.yaml"
+      - path: "https://raw.githubusercontent.com/sololabs/demos/b523571c66057a5591bce22ad896729f1fee662b/petclinic_demo/petclinic-virtual-service.yaml"
+      - secret:
+          name: aws-creds
+          namespace: gloo-system
+          entries:
+            secret_access_key:
+              envVar: AWS_SECRET_ACCESS_KEY
+            access_key_id:
+              envVar: AWS_ACCESS_KEY_ID
+      # relative path assumes valet is run from the root of the repo
+      - path: "cli/internal/ensure/test/fixtures/upstreams/aws.yaml"
+  - name: service-mesh-hub
+    resources:
+      - helmChart:
+          repoUrl: "https://storage.googleapis.com/sm-marketplace-helm/"
+          chartName: sm-marketplace
+          repoName: sm-marketplace
+          version: 0.3.9
+          namespace: sm-marketplace
+          set:
+            - "namespace.create=true"

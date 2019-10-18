@@ -1,0 +1,4 @@
+changelog:
+  - type: FIX
+    description: Deprecate old APIs in favor of Applications in ensure config.
+    issueLink: https://github.com/solo-io/valet/issues/58

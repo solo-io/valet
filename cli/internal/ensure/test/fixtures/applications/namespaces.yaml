@@ -1,0 +1,9 @@
+# example just to show namespaces
+
+applications:
+  - name: test-namespace-1
+    namespace: test-namespace-1
+  - name: test-namespace-2
+    namespace: test-namespace-2
+  - name: test-namespace-3
+    namespace: test-namespace-3

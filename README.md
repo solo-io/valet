@@ -68,7 +68,7 @@ Valet currently supports 3 ways to inject secret values into applications: **env
 
 Here's an example config that creates secrets with all 3 types of values:
 
-`valet ensure -f cli/internal/ensure/test/fixtures/secrets.yaml`
+`valet ensure -f cli/internal/ensure/test/fixtures/applications/secrets.yaml`
 
 ```yaml
 applications:
@@ -106,7 +106,7 @@ A cluster definition can be included in a Valet config in order to ensure the st
 Currently, Valet can ensure Minikube and Kubernetes clusters. 
 
 Here is an example of ensuring a default minikube cluster: 
-`valet ensure -f cli/internal/ensure/test/fixtures/minikube.yaml`
+`valet ensure -f cli/internal/ensure/test/fixtures/cluster/minikube.yaml`
 
 ```yaml
 cluster:
@@ -117,7 +117,7 @@ Here is an example for GKE. Note: if deploying to GKE, the global
 `GOOGLE_APPLICATION_CREDENTIALS` environment variable must be set. The referenced credentials must 
 grant GKE cluster admin permissions to Valet. 
 
-`valet ensure -f cli/internal/ensure/test/fixtures/cluster.yaml`
+`valet ensure -f cli/internal/ensure/test/fixtures/cluster/gke.yaml`
 ```yaml
 cluster:
   gke:

@@ -34,7 +34,7 @@ steps:
     waitFor: ['docker-login', 'valet-load-container']
 
   - name: 'quay.io/solo-io/valet:0.1.5-14-gf7fef9c'
-    args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/cluster.yaml', '--gke-cluster-name', 'valet-$COMMIT_SHA']
+    args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/cluster/gke.yaml', '--gke-cluster-name', 'valet-$COMMIT_SHA']
     id: 'valet-ensure-cluster'
     waitFor: ['untar-mod-cache', 'valet-load-container']
 

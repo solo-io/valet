@@ -10,7 +10,6 @@ import (
 )
 
 var (
-	MustProvideFileError    = errors.Errorf("Must provide file option")
 	MustSpecifyClusterError = errors.Errorf("Must specify cluster")
 )
 
@@ -33,6 +32,9 @@ func setContext(opts *options.Options) error {
 	cfg, err := common.LoadConfig(opts)
 	if err != nil {
 		return err
+	}
+	if cfg.Cluster == nil {
+		return MustSpecifyClusterError
 	}
 	command := cmd.CommandFactory{}
 	return cfg.Cluster.SetContext(opts.Top.Ctx, &command)

@@ -52,6 +52,9 @@ func ensure(opts *options.Options) error {
 
 	if cfg.Cluster != nil {
 		if opts.Ensure.GkeClusterName != "" {
+			if len(opts.Ensure.GkeClusterName) > 40 {
+				opts.Ensure.GkeClusterName = opts.Ensure.GkeClusterName[:40]
+			}
 			cfg.Cluster.GKE.Name = opts.Ensure.GkeClusterName
 		}
 	}

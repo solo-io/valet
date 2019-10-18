@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	secret  = "secret"
-	generic = "generic"
+	secret          = "secret"
+	generic         = "generic"
 	encryptedSuffix = ".enc"
 )
 
@@ -19,7 +19,7 @@ var (
 	_ Resource = new(Secret)
 
 	InvalidCiphertextFilenameError = errors.Errorf("Ciphertext files must end with '%s'.", encryptedSuffix)
-	UnableToDecryptFileError = func(err error) error {
+	UnableToDecryptFileError       = func(err error) error {
 		return errors.Wrapf(err, "Unable to decrypt file.")
 	}
 	UnableToCleanupPlaintextFileError = func(err error) error {
@@ -28,9 +28,9 @@ var (
 )
 
 type Secret struct {
-	Name      string `yaml:"name"`
-	Namespace string `yaml:"namespace"`
-	Entries   map[string]SecretValue
+	Name      string                 `yaml:"name"`
+	Namespace string                 `yaml:"namespace"`
+	Entries   map[string]SecretValue `yaml:"entries"`
 }
 
 type SecretValue struct {

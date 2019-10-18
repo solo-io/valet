@@ -303,6 +303,7 @@ func (a *AWS) Teardown(ctx context.Context) error {
 
 func patchGloouiWithDomain(ctx context.Context, command cmd.Factory, domain string) error {
 	contextutils.LoggerFrom(ctx).Infow("Patching glooui domain")
+	// This was hard to get right
 	patchStr := fmt.Sprintf("-p=[{\"op\":\"add\",\"path\":\"/spec/virtualHost/domains\",\"value\":[\"%s\"]}]", domain)
 	return command.Kubectl().With("patch", "vs", "glooui").Namespace("gloo-system").JsonPatch(patchStr).Cmd().Run(ctx)
 }

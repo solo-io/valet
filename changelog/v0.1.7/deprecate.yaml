@@ -2,3 +2,6 @@ changelog:
   - type: FIX
     description: Deprecate old APIs in favor of Applications in ensure config.
     issueLink: https://github.com/solo-io/valet/issues/58
+  - type: NEW_FEATURE
+    description: Add `--teardown-on-finish` option to ensure to try and cleanup before returning the result of the ensure operation.
+    issueLink: https://github.com/solo-io/valet/issues/61

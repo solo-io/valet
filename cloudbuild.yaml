@@ -22,7 +22,7 @@ steps:
     id: 'docker-login'
 
   - name: 'quay.io/solo-io/valet:0.1.5-6-g67d718a'
-    args: ['build', '-v', 'test-cloudbuild']
+    args: ['build']
     env:
       - 'DOCKER_CONFIG=/workspace/docker-config'
       - 'GOPATH=/workspace/gopath'

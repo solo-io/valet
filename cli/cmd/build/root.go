@@ -7,6 +7,7 @@ import (
 	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var (
@@ -45,12 +46,26 @@ func Build(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Co
 	return cmd
 }
 
+func determineVersion(opts *options.Options) error {
+	if opts.Build.Version != "" {
+		return nil
+	}
+	if os.Getenv("TAG_NAME") != "" {
+		opts.Build.Version = os.Getenv("TAG_NAME")
+		return nil
+	}
+	if os.Getenv("COMMIT_SHA") != "" {
+		opts.Build.Version = os.Getenv("COMMIT_SHA")
+	}
+	return MustProvideVersionError
+}
+
 func build(opts *options.Options) error {
 	if opts.Build.File == "" {
 		return MustProvideFileError
 	}
-	if opts.Build.Version == "" {
-		return MustProvideVersionError
+	if err := determineVersion(opts); err != nil {
+		return err
 	}
 	if err := ensureArtifactsDir(); err != nil {
 		return CouldNotPrepareArtifactsDirError(err)

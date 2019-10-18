@@ -11,15 +11,18 @@ type Options struct {
 }
 
 type Top struct {
-	Ctx                context.Context
+	Ctx context.Context
 }
 
 type Ensure struct {
-	File      string
-	ValetArtifacts bool
+	File              string
+	ValetArtifacts    bool
 	LocalArtifactsDir string
-	GkeClusterName string
-	GlooVersion string
+	GkeClusterName    string
+	GlooVersion       string
+	// if true, attempt teardown after ensure finishes.
+	// return error if ensure returned error
+	TeardownOnFinish bool
 }
 
 type Build struct {

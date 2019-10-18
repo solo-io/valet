@@ -44,6 +44,11 @@ func teardown(opts *options.Options) error {
 			}
 		}
 	}
+
+	return TeardownCfg(opts, cfg)
+}
+
+func TeardownCfg(opts *options.Options, cfg *resource.Config) error {
 	command := cmd.CommandFactory{}
 	return cfg.Teardown(opts.Top.Ctx, &command)
 }

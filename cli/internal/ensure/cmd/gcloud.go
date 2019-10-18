@@ -61,6 +61,6 @@ func (g *Gcloud) Global() *Gcloud {
 	return g.With("--location=global")
 }
 
-func (g *Gcloud) UnencryptFile(cipherText, plainText, project, keyring, key string) *Gcloud {
+func (g *Gcloud) DecryptFile(cipherText, plainText, project, keyring, key string) *Gcloud {
 	return g.Kms(Decrypt).Ciphertext(cipherText).Plaintext(plainText).Project(project).Keyring(keyring).Key(key).Global()
 }

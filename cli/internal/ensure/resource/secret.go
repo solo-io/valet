@@ -63,7 +63,7 @@ func (s *Secret) Ensure(ctx context.Context, command cmd.Factory) error {
 				return InvalidCiphertextFilenameError
 			}
 			unencrypted := strings.TrimSuffix(v.GcloudKmsEncryptedFile.CiphertextFile, encryptedSuffix)
-			err := command.Gcloud().UnencryptFile(
+			err := command.Gcloud().DecryptFile(
 				v.GcloudKmsEncryptedFile.CiphertextFile,
 				unencrypted,
 				v.GcloudKmsEncryptedFile.GcloudProject,

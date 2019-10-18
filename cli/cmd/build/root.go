@@ -56,6 +56,7 @@ func determineVersion(opts *options.Options) error {
 	}
 	if os.Getenv("COMMIT_SHA") != "" {
 		opts.Build.Version = os.Getenv("COMMIT_SHA")
+		return nil
 	}
 	return MustProvideVersionError
 }

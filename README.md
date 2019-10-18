@@ -5,7 +5,7 @@ Valet can be used in the dev environment, in CI, or as part of a GitOps deployme
 
 ## Usage
 
-There are three primary commands for interacting with Valet: **ensure**, **teardown**, **build**. 
+There are three primary commands for interacting with Valet: **ensure**, **teardown**, and **build**. 
 There is also a **config** command for setting global configuration. 
 
 ### Ensure 

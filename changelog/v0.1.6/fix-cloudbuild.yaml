@@ -2,3 +2,12 @@ changelog:
   - type: FIX
     description: Bump valet container for CI to 0.1.5. Use a cluster name based on `$SHORT_SHA` in CI to support concurrent builds.
     issueLink: https://github.com/solo-io/valet/issues/49
+  - type: NEW_FEATURE
+    description: Use default fallbacks for version during build if not specified. Prefer `TAGGED_VERSION`, and then `COMMIT_SHA` tags.
+    issueLink: https://github.com/solo-io/valet/issues/51
+  - type: NEW_FEATURE
+    description: Extend support for secrets to decrypt files via gcloud KMS.
+    issueLink: https://github.com/solo-io/valet/issues/50
+  - type: NEW_FEATURE
+    description: Support applications in valet config, to bundle a list of resources (helm chart, manifest, secret).
+    issueLink: https://github.com/solo-io/valet/issues/54

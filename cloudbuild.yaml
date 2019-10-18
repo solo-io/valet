@@ -27,6 +27,8 @@ steps:
       - 'DOCKER_CONFIG=/workspace/docker-config'
       - 'GOPATH=/workspace/gopath'
       - 'HELM_HOME=/root/.helm'
+      - 'TAGGED_VERSION=$TAG_NAME'
+      - 'COMMIT_SHA=$COMMIT_SHA'
     volumes: *vol
     id: 'valet-build'
     waitFor: ['docker-login', 'valet-load-container']

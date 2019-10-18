@@ -50,8 +50,8 @@ func determineVersion(opts *options.Options) error {
 	if opts.Build.Version != "" {
 		return nil
 	}
-	if os.Getenv("TAG_NAME") != "" {
-		opts.Build.Version = os.Getenv("TAG_NAME")
+	if os.Getenv("TAGGED_VERSION") != "" {
+		opts.Build.Version = os.Getenv("TAGGED_VERSION")
 		return nil
 	}
 	if os.Getenv("COMMIT_SHA") != "" {

@@ -34,12 +34,12 @@ steps:
     waitFor: ['docker-login', 'valet-load-container']
 
   - name: 'quay.io/solo-io/valet:0.1.5-14-gf7fef9c'
-    args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/cluster.yaml', '--gke-cluster-name', 'valet-$SHORT_SHA']
+    args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/cluster.yaml', '--gke-cluster-name', 'valet-$COMMIT_SHA']
     id: 'valet-ensure-cluster'
     waitFor: ['untar-mod-cache', 'valet-load-container']
 
   - name: 'quay.io/solo-io/valet:0.1.5-14-gf7fef9c'
-    args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/all.yaml', '--gke-cluster-name', 'valet-$SHORT_SHA']
+    args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/all.yaml', '--gke-cluster-name', 'valet-$COMMIT_SHA']
     id: 'valet-ensure-valet'
     env:
       - 'HELM_HOME=/root/.helm'
@@ -47,7 +47,7 @@ steps:
     waitFor: ['valet-build', 'valet-ensure-cluster']
 
   - name: 'quay.io/solo-io/valet:0.1.5-14-gf7fef9c'
-    args: ['teardown', '-f', 'cli/internal/ensure/test/fixtures/all.yaml', '--gke-cluster-name', 'valet-$SHORT_SHA']
+    args: ['teardown', '-f', 'cli/internal/ensure/test/fixtures/all.yaml', '--gke-cluster-name', 'valet-$COMMIT_SHA']
     id: 'valet-teardown'
     waitFor: ['valet-ensure-valet']
 

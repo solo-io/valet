@@ -2,7 +2,7 @@ package teardown
 
 import (
 	"github.com/solo-io/go-utils/cliutils"
-	"github.com/solo-io/valet/cli/cmd/ensure"
+	"github.com/solo-io/valet/cli/cmd/common"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"github.com/solo-io/valet/cli/options"
@@ -25,26 +25,10 @@ func Teardown(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra
 }
 
 func teardown(opts *options.Options) error {
-	if opts.Ensure.File == "" {
-		return ensure.MustProvideFileError
-	}
-	cfg, err := resource.LoadConfig(opts.Top.Ctx, opts.Ensure.File)
+	cfg, err := common.LoadConfig(opts)
 	if err != nil {
 		return err
 	}
-
-	if err := ensure.LoadEnv(opts.Top.Ctx); err != nil {
-		return err
-	}
-
-	if cfg.Cluster != nil {
-		if cfg.Cluster.GKE != nil {
-			if opts.Ensure.GkeClusterName != "" {
-				cfg.Cluster.GKE.Name = opts.Ensure.GkeClusterName
-			}
-		}
-	}
-
 	return TeardownCfg(opts, cfg)
 }
 

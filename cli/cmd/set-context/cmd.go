@@ -3,9 +3,8 @@ package set_context
 import (
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/go-utils/errors"
-	"github.com/solo-io/valet/cli/cmd/ensure"
+	"github.com/solo-io/valet/cli/cmd/common"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 )
@@ -31,27 +30,9 @@ func SetContext(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cob
 }
 
 func setContext(opts *options.Options) error {
-	if opts.Ensure.File == "" {
-		return MustProvideFileError
-	}
-	cfg, err := resource.LoadConfig(opts.Top.Ctx, opts.Ensure.File)
+	cfg, err := common.LoadConfig(opts)
 	if err != nil {
 		return err
-	}
-	if err := ensure.LoadEnv(opts.Top.Ctx); err != nil {
-		return err
-	}
-	if cfg.Cluster == nil {
-		return MustSpecifyClusterError
-	}
-
-	if cfg.Cluster.GKE != nil {
-		if opts.Ensure.GkeClusterName != "" {
-			cfg.Cluster.GKE.Name = opts.Ensure.GkeClusterName
-		}
-		if cfg.Cluster.GKE.Name == "" {
-			return MustSpecifyClusterError
-		}
 	}
 	command := cmd.CommandFactory{}
 	return cfg.Cluster.SetContext(opts.Top.Ctx, &command)

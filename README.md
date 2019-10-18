@@ -62,6 +62,44 @@ applications:
 Here, Valet deployed Gloo, and then a single application called petclinic. It applied 4 manifests, 
 then created a secret and a Gloo upstream referencing that secret. 
 
+#### Secret management
+
+Valet currently supports 3 ways to inject secret values into applications: **environment variables**, **files**, and **gcloud kms encrypted files**. 
+
+Here's an example config that creates secrets with all 3 types of values:
+
+`valet ensure -f cli/internal/ensure/test/fixtures/secrets.yaml`
+
+```yaml
+applications:
+  - name: example-secrets
+    resources:
+      - secret:
+          name: test-secret-1
+          namespace: default
+          entries:
+            aws_access_id:
+              envVar: AWS_ACCESS_KEY_ID
+            aws_secret_key:
+              envVar: AWS_SECRET_ACCESS_KEY
+      - secret:
+          name: test-secret-2
+          namespace: default
+          entries:
+            test-file:
+              file: Makefile
+      - secret:
+          name: test-secret-3
+          namespace: default
+          entries:
+            test-file:
+              gcloudKmsEncryptedFile:
+                ciphertextFile: test-cloudbuild/ci/id_rsa.enc
+                gcloudProject: solo-public
+                keyring: build
+                key: build-key
+```
+
 #### Ensuring clusters
 
 A cluster definition can be included in a Valet config in order to ensure the state of the cluster. 

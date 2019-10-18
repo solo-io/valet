@@ -2,9 +2,9 @@ package teardown
 
 import (
 	"github.com/solo-io/go-utils/cliutils"
-	"github.com/solo-io/valet/cli/api"
 	"github.com/solo-io/valet/cli/cmd/ensure"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
+	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 )
@@ -28,7 +28,7 @@ func teardown(opts *options.Options) error {
 	if opts.Ensure.File == "" {
 		return ensure.MustProvideFileError
 	}
-	cfg, err := api.LoadConfig(opts.Top.Ctx, opts.Ensure.File)
+	cfg, err := resource.LoadConfig(opts.Top.Ctx, opts.Ensure.File)
 	if err != nil {
 		return err
 	}

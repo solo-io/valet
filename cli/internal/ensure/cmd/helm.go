@@ -26,6 +26,9 @@ func (h *Helm) Template() *Helm {
 }
 
 func (h *Helm) Namespace(namespace string) *Helm {
+	if namespace == "" {
+		return h
+	}
 	return h.With("--namespace", namespace)
 }
 

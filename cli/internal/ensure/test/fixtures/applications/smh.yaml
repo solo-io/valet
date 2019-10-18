@@ -1,5 +1,5 @@
 applications:
-  serviceMeshHub:
+  - name: service-mesh-hub
     resources:
       - helmChart:
           repoUrl: "https://storage.googleapis.com/sm-marketplace-helm/"

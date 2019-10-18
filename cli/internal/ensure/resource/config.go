@@ -19,6 +19,7 @@ type Config struct {
 	CertManager    *CertManager    `yaml:"certManager"`
 	Gloo           *Gloo           `yaml:"gloo"`
 	ServiceMeshHub *ServiceMeshHub `yaml:"serviceMeshHub"`
+	Applications   []Application   `yaml:"applications"`
 	Workflows      []Workflow      `yaml:"workflows"`
 	Demos          *Demos          `yaml:"demos"`
 	Resources      []string        `yaml:"resources"`
@@ -61,7 +62,11 @@ func (c *Config) Ensure(ctx context.Context, command cmd.Factory) error {
 			return err
 		}
 	}
-
+	for _, application := range c.Applications {
+		if err := application.Ensure(ctx, command); err != nil {
+			return err
+		}
+	}
 	for _, workflow := range c.Workflows {
 		workflow.URL = proxyUrl
 		if err := workflow.Ensure(ctx, command); err != nil {

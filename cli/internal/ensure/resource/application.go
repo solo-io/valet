@@ -15,46 +15,74 @@ var (
 )
 
 type Application struct {
-	Namespace     *Namespace            `yaml:"namespace"`
+	Name          string                `yaml:"name"`
+	Namespace     string                `yaml:"namespace"`
 	Resources     []ApplicationResource `yaml:"resources"`
 	LabelSelector string                `yaml:"labelSelector"`
 }
 
 type HelmChart struct {
-	RepoUrl   string `yaml:"repoUrl"`
-	ChartName string `yaml:"chartName"`
-	RepoName  string `yaml:"repoName"`
-	Version   string `yaml:"version"`
-	Namespace string `yaml:"namespace"` // a bit redundant
+	RepoUrl   string   `yaml:"repoUrl"`
+	ChartName string   `yaml:"chartName"`
+	RepoName  string   `yaml:"repoName"`
+	Version   string   `yaml:"version"`
+	Namespace string   `yaml:"namespace"` // a bit redundant
 	Set       []string `yaml:"set"`
 }
 
 type ApplicationResource struct {
-	HelmChart *HelmChart
-	Secret    *Secret
-	Manifest  *Manifest
+	HelmChart *HelmChart `yaml:"helmChart"`
+	Secret    *Secret    `yaml:"secret"`
+	Path      string     `yaml:"path"`
 }
 
 var _ Resource = new(ApplicationResource)
 
 func (a *ApplicationResource) Ensure(ctx context.Context, command cmd.Factory) error {
-	return EnsureAll(ctx, command, a.HelmChart, a.Secret, a.Manifest)
+	if a.HelmChart != nil {
+		return a.HelmChart.Ensure(ctx, command)
+	}
+	if a.Secret != nil {
+		return a.Secret.Ensure(ctx, command)
+	}
+	if a.Path != "" {
+		manifest := Manifest{
+			Path: a.Path,
+		}
+		return manifest.Ensure(ctx, command)
+	}
+	return nil
 }
 
 func (a *ApplicationResource) Teardown(ctx context.Context, command cmd.Factory) error {
-	return TeardownAll(ctx, command, a.HelmChart, a.Secret, a.Manifest)
+	if a.HelmChart != nil {
+		return a.HelmChart.Teardown(ctx, command)
+	}
+	if a.Secret != nil {
+		return a.Secret.Teardown(ctx, command)
+	}
+	if a.Path != "" {
+		manifest := Manifest{
+			Path: a.Path,
+		}
+		return manifest.Teardown(ctx, command)
+	}
+	return nil
 }
 
 func (a *Application) Teardown(ctx context.Context, command cmd.Factory) error {
 	var resources []Resource
-	for i := len(a.Resources)-1; i >= 0; i-- {
+	for i := len(a.Resources) - 1; i >= 0; i-- {
 		resources = append(resources, &a.Resources[i])
 	}
 	if err := TeardownAll(ctx, command, resources...); err != nil {
 		return err
 	}
-	if a.Namespace != nil {
-		if err := a.Namespace.Teardown(ctx, command); err != nil {
+	if a.Namespace != "" {
+		namespace := Namespace{
+			Name: a.Namespace,
+		}
+		if err := namespace.Teardown(ctx, command); err != nil {
 			return err
 		}
 	}
@@ -62,22 +90,26 @@ func (a *Application) Teardown(ctx context.Context, command cmd.Factory) error {
 }
 
 func (a *Application) Ensure(ctx context.Context, command cmd.Factory) error {
-	if a.Namespace != nil {
-		if err := a.Namespace.Ensure(ctx, command); err != nil {
+	if a.Namespace != "" {
+		namespace := Namespace{
+			Name: a.Namespace,
+		}
+		if err := namespace.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
 	var resources []Resource
 	for _, resource := range a.Resources {
-		resources = append(resources, &resource)
+		r := resource
+		resources = append(resources, &r)
 	}
 	if err := EnsureAll(ctx, command, resources...); err != nil {
 		return err
 	}
-	if a.Namespace == nil {
+	if a.Namespace == "" {
 		return nil
 	}
-	return internal.WaitUntilPodsRunning(ctx, a.Namespace.Name)
+	return internal.WaitUntilPodsRunning(ctx, a.Namespace)
 }
 
 func (h *HelmChart) Ensure(ctx context.Context, command cmd.Factory) error {
@@ -89,7 +121,7 @@ func (h *HelmChart) Ensure(ctx context.Context, command cmd.Factory) error {
 	if err := command.Kubectl().ApplyStdIn(manifest).Cmd().Run(ctx); err != nil {
 		return err
 	}
-	return internal.WaitUntilPodsRunning(ctx, SmMarketplaceNamespace)
+	return internal.WaitUntilPodsRunning(ctx, h.Namespace)
 }
 
 func (h *HelmChart) renderManifest(ctx context.Context, command cmd.Factory) (string, error) {
@@ -101,7 +133,7 @@ func (h *HelmChart) renderManifest(ctx context.Context, command cmd.Factory) (st
 	if err != nil {
 		return "", err
 	}
-	contextutils.LoggerFrom(ctx).Infow("rendering and applying manifest for service mesh hub")
+	contextutils.LoggerFrom(ctx).Infow("rendering and applying manifest for application")
 	helmCmd := command.Helm().Template().Namespace(h.Namespace)
 	for _, set := range h.Set {
 		helmCmd = helmCmd.Set(set)
@@ -116,20 +148,6 @@ func (h *HelmChart) Teardown(ctx context.Context, command cmd.Factory) error {
 		return err
 	}
 	return command.Kubectl().DeleteStdIn(manifest).Cmd().Run(ctx)
-}
-
-func (h *HelmChart) renderAndDeleteManifest(ctx context.Context, command cmd.Factory, chartDir string) error {
-	contextutils.LoggerFrom(ctx).Infow("rendering and deleting manifest for service mesh hub")
-	out, err := command.Helm().Template().Namespace(h.Namespace).Set("namespace.create=true").Target(chartDir).Cmd().Output(ctx)
-	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("error rendering manifest", zap.Error(err), zap.String("out", out))
-		return err
-	}
-	out, err = command.Kubectl().DeleteStdIn(out).Cmd().Output(ctx)
-	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("error deleting manifest", zap.Error(err), zap.String("out", out))
-	}
-	return err
 }
 
 func (h *HelmChart) addHelmRepo(ctx context.Context, command cmd.Factory) error {

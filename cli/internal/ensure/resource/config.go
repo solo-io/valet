@@ -14,14 +14,19 @@ import (
 
 type Config struct {
 	Cluster        *Cluster        `yaml:"cluster"`
+	// Deprecated: Use Applications
 	Namespaces     []Namespace     `yaml:"namespaces"`
+	// Deprecated: Use Applications
 	Secrets        []Secret        `yaml:"secrets"`
 	CertManager    *CertManager    `yaml:"certManager"`
 	Gloo           *Gloo           `yaml:"gloo"`
+	// Deprecated: Use Applications
 	ServiceMeshHub *ServiceMeshHub `yaml:"serviceMeshHub"`
 	Applications   []Application   `yaml:"applications"`
 	Workflows      []Workflow      `yaml:"workflows"`
+	// Deprecated: Use Applications
 	Demos          *Demos          `yaml:"demos"`
+	// Deprecated: Use Applications
 	Resources      []string        `yaml:"resources"`
 }
 

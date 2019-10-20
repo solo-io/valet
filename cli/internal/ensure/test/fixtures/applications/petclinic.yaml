@@ -1,3 +1,5 @@
+# A standard Gloo demo
+
 gloo:
   version: 0.20.7
 applications:

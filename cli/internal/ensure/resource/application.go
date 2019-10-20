@@ -202,7 +202,7 @@ func (h *HelmChart) addHelmRepo(ctx context.Context, command cmd.Factory) error 
 }
 
 func (h *HelmChart) fetchAndUntarChart(ctx context.Context, command cmd.Factory) (string, error) {
-	untarDir, err := getLocalDirectory(h.Version)
+	untarDir, err := h.getLocalDirectory()
 	if err != nil {
 		contextutils.LoggerFrom(ctx).Errorw("error determining local directory for untarring chart", zap.Error(err))
 		return "", err

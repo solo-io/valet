@@ -1,5 +1,5 @@
 steps:
-  - name: 'quay.io/solo-io/valet:0.1.6'
+  - name: 'quay.io/solo-io/valet:0.1.6-12-ga61dbf3'
     args: ['--version']
     id: 'valet-load-container'
     waitFor: ['-']
@@ -21,7 +21,7 @@ steps:
     waitFor: ['-']
     id: 'docker-login'
 
-  - name: 'quay.io/solo-io/valet:0.1.6'
+  - name: 'quay.io/solo-io/valet:0.1.6-12-ga61dbf3'
     args: ['build']
     env:
       - 'DOCKER_CONFIG=/workspace/docker-config'
@@ -33,12 +33,12 @@ steps:
     id: 'valet-build'
     waitFor: ['docker-login', 'valet-load-container']
 
-  - name: 'quay.io/solo-io/valet:0.1.6'
+  - name: 'quay.io/solo-io/valet:0.1.6-12-ga61dbf3'
     args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/cluster/gke.yaml', '--gke-cluster-name', 'valet-$COMMIT_SHA']
     id: 'valet-ensure-cluster'
     waitFor: ['untar-mod-cache', 'valet-load-container']
 
-  - name: 'quay.io/solo-io/valet:0.1.6'
+  - name: 'quay.io/solo-io/valet:0.1.6-12-ga61dbf3'
     args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/all.yaml', '--gke-cluster-name', 'valet-$COMMIT_SHA', '--teardown-on-finish']
     id: 'valet-ensure-valet'
     env:

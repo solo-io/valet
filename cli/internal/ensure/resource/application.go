@@ -29,12 +29,13 @@ type ApplicationRef struct {
 }
 
 type HelmChart struct {
-	RepoUrl   string   `yaml:"repoUrl"`
-	ChartName string   `yaml:"chartName"`
-	RepoName  string   `yaml:"repoName"`
-	Version   string   `yaml:"version"`
-	Namespace string   `yaml:"namespace"` // a bit redundant
-	Set       []string `yaml:"set"`
+	RepoUrl   string            `yaml:"repoUrl"`
+	ChartName string            `yaml:"chartName"`
+	RepoName  string            `yaml:"repoName"`
+	Version   string            `yaml:"version"`
+	Namespace string            `yaml:"namespace"` // a bit redundant
+	Set       []string          `yaml:"set"`
+	SetEnv    map[string]string `yaml:"setEnv"`
 }
 
 type ApplicationResource struct {
@@ -184,6 +185,9 @@ func (h *HelmChart) renderManifest(ctx context.Context, command cmd.Factory) (st
 	helmCmd := command.Helm().Template().Namespace(h.Namespace)
 	for _, set := range h.Set {
 		helmCmd = helmCmd.Set(set)
+	}
+	for set, envVar := range h.SetEnv {
+		helmCmd = helmCmd.SetEnv(set, envVar)
 	}
 	return helmCmd.Target(chartDir).Cmd().Output(ctx)
 }

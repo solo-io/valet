@@ -6,3 +6,16 @@ gloo:
   aws:
     secret: true
     upstream: true
+applications:
+  - name: gloo
+    resources:
+      - helmChart:
+          repoUrl: "https://storage.googleapis.com/gloo-ee-helm/"
+          chartName: gloo-ee
+          repoName: gloo-ee
+          version: 0.20.4
+          namespace: gloo-system
+          set:
+            - "namespace.create=true"
+          setEnv:
+            - license_key: LICENSE_KEY

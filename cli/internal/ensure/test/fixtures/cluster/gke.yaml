@@ -1,5 +1,4 @@
 cluster:
   gke:
-    name: valet-test
     location: us-east1
     project: solo-public

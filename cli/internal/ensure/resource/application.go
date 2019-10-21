@@ -198,11 +198,21 @@ func (h *HelmChart) Teardown(ctx context.Context, command cmd.Factory) error {
 	if err != nil {
 		return err
 	}
-	kubectl := command.Kubectl().DeleteStdIn(manifest)
+	kubectl := command.Kubectl().DeleteStdIn(manifest).IgnoreNotFound()
 	if h.Namespace != "" {
 		kubectl = kubectl.Namespace(h.Namespace)
 	}
-	return kubectl.Cmd().Run(ctx)
+	if err := kubectl.Cmd().Run(ctx); err != nil {
+		return err
+	}
+	if h.Namespace != "" {
+		if ok, err := internal.NamespaceIsActive(ctx, h.Namespace); err != nil {
+			return err
+		} else if ok {
+			return command.Kubectl().Delete(ns).WithName(h.Namespace).Cmd().Run(ctx)
+		}
+	}
+	return nil
 }
 
 func (h *HelmChart) addHelmRepo(ctx context.Context, command cmd.Factory) error {

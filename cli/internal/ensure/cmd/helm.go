@@ -39,7 +39,10 @@ func (h *Helm) Set(set string) *Helm {
 
 func (h *Helm) SetEnv(set, envVar string) *Helm {
 	envVarValue := os.Getenv(envVar)
-	return h.With("--set", fmt.Sprintf("%s=%s", set, envVarValue))
+	unredacted := fmt.Sprintf("%s=%s", set, envVarValue)
+	redacted := fmt.Sprintf("%s=%s", set, Redacted)
+	h.cmd = h.cmd.Redact(unredacted, redacted)
+	return h.With("--set", )
 }
 
 func (h *Helm) Target(target string) *Helm {

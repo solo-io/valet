@@ -1,11 +1,11 @@
-gloo:
-  enterprise: true
-  uiVirtualService:
-    dns:
-      hostedZone: corp.solo.io.
-  aws:
-    secret: true
-    upstream: true
+#gloo:
+#  enterprise: true
+#  uiVirtualService:
+#    dns:
+#      hostedZone: corp.solo.io.
+#  aws:
+#    secret: true
+#    upstream: true
 applications:
   - name: gloo
     resources:
@@ -18,4 +18,4 @@ applications:
           set:
             - "namespace.create=true"
           setEnv:
-            - license_key: LICENSE_KEY
+            license_key: LICENSE_KEY

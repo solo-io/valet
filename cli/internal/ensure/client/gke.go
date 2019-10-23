@@ -63,7 +63,7 @@ func (c *gkeClient) IsRunning(ctx context.Context, name, project, zone string) (
 	} else if cluster == nil {
 		return false, nil
 	}
-	contextutils.LoggerFrom(ctx).Infow("Found cluster", zap.Any("cluster", cluster))
+	contextutils.LoggerFrom(ctx).Infow("Found cluster", zap.String("cluster", cluster.GetName()))
 	return cluster.GetStatus() == container2.Cluster_RUNNING, nil
 }
 

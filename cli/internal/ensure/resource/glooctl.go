@@ -16,6 +16,7 @@ import (
 
 const (
 	Owner = "solo-io"
+	GlooRepo = "gloo"
 )
 
 var (
@@ -101,7 +102,7 @@ func prepareLocalPath(version string) (string, error) {
 	return filepath.Join(dir, filename), nil
 }
 
-func (g *Glooctl) Teardown(ctx context.Context) error {
+func (g *Glooctl) Teardown(ctx context.Context, command cmd.Factory) error {
 	return nil
 }
 

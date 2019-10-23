@@ -1,0 +1,87 @@
+applications:
+  - name: gloo-enterprise
+    resources:
+      - id: helm-chart
+        helmChart:
+          repoUrl: "https://storage.googleapis.com/gloo-ee-helm/"
+          chartName: gloo-ee
+          repoName: gloo-ee
+          version: 0.20.4
+          namespace: gloo-system
+          set:
+            - "gloo.namespace.create=true"
+            - "prometheus.enabled=false"
+            - "grafana.defaultInstallationEnabled=false"
+            - "gloo.gatewayProxies.gatewayProxyV2.readConfig=true"
+          setEnv:
+            license_key: LICENSE_KEY
+  - name: service-mesh-hub
+    namespace: sm-marketplace
+    resources:
+      - secret:
+          name: github-token
+          namespace: sm-marketplace
+          entries:
+            token:
+              envVar: GITHUB_TOKEN
+      - helmChart:
+          repoUrl: "https://storage.googleapis.com/sm-marketplace-helm/"
+          chartName: sm-marketplace
+          repoName: sm-marketplace
+          version: 0.3.13
+          namespace: sm-marketplace
+          set:
+            - "namespace.create=true"
+  - name: gloo-os-ui
+    resources:
+      - id: helm-chart
+        helmChart:
+          repoUrl: "https://storage.googleapis.com/gloo-os-ui-helm/"
+          chartName: gloo-os-ui
+          repoName: gloo-os-ui
+          version: 0.20.4
+          namespace: gloo-system
+          set:
+            - "gloo.namespace.create=true"
+  - name: gloo
+    resources:
+      - id: helm-chart
+        helmChart:
+          repoUrl: "https://storage.googleapis.com/solo-public-helm/"
+          chartName: gloo
+          repoName: gloo
+          version: 0.20.8
+          namespace: gloo-system
+          set:
+            - "namespace.create=true"
+  - name: petclinic
+    resources:
+      - path: "https://raw.githubusercontent.com/sololabs/demos/b523571c66057a5591bce22ad896729f1fee662b/petclinic_demo/petclinic.yaml"
+      - path: "https://raw.githubusercontent.com/sololabs/demos/b523571c66057a5591bce22ad896729f1fee662b/petclinic_demo/petclinic-vets.yaml"
+      - path: "https://raw.githubusercontent.com/sololabs/demos/b523571c66057a5591bce22ad896729f1fee662b/petclinic_demo/petclinic-db.yaml"
+  - name: cert-manager
+    resources:
+      - path: https://github.com/jetstack/cert-manager/releases/download/v0.10.0/cert-manager-no-webhook.yaml
+      - secret:
+          name: cert-manager
+          namespace: cert-manager
+          entries:
+            access_key_id:
+              envVar: AWS_ACCESS_KEY_ID
+            secret_access_key:
+              envVar: AWS_SECRET_ACCESS_KEY
+      - template:
+          path: cli/internal/ensure/test/fixtures/templates/cluster_issuer.yaml
+          envValues:
+            AccessKeyId: AWS_ACCESS_KEY_ID
+  - name: aws-upstream
+    resources:
+      - secret:
+          name: aws-creds
+          namespace: gloo-system
+          entries:
+            aws_access_key_id:
+              envVar: AWS_ACCESS_KEY_ID
+            aws_secret_access_key:
+              envVar: AWS_SECRET_ACCESS_KEY
+      - path: cli/internal/ensure/test/fixtures/upstreams/aws.yaml

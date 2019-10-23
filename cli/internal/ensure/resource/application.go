@@ -24,8 +24,10 @@ type Application struct {
 }
 
 type ApplicationRef struct {
-	Path string `yaml:"path"`
-	Name string `yaml:"name"`
+	Path    string                `yaml:"path"`
+	Name    string                `yaml:"name"`
+	// When loading an application, patches defines a set of resources to edit
+	Patches []ApplicationResource `yaml:"patches"`
 }
 
 type HelmChart struct {
@@ -39,9 +41,32 @@ type HelmChart struct {
 }
 
 type ApplicationResource struct {
+	// Optional: used to look up a resource when trying to patch
+	Id        string     `yaml:"id"`
 	HelmChart *HelmChart `yaml:"helmChart"`
 	Secret    *Secret    `yaml:"secret"`
 	Path      string     `yaml:"path"`
+	Template  *Template  `yaml:"template"`
+	DnsEntry  *DnsEntry  `yaml:"dnsEntry"`
+	Cli       *Cli       `yaml:"cli"`
+}
+
+type Cli struct {
+	Glooctl *Glooctl `yaml:"glooctl"`
+}
+
+func (c *Cli) Ensure(ctx context.Context, command cmd.Factory) error {
+	if c.Glooctl != nil {
+		return c.Glooctl.Ensure(ctx, command)
+	}
+	return nil
+}
+
+func (c *Cli) Teardown(ctx context.Context, command cmd.Factory) error {
+	if c.Glooctl != nil {
+		return c.Glooctl.Teardown(ctx, command)
+	}
+	return nil
 }
 
 var _ Resource = new(ApplicationResource)
@@ -59,6 +84,12 @@ func (a *ApplicationResource) Ensure(ctx context.Context, command cmd.Factory) e
 		}
 		return manifest.Ensure(ctx, command)
 	}
+	if a.Template != nil {
+		return a.Template.Ensure(ctx, command)
+	}
+	if a.DnsEntry != nil {
+		return a.DnsEntry.Ensure(ctx, command)
+	}
 	return nil
 }
 
@@ -74,6 +105,12 @@ func (a *ApplicationResource) Teardown(ctx context.Context, command cmd.Factory)
 			Path: a.Path,
 		}
 		return manifest.Teardown(ctx, command)
+	}
+	if a.Template != nil {
+		return a.Template.Teardown(ctx, command)
+	}
+	if a.DnsEntry != nil {
+		return a.DnsEntry.Teardown(ctx, command)
 	}
 	return nil
 }
@@ -157,6 +194,28 @@ func (a *Application) reconcile(ctx context.Context, command cmd.Factory) (*Appl
 	if a.LabelSelector != "" {
 		from.LabelSelector = a.LabelSelector
 	}
+	for _, patch := range a.From.Patches {
+		toPatch := patch.Id
+		if toPatch == "" {
+			return nil, errors.Errorf("Can't patch an empty id")
+		}
+		for _, resource := range from.Resources {
+			if resource.Id != toPatch {
+				continue
+			}
+			if resource.HelmChart != nil && patch.HelmChart != nil {
+				if patch.HelmChart.Namespace != "" {
+					resource.HelmChart.Namespace = patch.HelmChart.Namespace
+				}
+				if patch.HelmChart.Version != "" {
+					resource.HelmChart.Version = patch.HelmChart.Version
+				}
+				if patch.HelmChart.Set != nil {
+					resource.HelmChart.Set = append(patch.HelmChart.Set, resource.HelmChart.Set...)
+				}
+			}
+		}
+	}
 	return from, nil
 }
 
@@ -166,7 +225,11 @@ func (h *HelmChart) Ensure(ctx context.Context, command cmd.Factory) error {
 	if err != nil {
 		return err
 	}
-	if err := command.Kubectl().ApplyStdIn(manifest).Cmd().Run(ctx); err != nil {
+	kubectl := command.Kubectl().ApplyStdIn(manifest)
+	if h.Namespace != "" {
+		kubectl = kubectl.Namespace(h.Namespace)
+	}
+	if err := kubectl.Cmd().Run(ctx); err != nil {
 		return err
 	}
 	return internal.WaitUntilPodsRunning(ctx, h.Namespace)
@@ -251,3 +314,6 @@ func (h *HelmChart) getLocalDirectory() (string, error) {
 	}
 	return filepath.Join(home, ".helm", "untar", h.RepoName, h.ChartName, h.Version), nil
 }
+
+
+

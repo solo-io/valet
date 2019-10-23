@@ -8,5 +8,5 @@ spec:
     aws:
       region: us-east-1
       secretRef:
-        name: aws
+        name: aws-creds
         namespace: gloo-system

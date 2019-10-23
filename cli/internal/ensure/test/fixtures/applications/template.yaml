@@ -1,0 +1,7 @@
+applications:
+  - name: glooui
+    resources:
+      - template:
+          path: cli/internal/ensure/test/fixtures/templates/glooui_virtual_service_ssl.yaml
+          values:
+            Domain: test-glooui.corp.solo.io

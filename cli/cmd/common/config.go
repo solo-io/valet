@@ -37,13 +37,6 @@ func LoadConfig(opts *options.Options) (*resource.Config, error) {
 			cfg.Cluster.GKE.Name = opts.Ensure.GkeClusterName
 		}
 	}
-	if cfg.Gloo != nil {
-		if opts.Ensure.GlooVersion != "" {
-			cfg.Gloo.Version = opts.Ensure.GlooVersion
-		}
-		cfg.Gloo.ValetArtifacts = opts.Ensure.ValetArtifacts
-		cfg.Gloo.LocalArtifactsDir = opts.Ensure.LocalArtifactsDir
-	}
 	return cfg, nil
 }
 

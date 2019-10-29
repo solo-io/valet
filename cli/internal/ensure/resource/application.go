@@ -11,75 +11,132 @@ import (
 )
 
 var (
-	_ Resource = new(Application)
+	RequiredValueNotProvidedError = func(key string) error {
+		return errors.Errorf("Required value %s not found", key)
+	}
 )
 
 type Application struct {
 	Name          string                `yaml:"name"`
 	Version       string                `yaml:"version"`
-	Namespace     string                `yaml:"namespace"`
 	Resources     []ApplicationResource `yaml:"resources"`
 	LabelSelector string                `yaml:"labelSelector"`
-	From          *ApplicationRef       `yaml:"from"`
 
-	Values    map[string]string `yaml:"values"`
+	RequiredValues []string          `yaml:"requiredValues"`
+	Values         map[string]string `yaml:"values"`
 }
 
 type ApplicationRef struct {
-	Path string `yaml:"path"`
+	Path   string            `yaml:"path"`
+	Values map[string]string `yaml:"values"`
 }
 
-func (a *Application) Teardown(ctx context.Context, command cmd.Factory) error {
-	app, err := a.reconcile(ctx, command)
+func (a *ApplicationRef) updateWithValues(values map[string]string) {
+	for k, v := range values {
+		if a.Values == nil {
+			a.Values = make(map[string]string)
+		}
+		a.Values[k] = v
+	}
+}
+
+func (a *ApplicationRef) load(ctx context.Context) (*Application, error) {
+	app, err := LoadApplication(ctx, a.Path)
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range a.Values {
+		if app.Values == nil {
+			app.Values = make(map[string]string)
+		}
+		app.Values[k] = v
+	}
+	return app, nil
+}
+
+func (a *ApplicationRef) Ensure(ctx context.Context, command cmd.Factory) error {
+	app, err := a.load(ctx)
 	if err != nil {
 		return err
 	}
+	return app.Ensure(ctx, command)
+}
+
+func (a *ApplicationRef) Teardown(ctx context.Context, command cmd.Factory) error {
+	app, err := a.load(ctx)
+	if err != nil {
+		return err
+	}
+	return app.Teardown(ctx, command)
+}
+
+func (a *Application) checkRequiredValues() error {
+	for _, key := range a.RequiredValues {
+		if a.Values == nil {
+			return RequiredValueNotProvidedError(key)
+		}
+		if val, ok := a.Values[key]; !ok || val == "" {
+			return RequiredValueNotProvidedError(key)
+		}
+	}
+	return nil
+}
+
+func (a *Application) Teardown(ctx context.Context, command cmd.Factory) error {
+	if err := a.checkRequiredValues(); err != nil {
+		return err
+	}
 	var resources []Resource
-	for i := len(app.Resources) - 1; i >= 0; i-- {
-		r := &app.Resources[i]
-		mergeValues(app, r)
+	for i := len(a.Resources) - 1; i >= 0; i-- {
+		r := &a.Resources[i]
+		mergeValues(a, r)
 		resources = append(resources, r)
 	}
 	if err := TeardownAll(ctx, command, resources...); err != nil {
 		return err
 	}
-	if app.Namespace != "" {
-		namespace := Namespace{
-			Name: app.Namespace,
-		}
-		if err := namespace.Teardown(ctx, command); err != nil {
-			return err
+	if a.Values != nil {
+		if val, ok := a.Values[NamespaceKey]; ok {
+			namespace := Namespace{
+				Name: val,
+			}
+			if err := namespace.Teardown(ctx, command); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
 }
 
 func (a *Application) Ensure(ctx context.Context, command cmd.Factory) error {
-	app, err := a.reconcile(ctx, command)
-	if err != nil {
+	if err := a.checkRequiredValues(); err != nil {
 		return err
 	}
-	if app.Namespace != "" {
-		namespace := Namespace{
-			Name: app.Namespace,
-		}
-		if err := namespace.Ensure(ctx, command); err != nil {
-			return err
+	ensuredNamespace := ""
+	if a.Values != nil {
+		if val, ok := a.Values[NamespaceKey]; ok {
+			namespace := Namespace{
+				Name: val,
+			}
+			if err := namespace.Ensure(ctx, command); err != nil {
+				return err
+			}
+			ensuredNamespace = val
 		}
 	}
 	var resources []Resource
-	for _, resource := range app.Resources {
+	for _, resource := range a.Resources {
 		r := resource
-		mergeValues(app, &r)
+		mergeValues(a, &r)
 		resources = append(resources, &r)
 	}
 	if err := EnsureAll(ctx, command, resources...); err != nil {
 		return err
 	}
-	if app.Namespace == "" {
+	if ensuredNamespace == "" {
 		return nil
 	}
-	return internal.WaitUntilPodsRunning(ctx, app.Namespace)
+	return internal.WaitUntilPodsRunning(ctx, ensuredNamespace)
 }
 
 func mergeValues(app *Application, resource *ApplicationResource) {
@@ -89,31 +146,6 @@ func mergeValues(app *Application, resource *ApplicationResource) {
 	if app.Version != "" {
 		resource.setValue(VersionKey, app.Version)
 	}
-	if app.Namespace != "" {
-		resource.setValue(NamespaceKey, app.Namespace)
-	}
-}
-
-func (a *Application) reconcile(ctx context.Context, command cmd.Factory) (*Application, error) {
-	if a.From == nil {
-		return a, nil
-	}
-	from, err := LoadApplication(ctx, a.From.Path)
-	if err != nil {
-		return nil, err
-	}
-
-	if from.From != nil {
-		return nil, errors.Errorf("Recursive chaining not yet implemented")
-	}
-	if a.Namespace != "" {
-		from.Namespace = a.Namespace
-	}
-	from.Resources = append(from.Resources, a.Resources...)
-	if a.LabelSelector != "" {
-		from.LabelSelector = a.LabelSelector
-	}
-	return from, nil
 }
 
 func LoadApplication(ctx context.Context, path string) (*Application, error) {

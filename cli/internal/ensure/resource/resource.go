@@ -42,6 +42,7 @@ type ApplicationResource struct {
 	DnsEntry  *DnsEntry  `yaml:"dnsEntry"`
 	Patch     *Patch     `yaml:"patch"`
 	Condition *Condition `yaml:"condition"`
+	Application *ApplicationRef `yaml:"application"`
 
 	Values    map[string]string `yaml:"values"`
 	EnvValues map[string]string `yaml:"envValues"`
@@ -97,6 +98,10 @@ func (a *ApplicationResource) Ensure(ctx context.Context, command cmd.Factory) e
 	if a.Namespace != nil {
 		return a.Namespace.Ensure(ctx, command)
 	}
+	if a.Application != nil {
+		a.Application.updateWithValues(a.Values)
+		return a.Application.Ensure(ctx, command)
+	}
 	return nil
 }
 
@@ -137,6 +142,10 @@ func (a *ApplicationResource) Teardown(ctx context.Context, command cmd.Factory)
 	}
 	if a.Namespace != nil {
 		return a.Namespace.Teardown(ctx, command)
+	}
+	if a.Application != nil {
+		a.Application.updateWithValues(a.Values)
+		return a.Application.Teardown(ctx, command)
 	}
 	return nil
 }

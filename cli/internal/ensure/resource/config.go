@@ -26,11 +26,7 @@ func (c *Config) Ensure(ctx context.Context, command cmd.Factory) error {
 	}
 
 	for _, application := range c.Applications {
-		loaded, err := LoadApplication(ctx, application.Path)
-		if err != nil {
-			return err
-		}
-		if err := loaded.Ensure(ctx, command); err != nil {
+		if err := application.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
@@ -48,11 +44,7 @@ func (c *Config) Teardown(ctx context.Context, command cmd.Factory) error {
 		return c.Cluster.Teardown(ctx, command)
 	}
 	for _, application := range c.Applications {
-		loaded, err := LoadApplication(ctx, application.Path)
-		if err != nil {
-			return err
-		}
-		if err := loaded.Teardown(ctx, command); err != nil {
+		if err := application.Teardown(ctx, command); err != nil {
 			return err
 		}
 	}

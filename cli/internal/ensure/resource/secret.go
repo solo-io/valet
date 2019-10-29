@@ -46,6 +46,14 @@ type GcloudKmsEncryptedFile struct {
 	Key            string `yaml:"key"`
 }
 
+func (s *Secret) updateWithValues(values map[string]string) {
+	if s.Namespace == "" {
+		if val, ok := values[NamespaceKey]; ok {
+			s.Namespace = val
+		}
+	}
+}
+
 func (s *Secret) Ensure(ctx context.Context, command cmd.Factory) error {
 	toRun := command.Kubectl().Create(secret).With(generic).WithName(s.Name).Namespace(s.Namespace)
 	var toCleanup []string

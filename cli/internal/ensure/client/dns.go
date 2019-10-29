@@ -59,7 +59,7 @@ func (c *awsDnsClient) CreateMapping(ctx context.Context, hostedZoneName, domain
 
 	action := "UPSERT"
 	typeStr := "A"
-	ttl := int64(300)
+	ttl := int64(30)
 	resourceRecord := &route53.ResourceRecord{
 		Value: &ip,
 	}

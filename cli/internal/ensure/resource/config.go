@@ -13,9 +13,9 @@ import (
 )
 
 type Config struct {
-	Cluster        *Cluster        `yaml:"cluster"`
-	Applications   []Application   `yaml:"applications"`
-	Workflows      []Workflow      `yaml:"workflows"`
+	Cluster      *Cluster         `yaml:"cluster"`
+	Applications []ApplicationRef `yaml:"applications"`
+	Workflows    []Workflow       `yaml:"workflows"`
 }
 
 func (c *Config) Ensure(ctx context.Context, command cmd.Factory) error {
@@ -26,7 +26,11 @@ func (c *Config) Ensure(ctx context.Context, command cmd.Factory) error {
 	}
 
 	for _, application := range c.Applications {
-		if err := application.Ensure(ctx, command); err != nil {
+		loaded, err := LoadApplication(ctx, application.Path)
+		if err != nil {
+			return err
+		}
+		if err := loaded.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
@@ -44,7 +48,11 @@ func (c *Config) Teardown(ctx context.Context, command cmd.Factory) error {
 		return c.Cluster.Teardown(ctx, command)
 	}
 	for _, application := range c.Applications {
-		if err := application.Teardown(ctx, command); err != nil {
+		loaded, err := LoadApplication(ctx, application.Path)
+		if err != nil {
+			return err
+		}
+		if err := loaded.Teardown(ctx, command); err != nil {
 			return err
 		}
 	}

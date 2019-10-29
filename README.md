@@ -121,7 +121,7 @@ grant GKE cluster admin permissions to Valet.
 ```yaml
 cluster:
   gke:
-    name: valet-test
+    name: valet-testing
     location: us-east1
     project: solo-public
 ```

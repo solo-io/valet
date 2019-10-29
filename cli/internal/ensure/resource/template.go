@@ -19,6 +19,13 @@ type TemplateValue struct {
 	EnvVar string `yaml:"envVar"`
 }
 
+func (g *Template) setValue(key, value string) {
+	if g.Values == nil {
+		g.Values = make(map[string]string)
+	}
+	g.Values[key] = value
+}
+
 func (g *Template) Ensure(ctx context.Context, command cmd.Factory) error {
 	rendered, err := g.render(ctx)
 	if err != nil {

@@ -15,6 +15,22 @@ var (
 	MustProvideFileError = errors.Errorf("Must provide file option or subcommand")
 )
 
+func LoadApplication(opts *options.Options) (*resource.Application, error) {
+	if opts.Ensure.File == "" {
+		return nil, MustProvideFileError
+	}
+
+	cfg, err := resource.LoadApplication(opts.Top.Ctx, opts.Ensure.File)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := LoadEnv(opts.Top.Ctx); err != nil {
+		return nil, err
+	}
+	return cfg, nil
+}
+
 func LoadConfig(opts *options.Options) (*resource.Config, error) {
 	if opts.Ensure.File == "" {
 		return nil, MustProvideFileError

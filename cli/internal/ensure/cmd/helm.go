@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 )
 
 type Helm struct {
@@ -34,6 +35,14 @@ func (h *Helm) Namespace(namespace string) *Helm {
 
 func (h *Helm) Set(set string) *Helm {
 	return h.With("--set", set)
+}
+
+func (h *Helm) SetEnv(set, envVar string) *Helm {
+	envVarValue := os.Getenv(envVar)
+	unredacted := fmt.Sprintf("%s=%s", set, envVarValue)
+	redacted := fmt.Sprintf("%s=%s", set, Redacted)
+	h.cmd = h.cmd.Redact(unredacted, redacted)
+	return h.With("--set", unredacted)
 }
 
 func (h *Helm) Target(target string) *Helm {

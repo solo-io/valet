@@ -2,67 +2,76 @@ package resource
 
 import (
 	"context"
-	"fmt"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
+	"os"
+	"strings"
+	"text/template"
 )
 
 type Template struct {
-	FormatFile *FormatFile `yaml:"formatFile"`
+	Path      string            `yaml:"path"`
+	Values    map[string]string `yaml:"values"`
+	EnvValues map[string]string `yaml:"envValues"`
 }
 
-func (t *Template) Ensure(ctx context.Context, command cmd.Factory) error {
-	if t.FormatFile != nil {
-		return t.FormatFile.Ensure(ctx, command)
+type TemplateValue struct {
+	Value  string `yaml:"value"`
+	EnvVar string `yaml:"envVar"`
+}
+
+func (g *Template) setValue(key, value string) {
+	if g.Values == nil {
+		g.Values = make(map[string]string)
 	}
-	return nil
+	g.Values[key] = value
 }
 
-func (t *Template) Teardown(ctx context.Context, command cmd.Factory) error {
-	if t.FormatFile != nil {
-		return t.FormatFile.Teardown(ctx, command)
-	}
-	return nil
-}
-
-type FormatFile struct {
-	Path string   `yaml:"path"`
-	Args []string `yaml:"args"`
-}
-
-func (f *FormatFile) Ensure(ctx context.Context, command cmd.Factory) error {
-	template, err := LoadFormatFile(ctx, f.Path)
+func (g *Template) Ensure(ctx context.Context, command cmd.Factory) error {
+	rendered, err := g.render(ctx)
 	if err != nil {
 		return err
 	}
-	var args []interface{}
-	for _, arg := range f.Args {
-		args = append(args, arg)
-	}
-	rendered := fmt.Sprintf(template, args...)
 	return command.Kubectl().ApplyStdIn(rendered).Cmd().Run(ctx)
 }
 
-func (f *FormatFile) Teardown(ctx context.Context, command cmd.Factory) error {
-	rendered, err := f.render(ctx)
+func (g *Template) Teardown(ctx context.Context, command cmd.Factory) error {
+	rendered, err := g.render(ctx)
 	if err != nil {
 		return err
 	}
 	return command.Kubectl().DeleteStdIn(rendered).Cmd().Run(ctx)
 }
 
-func (f *FormatFile) render(ctx context.Context) (string, error) {
-	template, err := LoadFormatFile(ctx, f.Path)
+func (g *Template) render(ctx context.Context) (string, error) {
+	tmpl, err := LoadFile(ctx, g.Path)
 	if err != nil {
 		return "", err
 	}
-	var args []interface{}
-	for _, arg := range f.Args {
-		args = append(args, arg)
+	parsed, err := template.New(g.Path).Parse(tmpl)
+	if err != nil {
+		return "", err
 	}
-	return fmt.Sprintf(template, args...), nil
+	out := strings.Builder{}
+	values, err := g.renderValues(ctx)
+	if err != nil {
+		return "", err
+	}
+	err = parsed.Execute(&out, values)
+	return out.String(), err
 }
 
-func LoadFormatFile(ctx context.Context, path string) (string, error) {
+func (g *Template) renderValues(ctx context.Context) (map[string]interface{}, error) {
+	values := make(map[string]interface{})
+	for k, v := range g.Values {
+		values[k] = v
+	}
+	for k, v := range g.EnvValues {
+		values[k] = os.Getenv(v)
+	}
+	return values, nil
+}
+
+func LoadFile(ctx context.Context, path string) (string, error) {
 	b, err := loadBytesFromPath(ctx, path)
 	if err != nil {
 		return "", err

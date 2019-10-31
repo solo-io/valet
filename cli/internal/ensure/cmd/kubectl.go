@@ -1,6 +1,9 @@
 package cmd
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 type Kubectl struct {
 	cmd *Command
@@ -98,4 +101,14 @@ func (k *Kubectl) DeleteFile(path string) *Kubectl {
 
 func (k *Kubectl) DeleteStdIn(stdIn string) *Kubectl {
 	return k.DeleteFile("-").WithStdIn(stdIn)
+}
+
+func (k *Kubectl) OutJsonpath(jsonpath string) *Kubectl {
+	return k.With(fmt.Sprintf("-o=jsonpath=%s", jsonpath))
+}
+
+func (k *Kubectl) GetServiceIP(ctx context.Context, namespace, name string) (string, error) {
+	cmd := k.With("get", "svc", name).Namespace(namespace)
+	cmd = cmd.OutJsonpath("{ .status.loadBalancer.ingress[0].ip }")
+	return cmd.Cmd().Output(ctx)
 }

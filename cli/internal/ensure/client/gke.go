@@ -63,6 +63,7 @@ func (c *gkeClient) IsRunning(ctx context.Context, name, project, zone string) (
 	} else if cluster == nil {
 		return false, nil
 	}
+	contextutils.LoggerFrom(ctx).Infow("Found cluster", zap.String("cluster", cluster.GetName()))
 	return cluster.GetStatus() == container2.Cluster_RUNNING, nil
 }
 
@@ -84,7 +85,7 @@ func (c *gkeClient) getCluster(ctx context.Context, name, project, zone string) 
 }
 
 
-func (c *gkeClient) Create(ctx context.Context,name, project, zone string) error {
+func (c *gkeClient) Create(ctx context.Context, name, project, zone string) error {
 	contextutils.LoggerFrom(ctx).Infow("creating cluster", zap.String("name", name))
 	nodePool := container2.NodePool{
 		Name:             "pool-1",

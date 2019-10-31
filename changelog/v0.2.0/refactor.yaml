@@ -1,0 +1,6 @@
+changelog:
+  - type: BREAKING_CHANGE
+    issueLink: https://github.com/solo-io/valet/pull/66
+    description: >
+      Major revamp of Valet to support more flexible application modeling, and eliminate hard-coded solo products.
+      For a complete description, check out the readme and look at the examples in github.com/solo-io/valet-config. 

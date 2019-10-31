@@ -193,7 +193,7 @@ resources: [...]
 The **name** currently is just a convenient name for the application. In the future, this may become used to identify
 an application inside of a registry. 
 
-The **values** are a map of key-key value string pairs that will be provided to resources in the application. If values 
+The **values** are a map of key-value string pairs that will be provided to resources in the application. If values 
 were provided to the application, they will be merged with the values defined on the application, with the inherited 
 values taking precedence. This allows the person assembling applications to override values as necessary. 
 
@@ -270,14 +270,14 @@ resources:
       name: gcloud-example
       namespace: example
       entries:
-		private-key:
-		  gcloudKmsEncryptedFile:
-			ciphertextFile: cluster/approval-bot/private-key.enc
-			gcloudProject: solo-corp
-			keyring: build
-			key: buildkey
-	    constant:
-	      file: path/to/file.ext
+        private-key:
+          gcloudKmsEncryptedFile:
+            ciphertextFile: cluster/approval-bot/private-key.enc
+	    gcloudProject: solo-corp
+	    keyring: build
+	    key: buildkey
+	  constant:
+	    file: path/to/file.ext
 ``` 
 
 In this example, two secrets are created. The first is a set of aws credentials, pulled from the environment. The 

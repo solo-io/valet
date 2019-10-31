@@ -17,13 +17,10 @@ var (
 )
 
 type Application struct {
-	Name          string                `yaml:"name"`
-	Version       string                `yaml:"version"`
-	Resources     []ApplicationResource `yaml:"resources"`
-	LabelSelector string                `yaml:"labelSelector"`
-
-	RequiredValues []string          `yaml:"requiredValues"`
-	Values         map[string]string `yaml:"values"`
+	Name           string                `yaml:"name"`
+	Resources      []ApplicationResource `yaml:"resources"`
+	RequiredValues []string              `yaml:"requiredValues"`
+	Values         map[string]string     `yaml:"values"`
 }
 
 type ApplicationRef struct {
@@ -142,9 +139,6 @@ func (a *Application) Ensure(ctx context.Context, command cmd.Factory) error {
 func mergeValues(app *Application, resource *ApplicationResource) {
 	for k, v := range app.Values {
 		resource.setValue(k, v)
-	}
-	if app.Version != "" {
-		resource.setValue(VersionKey, app.Version)
 	}
 }
 

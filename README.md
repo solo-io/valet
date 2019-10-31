@@ -266,18 +266,18 @@ resources:
           envVar: AWS_ACCESS_KEY_ID
         aws_secret_access_key:
           envVar: AWS_SECRET_ACCESS_KEY
-  - secret: 
+  - secret:
       name: gcloud-example
       namespace: example
       entries:
         private-key:
           gcloudKmsEncryptedFile:
             ciphertextFile: cluster/approval-bot/private-key.enc
-	    gcloudProject: solo-corp
-	    keyring: build
-	    key: buildkey
-	  constant:
-	    file: path/to/file.ext
+            gcloudProject: solo-corp
+            keyring: build
+            key: buildkey
+        constant:
+          file: path/to/file.ext
 ``` 
 
 In this example, two secrets are created. The first is a set of aws credentials, pulled from the environment. The 

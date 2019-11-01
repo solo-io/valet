@@ -23,6 +23,7 @@ type Command struct {
 	Args  []string
 	StdIn string
 
+	PrintCommands   bool
 	Redactions      map[string]string
 	SwallowErrorLog bool
 	CommandRunner   CommandRunner
@@ -91,7 +92,9 @@ func (c *Command) logCommand(ctx context.Context) {
 		parts = append(parts, processed)
 	}
 	command := strings.Join(parts, " ")
-	Stdout().Println("Running command: %s", command)
+	if c.PrintCommands {
+		Stdout().Println("Running command: %s", command)
+	}
 }
 
 func (c *Command) WithStdIn(stdIn string) *Command {

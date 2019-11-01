@@ -50,11 +50,16 @@ func (a *ApplicationRef) load(ctx context.Context) (*Application, error) {
 }
 
 func (a *ApplicationRef) Ensure(ctx context.Context, command cmd.Factory) error {
+	cmd.Stdout().Println("Ensuring application %s %s", a.Path, internal.MapToString(a.Values))
 	app, err := a.load(ctx)
 	if err != nil {
 		return err
 	}
-	return app.Ensure(ctx, command)
+	err = app.Ensure(ctx, command)
+	if err == nil {
+		cmd.Stdout().Println("Done ensuring application %s", a.Path)
+	}
+	return err
 }
 
 func (a *ApplicationRef) Teardown(ctx context.Context, command cmd.Factory) error {
@@ -90,34 +95,12 @@ func (a *Application) Teardown(ctx context.Context, command cmd.Factory) error {
 	if err := TeardownAll(ctx, command, resources...); err != nil {
 		return err
 	}
-	if a.Values != nil {
-		if val, ok := a.Values[NamespaceKey]; ok {
-			namespace := Namespace{
-				Name: val,
-			}
-			if err := namespace.Teardown(ctx, command); err != nil {
-				return err
-			}
-		}
-	}
 	return nil
 }
 
 func (a *Application) Ensure(ctx context.Context, command cmd.Factory) error {
 	if err := a.checkRequiredValues(); err != nil {
 		return err
-	}
-	ensuredNamespace := ""
-	if a.Values != nil {
-		if val, ok := a.Values[NamespaceKey]; ok {
-			namespace := Namespace{
-				Name: val,
-			}
-			if err := namespace.Ensure(ctx, command); err != nil {
-				return err
-			}
-			ensuredNamespace = val
-		}
 	}
 	var resources []Resource
 	for _, resource := range a.Resources {
@@ -128,10 +111,7 @@ func (a *Application) Ensure(ctx context.Context, command cmd.Factory) error {
 	if err := EnsureAll(ctx, command, resources...); err != nil {
 		return err
 	}
-	if ensuredNamespace == "" {
-		return nil
-	}
-	return internal.WaitUntilPodsRunning(ensuredNamespace)
+	return nil
 }
 
 func mergeValues(app *Application, resource *ApplicationResource) {

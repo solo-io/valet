@@ -14,6 +14,7 @@ type Patch struct {
 }
 
 func (p *Patch) Ensure(ctx context.Context, command cmd.Factory) error {
+	cmd.Stdout().Println("Patching %s.%s (%s) from file %s (%s)", p.Namespace, p.Name, p.KubeType, p.Path, p.PatchType)
 	patchString, err := LoadFile(p.Path)
 	if err != nil {
 		return err
@@ -27,5 +28,6 @@ func (p *Patch) Ensure(ctx context.Context, command cmd.Factory) error {
 }
 
 func (p *Patch) Teardown(ctx context.Context, command cmd.Factory) error {
+	cmd.Stdout().Println("Skipping teardown for patch")
 	return nil
 }

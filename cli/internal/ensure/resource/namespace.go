@@ -18,6 +18,7 @@ type Namespace struct {
 }
 
 func (n *Namespace) Ensure(ctx context.Context, command cmd.Factory) error {
+	cmd.Stdout().Println("Ensuring namespace %s", n.Name)
 	err := command.Kubectl().Create(ns).WithName(n.Name).DryRunAndApply(ctx, command)
 	if err != nil {
 		return err
@@ -32,5 +33,6 @@ func (n *Namespace) Ensure(ctx context.Context, command cmd.Factory) error {
 }
 
 func (n *Namespace) Teardown(ctx context.Context, command cmd.Factory) error {
+	cmd.Stdout().Println("Tearing down namespace %s", n.Name)
 	return command.Kubectl().Delete(ns).WithName(n.Name).Cmd().Run(ctx)
 }

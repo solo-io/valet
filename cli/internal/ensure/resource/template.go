@@ -27,6 +27,7 @@ func (g *Template) setValue(key, value string) {
 }
 
 func (g *Template) Ensure(ctx context.Context, command cmd.Factory) error {
+	cmd.Stdout().Println("Ensuring template %s", g.Path)
 	rendered, err := g.render(ctx)
 	if err != nil {
 		return err
@@ -35,6 +36,7 @@ func (g *Template) Ensure(ctx context.Context, command cmd.Factory) error {
 }
 
 func (g *Template) Teardown(ctx context.Context, command cmd.Factory) error {
+	cmd.Stdout().Println("Tearing down template %s", g.Path)
 	rendered, err := g.render(ctx)
 	if err != nil {
 		return err

@@ -55,6 +55,7 @@ func (s *Secret) updateWithValues(values map[string]string) {
 }
 
 func (s *Secret) Ensure(ctx context.Context, command cmd.Factory) error {
+	cmd.Stdout().Println("Ensuring secret %s.%s with %d entries", s.Namespace, s.Name, len(s.Entries))
 	toRun := command.Kubectl().Create(secret).With(generic).WithName(s.Name).Namespace(s.Namespace)
 	var toCleanup []string
 	for name, v := range s.Entries {
@@ -97,5 +98,6 @@ func (s *Secret) Ensure(ctx context.Context, command cmd.Factory) error {
 }
 
 func (s *Secret) Teardown(ctx context.Context, command cmd.Factory) error {
+	cmd.Stdout().Println("Tearing down secret %s.%s", s.Namespace, s.Name)
 	return command.Kubectl().Delete(secret).Namespace(s.Namespace).WithName(s.Name).IgnoreNotFound().Cmd().Run(ctx)
 }

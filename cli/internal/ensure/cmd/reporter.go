@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 )
 
 type Reporter interface {
@@ -28,9 +29,10 @@ type Printer struct {
 }
 
 func (p *Printer) Print(format string, args... interface{}) {
-	fmt.Printf(format, args...)
+	_, _ = fmt.Fprintf(p.w, format, args...)
 }
 
 func (p *Printer) Println(format string, args... interface{}) {
-	fmt.Printf(format + "\n", args...)
+	msg := fmt.Sprintf(format + "\n", args...)
+	_, _ = fmt.Fprintf(p.w, "[%s] %s\n", time.Now().Format(time.RFC3339), msg)
 }

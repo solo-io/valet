@@ -3,12 +3,11 @@ package config
 import (
 	"context"
 	"github.com/solo-io/go-utils/cliutils"
-	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/osutils"
 	"github.com/solo-io/valet/cli/internal"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -60,29 +59,24 @@ func LoadGlobalConfig(ctx context.Context) (*ValetGlobalConfig, error) {
 	var c ValetGlobalConfig
 	path, err := GetGlobalConfigPath()
 	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Could not determine global config path", zap.Error(err))
+		cmd.Stderr().Println("Could not determine global config path")
 		return nil, err
 	}
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		contextutils.LoggerFrom(ctx).Infow("No global config exists")
+		cmd.Stdout().Println("No global config exists")
 		return &c, nil
 	}
 
 	osClient := osutils.NewOsClient()
 	bytes, err := osClient.ReadFile(path)
 	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Could not read file",
-			zap.Error(err),
-			zap.String("path", path))
+		cmd.Stderr().Println("Could not read file %s: %s", path, err.Error())
 		return nil, err
 	}
 
 	if err := yaml.UnmarshalStrict(bytes, &c); err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Failed to unmarshal file",
-			zap.Error(err),
-			zap.String("path", path),
-			zap.ByteString("bytes", bytes))
+		cmd.Stderr().Println("Failed to unmarshal file %s: %s", path, err.Error())
 		return nil, err
 	}
 
@@ -92,21 +86,18 @@ func LoadGlobalConfig(ctx context.Context) (*ValetGlobalConfig, error) {
 func StoreGlobalConfig(ctx context.Context, config *ValetGlobalConfig) error {
 	path, err := GetGlobalConfigPath()
 	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Could not determine global config path", zap.Error(err))
+		cmd.Stderr().Println("Could not determine global config path: %s", err.Error())
 		return err
 	}
 
 	bytes, err := yaml.Marshal(config)
 	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Failed to marshal config", zap.Error(err), zap.Any("config", config))
+		cmd.Stderr().Println("Failed to marshal config: %s", err.Error())
 		return err
 	}
 
 	if err := ioutil.WriteFile(path, bytes, os.ModePerm); err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Failed to write file",
-			zap.Error(err),
-			zap.String("path", path),
-			zap.ByteString("bytes", bytes))
+		cmd.Stderr().Println("Failed to write file %s: %s", path, err.Error())
 		return err
 	}
 

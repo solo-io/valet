@@ -14,16 +14,16 @@ type Patch struct {
 }
 
 func (p *Patch) Ensure(ctx context.Context, command cmd.Factory) error {
-	patchString, err := LoadFile(ctx, p.Path)
+	patchString, err := LoadFile(p.Path)
 	if err != nil {
 		return err
 	}
-	cmd := command.Kubectl().
+	kubectl := command.Kubectl().
 		With("patch", p.KubeType, p.Name).
 		Namespace(p.Namespace).
 		With("--type", p.PatchType).
 		With("--patch", patchString)
-	return cmd.Cmd().Run(ctx)
+	return kubectl.Cmd().Run(ctx)
 }
 
 func (p *Patch) Teardown(ctx context.Context, command cmd.Factory) error {

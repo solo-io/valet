@@ -3,10 +3,8 @@ package resource
 import (
 	"bytes"
 	"context"
-	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/osutils"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 	"net/http"
 	"net/url"
@@ -51,26 +49,23 @@ func (c *Config) Teardown(ctx context.Context, command cmd.Factory) error {
 	return nil
 }
 
-func LoadConfig(ctx context.Context, path string) (*Config, error) {
+func LoadConfig(path string) (*Config, error) {
 	var c Config
 
-	b, err := loadBytesFromPath(ctx, path)
+	b, err := loadBytesFromPath(path)
 	if err != nil {
 		return nil, err
 	}
 
 	if err := yaml.UnmarshalStrict(b, &c); err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Failed to unmarshal file",
-			zap.Error(err),
-			zap.String("path", path),
-			zap.ByteString("bytes", b))
+		cmd.Stderr().Println("Failed to unmarshal file '%s': %s", path, err.Error())
 		return nil, err
 	}
 
 	return &c, nil
 }
 
-func loadBytesFromPath(ctx context.Context, path string) ([]byte, error) {
+func loadBytesFromPath(path string) ([]byte, error) {
 	if isValidUrl(path) {
 		contents, err := loadBytesFromUrl(path)
 		if err == nil {
@@ -81,9 +76,7 @@ func loadBytesFromPath(ctx context.Context, path string) ([]byte, error) {
 	osClient := osutils.NewOsClient()
 	contents, err := osClient.ReadFile(path)
 	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Could not read file",
-			zap.Error(err),
-			zap.String("path", path))
+		cmd.Stderr().Println("Failed to read file '%s': %s", path, err.Error())
 		return nil, err
 	}
 	return contents, nil

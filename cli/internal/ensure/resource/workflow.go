@@ -2,9 +2,7 @@ package resource
 
 import (
 	"context"
-	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 )
 
@@ -14,7 +12,7 @@ type WorkflowRef struct {
 }
 
 func (w *WorkflowRef) Ensure(ctx context.Context, command cmd.Factory) error {
-	workflow, err := LoadWorkflow(ctx, w.Path)
+	workflow, err := LoadWorkflow(w.Path)
 	if err != nil {
 		return err
 	}
@@ -22,7 +20,7 @@ func (w *WorkflowRef) Ensure(ctx context.Context, command cmd.Factory) error {
 }
 
 func (w *WorkflowRef) Teardown(ctx context.Context, command cmd.Factory) error {
-	workflow, err := LoadWorkflow(ctx, w.Path)
+	workflow, err := LoadWorkflow(w.Path)
 	if err != nil {
 		return err
 	}
@@ -51,19 +49,16 @@ func (w *Workflow) Teardown(ctx context.Context, command cmd.Factory) error {
 	return nil
 }
 
-func LoadWorkflow(ctx context.Context, path string) (*Workflow, error) {
+func LoadWorkflow(path string) (*Workflow, error) {
 	var w Workflow
 
-	b, err := loadBytesFromPath(ctx, path)
+	b, err := loadBytesFromPath(path)
 	if err != nil {
 		return nil, err
 	}
 
 	if err := yaml.UnmarshalStrict(b, &w); err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Failed to unmarshal file",
-			zap.Error(err),
-			zap.String("path", path),
-			zap.ByteString("bytes", b))
+		cmd.Stderr().Println("Failed to unmarshal file '%s': %s", path, err.Error())
 		return nil, err
 	}
 

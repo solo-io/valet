@@ -2,11 +2,9 @@ package resource
 
 import (
 	"context"
-	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 )
 
@@ -38,7 +36,7 @@ func (a *ApplicationRef) updateWithValues(values map[string]string) {
 }
 
 func (a *ApplicationRef) load(ctx context.Context) (*Application, error) {
-	app, err := LoadApplication(ctx, a.Path)
+	app, err := LoadApplication(a.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +131,7 @@ func (a *Application) Ensure(ctx context.Context, command cmd.Factory) error {
 	if ensuredNamespace == "" {
 		return nil
 	}
-	return internal.WaitUntilPodsRunning(ctx, ensuredNamespace)
+	return internal.WaitUntilPodsRunning(ensuredNamespace)
 }
 
 func mergeValues(app *Application, resource *ApplicationResource) {
@@ -142,19 +140,16 @@ func mergeValues(app *Application, resource *ApplicationResource) {
 	}
 }
 
-func LoadApplication(ctx context.Context, path string) (*Application, error) {
+func LoadApplication(path string) (*Application, error) {
 	var a Application
 
-	b, err := loadBytesFromPath(ctx, path)
+	b, err := loadBytesFromPath(path)
 	if err != nil {
 		return nil, err
 	}
 
 	if err := yaml.UnmarshalStrict(b, &a); err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Failed to unmarshal file",
-			zap.Error(err),
-			zap.String("path", path),
-			zap.ByteString("bytes", b))
+		cmd.Stderr().Println("Failed to unmarshal file: %s", err.Error())
 		return nil, err
 	}
 

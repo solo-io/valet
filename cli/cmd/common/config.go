@@ -2,12 +2,11 @@ package common
 
 import (
 	"context"
-	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/cmd/config"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"github.com/solo-io/valet/cli/options"
-	"go.uber.org/zap"
 	"os"
 )
 
@@ -20,7 +19,7 @@ func LoadApplication(opts *options.Options) (*resource.Application, error) {
 		return nil, MustProvideFileError
 	}
 
-	cfg, err := resource.LoadApplication(opts.Top.Ctx, opts.Ensure.File)
+	cfg, err := resource.LoadApplication(opts.Ensure.File)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +35,7 @@ func LoadConfig(opts *options.Options) (*resource.Config, error) {
 		return nil, MustProvideFileError
 	}
 
-	cfg, err := resource.LoadConfig(opts.Top.Ctx, opts.Ensure.File)
+	cfg, err := resource.LoadConfig(opts.Ensure.File)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +58,7 @@ func LoadConfig(opts *options.Options) (*resource.Config, error) {
 func LoadEnv(ctx context.Context) error {
 	globalConfig, err := config.LoadGlobalConfig(ctx)
 	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Failed to load global config", zap.Error(err))
+		cmd.Stderr().Println("Failed to load global config: %s", err.Error())
 		return err
 	}
 
@@ -68,7 +67,7 @@ func LoadEnv(ctx context.Context) error {
 		if val == "" {
 			err := os.Setenv(k, v)
 			if err != nil {
-				contextutils.LoggerFrom(ctx).Errorw("Failed to set environment variable", zap.Error(err))
+				cmd.Stderr().Println("Failed to set environment variable: %s", err.Error())
 				return err
 			}
 		}

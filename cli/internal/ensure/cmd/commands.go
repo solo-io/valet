@@ -2,9 +2,7 @@ package cmd
 
 import (
 	"context"
-	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/errors"
-	"go.uber.org/zap"
 	"os/exec"
 	"strings"
 )
@@ -66,7 +64,8 @@ func (r *commandRunner) Output(ctx context.Context, c *Command) (string, error) 
 	bytes, err := cmd.CombinedOutput()
 	if err != nil {
 		if !c.SwallowErrorLog {
-			contextutils.LoggerFrom(ctx).Errorw("error running command", zap.Error(err), zap.String("out", string(bytes)))
+			Stderr().Println("Error running command: %s", err.Error())
+			Stderr().Println(string(bytes))
 		}
 		return "", CommandError(err)
 	}
@@ -92,8 +91,7 @@ func (c *Command) logCommand(ctx context.Context) {
 		parts = append(parts, processed)
 	}
 	command := strings.Join(parts, " ")
-	contextutils.LoggerFrom(ctx).Infow("running command",
-		zap.String("command", command))
+	Stdout().Println("Running command: %s", command)
 }
 
 func (c *Command) WithStdIn(stdIn string) *Command {

@@ -1,11 +1,9 @@
 package internal
 
 import (
-	"context"
-	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/go-utils/testutils/kube"
-	"go.uber.org/zap"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	v12 "k8s.io/api/core/v1"
 	kubeerrs "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,8 +11,12 @@ import (
 	"time"
 )
 
-func WaitUntilPodsRunning(ctx context.Context, namespace string) error {
-	contextutils.LoggerFrom(ctx).Infow("waiting for pods")
+var (
+	TimedOutWaitingForPodsError = errors.Errorf("Timed out waiting for pods to come online")
+)
+
+func WaitUntilPodsRunning(namespace string) error {
+	cmd.Stdout().Println("Waiting for pods")
 	kubeClient, err := kube.KubeClient()
 	if err != nil {
 		return err
@@ -47,24 +49,24 @@ func WaitUntilPodsRunning(ctx context.Context, namespace string) error {
 	for {
 		select {
 		case <-failed:
-			contextutils.LoggerFrom(ctx).Errorf("timed out waiting for pods to come online: %v", notYetRunning)
-			return errors.Errorf("timed out waiting for pods to come online: %v", notYetRunning)
+			cmd.Stderr().Println("Timed out waiting for pods to come online: %v", notYetRunning)
+			return TimedOutWaitingForPodsError
 		case <-time.After(time.Second / 2):
 			notYetRunning = make(map[string]struct{})
 			ready, err := podsReady()
 			if err != nil {
-				contextutils.LoggerFrom(ctx).Errorw("error checking for ready pods", zap.Error(err))
+				cmd.Stderr().Println("Error checking for ready pods: %s", err.Error())
 				return err
 			}
 			if ready {
-				contextutils.LoggerFrom(ctx).Infow("pods are ready")
+				cmd.Stdout().Println("Pods are ready")
 				return nil
 			}
 		}
 	}
 }
 
-func NamespaceIsActive(ctx context.Context, namespace string) (bool, error) {
+func NamespaceIsActive(namespace string) (bool, error) {
 	kubeClient, err := kube.KubeClient()
 	if err != nil {
 		return false, err
@@ -74,27 +76,27 @@ func NamespaceIsActive(ctx context.Context, namespace string) (bool, error) {
 		if kubeerrs.IsNotFound(err) {
 			return false, nil
 		}
-		contextutils.LoggerFrom(ctx).Errorw("error trying to get namespace", zap.Error(err), zap.String("ns", namespace))
+		cmd.Stderr().Println("Error trying to get namespace %s: %s", namespace, err.Error())
 		return false, err
 	}
 	if ns.Status.Phase != v12.NamespaceActive {
-		contextutils.LoggerFrom(ctx).Errorw("namespace is not active", zap.Any("phase", ns.Status.Phase))
+		cmd.Stderr().Println("Namespace is not active (%s)", ns.Status.Phase)
 	}
 	return true, nil
 }
 
-func PodsReadyAndVersionsMatch(ctx context.Context, namespace, selector, version string) (bool, error) {
+func PodsReadyAndVersionsMatch(namespace, selector, version string) (bool, error) {
 	kubeClient, err := kube.KubeClient()
 	if err != nil {
 		return false, err
 	}
 	pods, err := kubeClient.CoreV1().Pods(namespace).List(v1.ListOptions{LabelSelector: selector})
 	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("error listing pods", zap.Error(err))
+		cmd.Stderr().Println("Error listing pods: %s", err.Error())
 		return false, err
 	}
 	if len(pods.Items) == 0 {
-		contextutils.LoggerFrom(ctx).Infow("no pods")
+		cmd.Stdout().Println("No pods")
 		return false, nil
 	}
 	for _, pod := range pods.Items {
@@ -103,7 +105,7 @@ func PodsReadyAndVersionsMatch(ctx context.Context, namespace, selector, version
 		}
 		for _, cond := range pod.Status.Conditions {
 			if cond.Type == v12.ContainersReady && cond.Status != v12.ConditionTrue {
-				contextutils.LoggerFrom(ctx).Infow("pods not ready")
+				cmd.Stdout().Println("Pods not ready")
 				return false, nil
 			}
 		}
@@ -116,7 +118,6 @@ func PodsReadyAndVersionsMatch(ctx context.Context, namespace, selector, version
 			}
 		}
 	}
-	contextutils.LoggerFrom(ctx).Warnw("detected install, but did not find any containers with the expected version",
-		zap.String("expected", version))
+	cmd.Stdout().Println("Detected install, but did not find any containers with the expected version %s", version)
 	return false, nil
 }

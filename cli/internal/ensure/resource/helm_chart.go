@@ -2,10 +2,8 @@ package resource
 
 import (
 	"context"
-	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"go.uber.org/zap"
 	"os"
 	"path/filepath"
 )
@@ -34,7 +32,7 @@ func (h *HelmChart) updateWithValues(values map[string]string) {
 }
 
 func (h *HelmChart) Ensure(ctx context.Context, command cmd.Factory) error {
-	contextutils.LoggerFrom(ctx).Infof("preparing to install %s version %s", h.ChartName, h.Version)
+	cmd.Stdout().Println("Preparing to install %s version %s", h.ChartName, h.Version)
 	manifest, err := h.renderManifest(ctx, command)
 	if err != nil {
 		return err
@@ -46,7 +44,7 @@ func (h *HelmChart) Ensure(ctx context.Context, command cmd.Factory) error {
 	if err := kubectl.Cmd().Run(ctx); err != nil {
 		return err
 	}
-	return internal.WaitUntilPodsRunning(ctx, h.Namespace)
+	return internal.WaitUntilPodsRunning(h.Namespace)
 }
 
 func (h *HelmChart) renderManifest(ctx context.Context, command cmd.Factory) (string, error) {
@@ -58,7 +56,7 @@ func (h *HelmChart) renderManifest(ctx context.Context, command cmd.Factory) (st
 	if err != nil {
 		return "", err
 	}
-	contextutils.LoggerFrom(ctx).Infow("rendering and applying manifest for application")
+	cmd.Stdout().Println("Rendering and applying manifest for application")
 	helmCmd := command.Helm().Template().Namespace(h.Namespace)
 	for _, set := range h.Set {
 		helmCmd = helmCmd.Set(set)
@@ -70,7 +68,7 @@ func (h *HelmChart) renderManifest(ctx context.Context, command cmd.Factory) (st
 }
 
 func (h *HelmChart) Teardown(ctx context.Context, command cmd.Factory) error {
-	contextutils.LoggerFrom(ctx).Infof("preparing to uninstall %s version %s", h.ChartName, h.Version)
+	cmd.Stdout().Println("Preparing to uninstall %s version %s", h.ChartName, h.Version)
 	manifest, err := h.renderManifest(ctx, command)
 	if err != nil {
 		return err
@@ -83,7 +81,7 @@ func (h *HelmChart) Teardown(ctx context.Context, command cmd.Factory) error {
 		return err
 	}
 	if h.Namespace != "" {
-		if ok, err := internal.NamespaceIsActive(ctx, h.Namespace); err != nil {
+		if ok, err := internal.NamespaceIsActive(h.Namespace); err != nil {
 			return err
 		} else if ok {
 			return command.Kubectl().Delete(ns).WithName(h.Namespace).Cmd().Run(ctx)
@@ -99,11 +97,11 @@ func (h *HelmChart) addHelmRepo(ctx context.Context, command cmd.Factory) error 
 func (h *HelmChart) fetchAndUntarChart(ctx context.Context, command cmd.Factory) (string, error) {
 	untarDir, err := h.getLocalDirectory()
 	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("error determining local directory for untarring chart", zap.Error(err))
+		cmd.Stderr().Println("Error determining local directory for extracting chart: %s", err.Error())
 		return "", err
 	}
 	if err := os.MkdirAll(untarDir, os.ModePerm); err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("error making directory", zap.Error(err))
+		cmd.Stderr().Println("Error making directory: %s", err.Error())
 		return "", err
 	}
 	out, err := command.
@@ -114,10 +112,11 @@ func (h *HelmChart) fetchAndUntarChart(ctx context.Context, command cmd.Factory)
 		Cmd().
 		Output(ctx)
 	if err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("error trying to untar helm chart", zap.Error(err), zap.String("out", out))
+		cmd.Stderr().Println("Error trying to extract chart: %s", err.Error())
+		cmd.Stderr().Println(out)
 		return "", err
 	}
-	contextutils.LoggerFrom(ctx).Infow("successfully downloaded and extracted chart", zap.String("untarDir", untarDir))
+	cmd.Stdout().Println("Successfully downloaded and extracted chart")
 	return untarDir, nil
 }
 

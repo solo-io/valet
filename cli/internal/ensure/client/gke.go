@@ -145,12 +145,12 @@ func (c *gkeClient) waitForOperation(ctx context.Context, operationId string) er
 	for range ticker.C {
 		operation, err := c.client.GetOperation(ctx, &getOp)
 		if err != nil {
-			cmd.Stderr().Println("Error monitoring operation: %s", err.Error())
+			cmd.Stderr().Println("\nError monitoring operation: %s", err.Error())
 			return err
 		}
 		cmd.Stdout().Print(".")
 		if operation.Status == container2.Operation_DONE {
-			cmd.Stdout().Println("Operation done!")
+			cmd.Stdout().Println("\nOperation done!")
 			return nil
 		}
 	}

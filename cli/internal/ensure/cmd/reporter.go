@@ -33,6 +33,6 @@ func (p *Printer) Print(format string, args... interface{}) {
 }
 
 func (p *Printer) Println(format string, args... interface{}) {
-	msg := fmt.Sprintf(format + "\n", args...)
+	msg := fmt.Sprintf(format, args...)
 	_, _ = fmt.Fprintf(p.w, "[%s] %s\n", time.Now().Format(time.RFC3339), msg)
 }

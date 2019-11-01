@@ -25,6 +25,7 @@ type Condition struct {
 }
 
 func (c *Condition) Ensure(ctx context.Context, command cmd.Factory) error {
+	cmd.Stdout().Println("Waiting on condition: %s.%s (%s) path %s matches %s (timeout: %s)", c.Namespace, c.Name, c.Timeout, c.Jsonpath, c.Value, c.Timeout)
 	if c.Timeout == "" {
 		c.Timeout = DefaultTimeout
 	}
@@ -54,5 +55,6 @@ func (c *Condition) Ensure(ctx context.Context, command cmd.Factory) error {
 }
 
 func (*Condition) Teardown(ctx context.Context, command cmd.Factory) error {
+	cmd.Stdout().Println("Skipping teardown for condition")
 	return nil
 }

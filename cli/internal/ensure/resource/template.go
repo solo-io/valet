@@ -27,6 +27,7 @@ func (g *Template) setValue(key, value string) {
 }
 
 func (g *Template) Ensure(ctx context.Context, command cmd.Factory) error {
+	cmd.Stdout().Println("Ensuring template %s", g.Path)
 	rendered, err := g.render(ctx)
 	if err != nil {
 		return err
@@ -35,6 +36,7 @@ func (g *Template) Ensure(ctx context.Context, command cmd.Factory) error {
 }
 
 func (g *Template) Teardown(ctx context.Context, command cmd.Factory) error {
+	cmd.Stdout().Println("Tearing down template %s", g.Path)
 	rendered, err := g.render(ctx)
 	if err != nil {
 		return err
@@ -43,7 +45,7 @@ func (g *Template) Teardown(ctx context.Context, command cmd.Factory) error {
 }
 
 func (g *Template) render(ctx context.Context) (string, error) {
-	tmpl, err := LoadFile(ctx, g.Path)
+	tmpl, err := LoadFile(g.Path)
 	if err != nil {
 		return "", err
 	}
@@ -71,8 +73,8 @@ func (g *Template) renderValues(ctx context.Context) (map[string]interface{}, er
 	return values, nil
 }
 
-func LoadFile(ctx context.Context, path string) (string, error) {
-	b, err := loadBytesFromPath(ctx, path)
+func LoadFile(path string) (string, error) {
+	b, err := loadBytesFromPath(path)
 	if err != nil {
 		return "", err
 	}

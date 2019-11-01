@@ -5,12 +5,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/errors"
-	"go.uber.org/zap"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
-var _ AwsDnsClient = new(awsDnsClient)
+var (
+	_ AwsDnsClient = new(awsDnsClient)
+
+	HostedZoneNotFoundError = errors.Errorf("Hosted zone not found")
+)
 
 type AwsDnsClient interface {
 	CreateMapping(ctx context.Context, hostedZoneName, domain, ip string) error
@@ -33,7 +36,7 @@ type awsDnsClient struct {
 }
 
 func (c *awsDnsClient) getHostedZone(ctx context.Context, name string) (*route53.HostedZone, error) {
-	contextutils.LoggerFrom(ctx).Infow("Getting hosted zone id")
+	cmd.Stdout().Println("Getting hosted zone id")
 	listHostedZonesInput := route53.ListHostedZonesInput{}
 	output, err := c.svc.ListHostedZones(&listHostedZonesInput)
 	if err != nil {
@@ -46,7 +49,7 @@ func (c *awsDnsClient) getHostedZone(ctx context.Context, name string) (*route53
 		}
 	}
 	if hostedZone == nil {
-		return nil, errors.Errorf("hosted zone not found")
+		return nil, HostedZoneNotFoundError
 	}
 	return hostedZone, nil
 }
@@ -64,27 +67,23 @@ func (c *awsDnsClient) CreateMapping(ctx context.Context, hostedZoneName, domain
 		Value: &ip,
 	}
 	resourceRecordSet := &route53.ResourceRecordSet{
-		Type: &typeStr,
-		Name: &domain,
-		TTL: &ttl,
+		Type:            &typeStr,
+		Name:            &domain,
+		TTL:             &ttl,
 		ResourceRecords: []*route53.ResourceRecord{resourceRecord},
 	}
 	change := &route53.Change{
-		Action: &action,
+		Action:            &action,
 		ResourceRecordSet: resourceRecordSet,
 	}
 	changeBatch := &route53.ChangeBatch{
-		Changes: []*route53.Change{ change },
+		Changes: []*route53.Change{change},
 	}
 	input := route53.ChangeResourceRecordSetsInput{
 		HostedZoneId: hostedZone.Id,
-		ChangeBatch: changeBatch,
+		ChangeBatch:  changeBatch,
 	}
-	contextutils.LoggerFrom(ctx).Infow("Creating dns mapping",
-		zap.String("hostedZone", hostedZoneName),
-		zap.String("hostedZoneId", *hostedZone.Id),
-		zap.String("domain", domain),
-		zap.String("ip", ip))
+	cmd.Stdout().Println("Creating DNS mapping for %s to %s", domain, ip)
 	_, err = c.svc.ChangeResourceRecordSets(&input)
 	return err
 }

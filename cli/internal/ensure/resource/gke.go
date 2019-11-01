@@ -2,10 +2,8 @@ package resource
 
 import (
 	"context"
-	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/valet/cli/internal/ensure/client"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"go.uber.org/zap"
 )
 
 var _ ClusterResource = new(GKE)
@@ -17,7 +15,7 @@ type GKE struct {
 }
 
 func (g *GKE) Ensure(ctx context.Context, command cmd.Factory) error {
-	contextutils.LoggerFrom(ctx).Infow("Ensuring cluster", zap.Any("cluster", g))
+	cmd.Stdout().Println("Ensuring GKE cluster %s (project: %s, location: %s)", g.Name, g.Project, g.Location)
 	gkeClient, err := client.NewGkeClient(ctx)
 	if err != nil {
 		return err

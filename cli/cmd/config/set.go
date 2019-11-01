@@ -3,8 +3,8 @@ package config
 import (
 	"context"
 	"github.com/solo-io/go-utils/cliutils"
-	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/errors"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 	"strings"
@@ -49,6 +49,6 @@ func setConfig(ctx context.Context, args []string) error {
 	if err != nil {
 		return err
 	}
-	contextutils.LoggerFrom(ctx).Infow("Successfully updated config")
+	cmd.Stdout().Println("Successfully updated config")
 	return nil
 }

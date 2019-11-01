@@ -1,0 +1,4 @@
+changelog:
+  - type: FIX
+    description: Switch from logging to good console output. 
+    issueLink: https://github.com/solo-io/valet/issues/71

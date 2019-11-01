@@ -17,6 +17,7 @@ var _ ClusterResource = new(Minikube)
 type Minikube struct {}
 
 func (m *Minikube) Ensure(ctx context.Context, command cmd.Factory) error {
+	cmd.Stdout().Println("Ensuring minikube cluster")
 	// If minikube status seems healthy, just set context and return
 	if err := command.Minikube().Status().SwallowError().Cmd().Run(ctx); err == nil {
 		return m.SetContext(ctx, command)
@@ -30,6 +31,7 @@ func (m *Minikube) SetContext(ctx context.Context, command cmd.Factory) error {
 }
 
 func (m *Minikube) Teardown(ctx context.Context, command cmd.Factory) error {
+	cmd.Stdout().Println("Tearing down minikube cluster")
 	return command.Minikube().Delete().SwallowError().Cmd().Run(ctx)
 }
 

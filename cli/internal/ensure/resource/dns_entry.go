@@ -2,7 +2,6 @@ package resource
 
 import (
 	"context"
-	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/valet/cli/internal/ensure/client"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
@@ -38,7 +37,7 @@ func (d *DnsEntry) Ensure(ctx context.Context, command cmd.Factory) error {
 }
 
 func (d *DnsEntry) Teardown(ctx context.Context, command cmd.Factory) error {
-	contextutils.LoggerFrom(ctx).Errorw("Teardown not implemented")
+	cmd.Stderr().Println("Teardown not implemented")
 	return nil
 }
 

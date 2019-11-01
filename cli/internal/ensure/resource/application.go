@@ -2,11 +2,9 @@ package resource
 
 import (
 	"context"
-	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 )
 
@@ -38,7 +36,7 @@ func (a *ApplicationRef) updateWithValues(values map[string]string) {
 }
 
 func (a *ApplicationRef) load(ctx context.Context) (*Application, error) {
-	app, err := LoadApplication(ctx, a.Path)
+	app, err := LoadApplication(a.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -52,11 +50,16 @@ func (a *ApplicationRef) load(ctx context.Context) (*Application, error) {
 }
 
 func (a *ApplicationRef) Ensure(ctx context.Context, command cmd.Factory) error {
+	cmd.Stdout().Println("Ensuring application %s %s", a.Path, internal.MapToString(a.Values))
 	app, err := a.load(ctx)
 	if err != nil {
 		return err
 	}
-	return app.Ensure(ctx, command)
+	err = app.Ensure(ctx, command)
+	if err == nil {
+		cmd.Stdout().Println("Done ensuring application %s", a.Path)
+	}
+	return err
 }
 
 func (a *ApplicationRef) Teardown(ctx context.Context, command cmd.Factory) error {
@@ -92,34 +95,12 @@ func (a *Application) Teardown(ctx context.Context, command cmd.Factory) error {
 	if err := TeardownAll(ctx, command, resources...); err != nil {
 		return err
 	}
-	if a.Values != nil {
-		if val, ok := a.Values[NamespaceKey]; ok {
-			namespace := Namespace{
-				Name: val,
-			}
-			if err := namespace.Teardown(ctx, command); err != nil {
-				return err
-			}
-		}
-	}
 	return nil
 }
 
 func (a *Application) Ensure(ctx context.Context, command cmd.Factory) error {
 	if err := a.checkRequiredValues(); err != nil {
 		return err
-	}
-	ensuredNamespace := ""
-	if a.Values != nil {
-		if val, ok := a.Values[NamespaceKey]; ok {
-			namespace := Namespace{
-				Name: val,
-			}
-			if err := namespace.Ensure(ctx, command); err != nil {
-				return err
-			}
-			ensuredNamespace = val
-		}
 	}
 	var resources []Resource
 	for _, resource := range a.Resources {
@@ -130,10 +111,7 @@ func (a *Application) Ensure(ctx context.Context, command cmd.Factory) error {
 	if err := EnsureAll(ctx, command, resources...); err != nil {
 		return err
 	}
-	if ensuredNamespace == "" {
-		return nil
-	}
-	return internal.WaitUntilPodsRunning(ctx, ensuredNamespace)
+	return nil
 }
 
 func mergeValues(app *Application, resource *ApplicationResource) {
@@ -142,19 +120,16 @@ func mergeValues(app *Application, resource *ApplicationResource) {
 	}
 }
 
-func LoadApplication(ctx context.Context, path string) (*Application, error) {
+func LoadApplication(path string) (*Application, error) {
 	var a Application
 
-	b, err := loadBytesFromPath(ctx, path)
+	b, err := loadBytesFromPath(path)
 	if err != nil {
 		return nil, err
 	}
 
 	if err := yaml.UnmarshalStrict(b, &a); err != nil {
-		contextutils.LoggerFrom(ctx).Errorw("Failed to unmarshal file",
-			zap.Error(err),
-			zap.String("path", path),
-			zap.ByteString("bytes", b))
+		cmd.Stderr().Println("Failed to unmarshal file: %s", err.Error())
 		return nil, err
 	}
 

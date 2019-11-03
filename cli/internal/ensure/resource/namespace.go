@@ -3,6 +3,7 @@ package resource
 import (
 	"context"
 	"fmt"
+
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
@@ -15,6 +16,7 @@ const (
 type Namespace struct {
 	Name   string            `yaml:"name"`
 	Labels map[string]string `yaml:"labels"`
+	Annotations map[string]string `yaml:"annotations"`
 }
 
 func (n *Namespace) Ensure(ctx context.Context, command cmd.Factory) error {
@@ -26,6 +28,12 @@ func (n *Namespace) Ensure(ctx context.Context, command cmd.Factory) error {
 	for k, v := range n.Labels {
 		labelString := fmt.Sprintf("%s=%s", k, v)
 		if err := command.Kubectl().With("label", "ns", n.Name, labelString, "--overwrite").Cmd().Run(ctx); err != nil {
+			return err
+		}
+	}
+	for k, v := range n.Annotations {
+		annotationString := fmt.Sprintf("%s=%s", k, v)
+		if err := command.Kubectl().With("annotate", "ns", n.Name, annotationString, "--overwrite").Cmd().Run(ctx); err != nil {
 			return err
 		}
 	}

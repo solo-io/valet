@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"context"
-	"github.com/solo-io/go-utils/errors"
 	"os/exec"
 	"strings"
+
+	"github.com/solo-io/go-utils/errors"
 )
 
 const (

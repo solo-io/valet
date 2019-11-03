@@ -6,9 +6,11 @@ import (
 )
 
 type Step struct {
-	Apply  string `yaml:"apply"`
-	Delete string `yaml:"delete"`
-	Curl   *Curl  `yaml:"curl"`
+	Apply     string     `yaml:"apply"`
+	Delete    string     `yaml:"delete"`
+	Curl      *Curl      `yaml:"curl"`
+	Condition *Condition `yaml:"condition"`
+	DnsEntry  *DnsEntry  `yaml:"dnsEntry"`
 }
 
 func (s *Step) Ensure(ctx context.Context, command cmd.Factory) error {
@@ -31,5 +33,3 @@ func (s *Step) Ensure(ctx context.Context, command cmd.Factory) error {
 func (s *Step) Teardown(ctx context.Context, command cmd.Factory) error {
 	return nil
 }
-
-

@@ -14,63 +14,66 @@ type Template struct {
 	EnvValues map[string]string `yaml:"envValues"`
 }
 
-type TemplateValue struct {
-	Value  string `yaml:"value"`
-	EnvVar string `yaml:"envVar"`
-}
-
-func (g *Template) setValue(key, value string) {
-	if g.Values == nil {
-		g.Values = make(map[string]string)
+func (t *Template) setValue(key, value string) {
+	if t.Values == nil {
+		t.Values = make(map[string]string)
 	}
-	g.Values[key] = value
+	t.Values[key] = value
 }
 
-func (g *Template) Ensure(ctx context.Context, command cmd.Factory) error {
-	cmd.Stdout().Println("Ensuring template %s", g.Path)
-	rendered, err := g.render(ctx)
+func (t *Template) setEnvValue(key, value string) {
+	if t.EnvValues == nil {
+		t.EnvValues = make(map[string]string)
+	}
+	t.EnvValues[key] = value
+}
+
+func (t *Template) Ensure(ctx context.Context, command cmd.Factory) error {
+	cmd.Stdout().Println("Ensuring template %s", t.Path)
+	rendered, err := t.Load()
 	if err != nil {
 		return err
 	}
 	return command.Kubectl().ApplyStdIn(rendered).Cmd().Run(ctx)
 }
 
-func (g *Template) Teardown(ctx context.Context, command cmd.Factory) error {
-	cmd.Stdout().Println("Tearing down template %s", g.Path)
-	rendered, err := g.render(ctx)
+func (t *Template) Teardown(ctx context.Context, command cmd.Factory) error {
+	cmd.Stdout().Println("Tearing down template %s", t.Path)
+	rendered, err := t.Load()
 	if err != nil {
 		return err
 	}
 	return command.Kubectl().DeleteStdIn(rendered).Cmd().Run(ctx)
 }
 
-func (g *Template) render(ctx context.Context) (string, error) {
-	tmpl, err := LoadFile(g.Path)
+func (t *Template) Load() (string, error) {
+	tmpl, err := LoadFile(t.Path)
 	if err != nil {
 		return "", err
 	}
-	parsed, err := template.New(g.Path).Parse(tmpl)
+	return LoadTemplate(tmpl, t.Values, t.EnvValues)
+}
+
+func LoadTemplate(tmpl string, values, envValues map[string]string) (string, error) {
+	parsed, err := template.New("").Parse(tmpl)
 	if err != nil {
 		return "", err
 	}
 	out := strings.Builder{}
-	values, err := g.renderValues(ctx)
-	if err != nil {
-		return "", err
-	}
-	err = parsed.Execute(&out, values)
+	vals := renderValues(values, envValues)
+	err = parsed.Execute(&out, vals)
 	return out.String(), err
 }
 
-func (g *Template) renderValues(ctx context.Context) (map[string]interface{}, error) {
-	values := make(map[string]interface{})
-	for k, v := range g.Values {
-		values[k] = v
+func renderValues(values, envValues map[string]string) map[string]interface{} {
+	vals := make(map[string]interface{})
+	for k, v := range values {
+		vals[k] = v
 	}
-	for k, v := range g.EnvValues {
-		values[k] = os.Getenv(v)
+	for k, v := range envValues {
+		vals[k] = os.Getenv(v)
 	}
-	return values, nil
+	return vals
 }
 
 func LoadFile(path string) (string, error) {

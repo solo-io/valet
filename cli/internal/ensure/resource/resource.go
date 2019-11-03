@@ -34,18 +34,19 @@ var (
 )
 
 type ApplicationResource struct {
-	Namespace *Namespace `yaml:"namespace"`
-	HelmChart *HelmChart `yaml:"helmChart"`
-	Secret    *Secret    `yaml:"secret"`
-	Path      string     `yaml:"path"`
-	Template  *Template  `yaml:"template"`
-	DnsEntry  *DnsEntry  `yaml:"dnsEntry"`
-	Patch     *Patch     `yaml:"patch"`
-	Condition *Condition `yaml:"condition"`
+	Namespace   *Namespace      `yaml:"namespace"`
+	HelmChart   *HelmChart      `yaml:"helmChart"`
+	Secret      *Secret         `yaml:"secret"`
+	Path        string          `yaml:"path"`
+	Template    *Template       `yaml:"template"`
+	DnsEntry    *DnsEntry       `yaml:"dnsEntry"`
+	Patch       *Patch          `yaml:"patch"`
+	Condition   *Condition      `yaml:"condition"`
 	Application *ApplicationRef `yaml:"application"`
 
 	Values    map[string]string `yaml:"values"`
 	EnvValues map[string]string `yaml:"envValues"`
+	Flags     []string          `yaml:"flags"`
 }
 
 func (a *ApplicationResource) setValue(key, value string) {
@@ -90,6 +91,7 @@ func (a *ApplicationResource) Ensure(ctx context.Context, command cmd.Factory) e
 		return a.DnsEntry.Ensure(ctx, command)
 	}
 	if a.Patch != nil {
+		mergeValuesForPatch(a, a.Patch)
 		return a.Patch.Ensure(ctx, command)
 	}
 	if a.Condition != nil {
@@ -108,6 +110,18 @@ func (a *ApplicationResource) Ensure(ctx context.Context, command cmd.Factory) e
 func mergeValuesForTemplate(resource *ApplicationResource, template *Template) {
 	for k, v := range resource.Values {
 		template.setValue(k, v)
+	}
+	for k, v := range resource.EnvValues {
+		template.setEnvValue(k, v)
+	}
+}
+
+func mergeValuesForPatch(resource *ApplicationResource, patch *Patch) {
+	for k, v := range resource.Values {
+		patch.setValue(k, v)
+	}
+	for k, v := range resource.EnvValues {
+		patch.setEnvValue(k, v)
 	}
 }
 

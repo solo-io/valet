@@ -1,4 +1,7 @@
 changelog:
   - type: NEW_FEATURE
     issueLink: https://github.com/solo-io/valet/issues/76
-    description: Add feature flags to make certain config optional. 
+    description: Add feature flags to make certain config optional.
+  - type: NEW_FEATURE
+    issueLink: https://github.com/solo-io/valet/issues/77
+    description: Support templates on patch name, namespace.

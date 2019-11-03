@@ -4,8 +4,9 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"strings"
+
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
 func GetCurrentContextName(ctx context.Context, command cmd.Factory) (string, error) {

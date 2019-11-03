@@ -2,10 +2,11 @@ package resource
 
 import (
 	"context"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"os"
 	"strings"
 	"text/template"
+
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
 type Template struct {

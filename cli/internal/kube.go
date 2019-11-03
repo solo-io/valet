@@ -1,14 +1,15 @@
 package internal
 
 import (
+	"strings"
+	"time"
+
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/go-utils/testutils/kube"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	v12 "k8s.io/api/core/v1"
 	kubeerrs "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
-	"time"
 )
 
 var (

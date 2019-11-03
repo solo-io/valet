@@ -1,8 +1,9 @@
 package artifacts
 
 import (
-	"github.com/ghodss/yaml"
 	"io/ioutil"
+
+	"github.com/ghodss/yaml"
 )
 
 const (

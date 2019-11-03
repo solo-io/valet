@@ -13,7 +13,7 @@ func (k *Kubectl) Cmd() *Command {
 	return k.cmd
 }
 
-func (k *Kubectl) With(args... string) *Kubectl {
+func (k *Kubectl) With(args ...string) *Kubectl {
 	k.cmd = k.cmd.With(args...)
 	return k
 }

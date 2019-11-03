@@ -2,12 +2,13 @@ package client
 
 import (
 	"context"
-	"github.com/google/go-github/github"
-	"github.com/solo-io/go-utils/errors"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/google/go-github/github"
+	"github.com/solo-io/go-utils/errors"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
 type ArtifactDownloader interface {

@@ -8,7 +8,7 @@ type Minikube struct {
 	cmd *Command
 }
 
-func (m  *Minikube) With(args... string) *Minikube {
+func (m *Minikube) With(args ...string) *Minikube {
 	m.cmd = m.cmd.With(args...)
 	return m
 }

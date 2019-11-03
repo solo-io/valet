@@ -2,12 +2,13 @@ package build
 
 import (
 	"fmt"
-	"github.com/solo-io/valet/cli/cmd/build/artifacts"
-	"github.com/solo-io/valet/cli/internal"
-	"github.com/solo-io/valet/cli/options"
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/solo-io/valet/cli/cmd/build/artifacts"
+	"github.com/solo-io/valet/cli/internal"
+	"github.com/solo-io/valet/cli/options"
 )
 
 func buildArtifacts(build artifacts.Build, opts options.Build, productName string) error {

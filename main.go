@@ -1,9 +1,10 @@
 package main
 
 import (
+	"os"
+
 	"github.com/solo-io/valet/cli/cmd"
 	"github.com/solo-io/valet/cli/version"
-	"os"
 )
 
 func main() {

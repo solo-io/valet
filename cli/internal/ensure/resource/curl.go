@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/solo-io/go-utils/errors"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"io"
 	"net/http"
+
+	"github.com/solo-io/go-utils/errors"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
 var (
-	NoUrlSetError = errors.Errorf("no url set")
+	NoUrlSetError             = errors.Errorf("no url set")
 	UnexpectedStatusCodeError = func(statusCode int) error {
 		return errors.Errorf("Curl got unexpected status code %d", statusCode)
 	}

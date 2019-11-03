@@ -30,7 +30,7 @@ func (c *CommandFactory) getLocalPath(path string) string {
 
 func (c *CommandFactory) getCommand(path string) *Command {
 	return &Command{
-		Name: c.getLocalPath(path),
+		Name:          c.getLocalPath(path),
 		CommandRunner: c.CommandRunner,
 	}
 }

@@ -2,19 +2,20 @@ package resource
 
 import (
 	"context"
+
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
 const (
-	MinikubeContext = "minikube"
+	MinikubeContext    = "minikube"
 	DefaultKubeVersion = "v1.13.0"
-	DefaultCpus = 4
-	DefaultMemory = 8192
+	DefaultCpus        = 4
+	DefaultMemory      = 8192
 )
 
 var _ ClusterResource = new(Minikube)
 
-type Minikube struct {}
+type Minikube struct{}
 
 func (m *Minikube) Ensure(ctx context.Context, command cmd.Factory) error {
 	cmd.Stdout().Println("Ensuring minikube cluster")
@@ -34,6 +35,3 @@ func (m *Minikube) Teardown(ctx context.Context, command cmd.Factory) error {
 	cmd.Stdout().Println("Tearing down minikube cluster")
 	return command.Minikube().Delete().SwallowError().Cmd().Run(ctx)
 }
-
-
-

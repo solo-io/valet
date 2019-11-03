@@ -2,9 +2,10 @@ package resource
 
 import (
 	"context"
+	"os"
+
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"os"
 )
 
 var (

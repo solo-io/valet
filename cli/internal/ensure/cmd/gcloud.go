@@ -16,7 +16,7 @@ func (g *Gcloud) Cmd() *Command {
 	return g.cmd
 }
 
-func (g *Gcloud) With(args... string) *Gcloud {
+func (g *Gcloud) With(args ...string) *Gcloud {
 	g.cmd = g.cmd.With(args...)
 	return g
 }

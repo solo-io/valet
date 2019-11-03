@@ -2,10 +2,11 @@ package resource
 
 import (
 	"context"
-	"github.com/solo-io/valet/cli/internal"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"os"
 	"path/filepath"
+
+	"github.com/solo-io/valet/cli/internal"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
 type HelmChart struct {

@@ -2,13 +2,14 @@ package build
 
 import (
 	"fmt"
-	"github.com/solo-io/valet/cli/cmd/build/artifacts"
-	"github.com/solo-io/valet/cli/internal"
-	"github.com/solo-io/valet/cli/options"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/solo-io/valet/cli/cmd/build/artifacts"
+	"github.com/solo-io/valet/cli/internal"
+	"github.com/solo-io/valet/cli/options"
 )
 
 func helm(helm artifacts.Helm, opts options.Build, productName string) error {

@@ -1,0 +1,4 @@
+changelog:
+- type: NEW_FEATURE
+  description: Add the ability to create namespace with annotations.
+  issueLink: https://github.com/solo-io/valet/issues/75

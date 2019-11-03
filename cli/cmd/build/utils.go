@@ -2,9 +2,10 @@ package build
 
 import (
 	"fmt"
-	"github.com/solo-io/valet/cli/internal"
 	"os"
 	"os/exec"
+
+	"github.com/solo-io/valet/cli/internal"
 )
 
 const (
@@ -31,7 +32,7 @@ func ensureArtifactsDir() error {
 }
 
 func syncToGoogleStorage(product, version string) error {
-	args := []string {
+	args := []string{
 		"-m", "rsync", "-r",
 		fmt.Sprintf("./%s/", ArtifactsDir),
 		getStorageDirectory(product, version),
@@ -49,7 +50,7 @@ func syncFileToGoogleStorage(product, version, filename string) error {
 	internal.Report("Saving %s to google storage", filename)
 	localFile := fmt.Sprintf("./%s/%s", ArtifactsDir, filename)
 	remoteFile := getStorageLocation(product, version, filename)
-	args := []string {"cp", localFile, remoteFile}
+	args := []string{"cp", localFile, remoteFile}
 	cmd := exec.Command("gsutil", args...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {

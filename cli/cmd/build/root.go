@@ -1,13 +1,14 @@
 package build
 
 import (
+	"os"
+
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/cmd/build/artifacts"
 	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var (

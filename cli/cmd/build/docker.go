@@ -2,18 +2,19 @@ package build
 
 import (
 	"fmt"
+	"os/exec"
+	"path/filepath"
+
 	"github.com/avast/retry-go"
 	"github.com/solo-io/valet/cli/cmd/build/artifacts"
 	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/options"
-	"os/exec"
-	"path/filepath"
 )
 
 func docker(docker artifacts.Docker, opts options.Build) error {
 	for _, registry := range docker.Registries {
 		for _, container := range docker.Containers {
-			retryFunc := func () error {
+			retryFunc := func() error {
 				return dockerContainer(registry, container, opts)
 			}
 			if err := retry.Do(retryFunc); err != nil {

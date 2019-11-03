@@ -6,9 +6,10 @@ package mocks
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	cmd "github.com/solo-io/valet/cli/internal/ensure/cmd"
-	reflect "reflect"
 )
 
 // MockCommandRunner is a mock of CommandRunner interface

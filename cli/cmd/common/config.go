@@ -2,12 +2,13 @@ package common
 
 import (
 	"context"
+	"os"
+
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/cmd/config"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"github.com/solo-io/valet/cli/options"
-	"os"
 )
 
 var (

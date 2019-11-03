@@ -2,6 +2,7 @@ package resource
 
 import (
 	"context"
+
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
@@ -34,14 +35,14 @@ var (
 )
 
 type ApplicationResource struct {
-	Namespace *Namespace `yaml:"namespace"`
-	HelmChart *HelmChart `yaml:"helmChart"`
-	Secret    *Secret    `yaml:"secret"`
-	Path      string     `yaml:"path"`
-	Template  *Template  `yaml:"template"`
-	DnsEntry  *DnsEntry  `yaml:"dnsEntry"`
-	Patch     *Patch     `yaml:"patch"`
-	Condition *Condition `yaml:"condition"`
+	Namespace   *Namespace      `yaml:"namespace"`
+	HelmChart   *HelmChart      `yaml:"helmChart"`
+	Secret      *Secret         `yaml:"secret"`
+	Path        string          `yaml:"path"`
+	Template    *Template       `yaml:"template"`
+	DnsEntry    *DnsEntry       `yaml:"dnsEntry"`
+	Patch       *Patch          `yaml:"patch"`
+	Condition   *Condition      `yaml:"condition"`
 	Application *ApplicationRef `yaml:"application"`
 
 	Values    map[string]string `yaml:"values"`

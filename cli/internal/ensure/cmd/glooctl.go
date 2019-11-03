@@ -18,7 +18,7 @@ func (g *Glooctl) SwallowError() *Glooctl {
 	return g
 }
 
-func (g *Glooctl) With(args... string) *Glooctl {
+func (g *Glooctl) With(args ...string) *Glooctl {
 	g.cmd = g.cmd.With(args...)
 	return g
 }

@@ -2,12 +2,13 @@ package config
 
 import (
 	"context"
+	"strings"
+
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
-	"strings"
 )
 
 func SetCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {

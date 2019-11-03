@@ -3,11 +3,12 @@ package resource
 import (
 	"bytes"
 	"context"
+	"net/http"
+	"net/url"
+
 	"github.com/solo-io/go-utils/osutils"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"gopkg.in/yaml.v2"
-	"net/http"
-	"net/url"
 )
 
 type Config struct {

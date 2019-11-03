@@ -1,18 +1,20 @@
 package client
 
 import (
-	container "cloud.google.com/go/container/apiv1"
 	"fmt"
+
+	container "cloud.google.com/go/container/apiv1"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	container2 "google.golang.org/genproto/googleapis/container/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"context"
+	"time"
+
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
-	"time"
 )
 
 type GkeClient interface {

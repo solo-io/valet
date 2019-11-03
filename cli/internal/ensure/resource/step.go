@@ -2,6 +2,7 @@ package resource
 
 import (
 	"context"
+
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
@@ -31,5 +32,3 @@ func (s *Step) Ensure(ctx context.Context, command cmd.Factory) error {
 func (s *Step) Teardown(ctx context.Context, command cmd.Factory) error {
 	return nil
 }
-
-

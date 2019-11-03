@@ -3,10 +3,11 @@ package resource
 import (
 	"context"
 	"fmt"
-	"github.com/solo-io/go-utils/errors"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"os"
 	"strings"
+
+	"github.com/solo-io/go-utils/errors"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
 const (

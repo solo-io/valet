@@ -2,6 +2,10 @@ package config
 
 import (
 	"context"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/go-utils/osutils"
 	"github.com/solo-io/valet/cli/internal"
@@ -9,9 +13,6 @@ import (
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 )
 
 func Config(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {

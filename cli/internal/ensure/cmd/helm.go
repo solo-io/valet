@@ -9,7 +9,7 @@ type Helm struct {
 	cmd *Command
 }
 
-func (h *Helm) With(args... string) *Helm {
+func (h *Helm) With(args ...string) *Helm {
 	h.cmd = h.cmd.With(args...)
 	return h
 }

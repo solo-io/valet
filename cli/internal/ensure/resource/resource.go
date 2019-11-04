@@ -40,8 +40,10 @@ type ApplicationResource struct {
 	Secret      *Secret         `yaml:"secret"`
 	Path        string          `yaml:"path"`
 	Template    *Template       `yaml:"template"`
+	// Deprecated: DnsEntry should be part of a workflow, not part of an application, since it's an imperative step
 	DnsEntry    *DnsEntry       `yaml:"dnsEntry"`
 	Patch       *Patch          `yaml:"patch"`
+	// Deprecated: Condition should be part of a workflow, not part of an application, since it's an imperative step
 	Condition   *Condition      `yaml:"condition"`
 	Application *ApplicationRef `yaml:"application"`
 

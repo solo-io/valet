@@ -7,21 +7,21 @@ import (
 )
 
 type Step struct {
-	Apply     string     `yaml:"apply"`
-	Delete    string     `yaml:"delete"`
-	Curl      *Curl      `yaml:"curl"`
-	Condition *Condition `yaml:"condition"`
-	DnsEntry  *DnsEntry  `yaml:"dnsEntry"`
+	Curl      *Curl           `yaml:"curl"`
+	Condition *Condition      `yaml:"condition"`
+	DnsEntry  *DnsEntry       `yaml:"dnsEntry"`
+	Install   *ApplicationRef `yaml:"install"`
+	Uninstall *ApplicationRef `yaml:"uninstall"`
 }
 
 func (s *Step) Ensure(ctx context.Context, command cmd.Factory) error {
-	if s.Apply != "" {
-		if err := command.Kubectl().ApplyFile(s.Apply).Cmd().Run(ctx); err != nil {
+	if s.Install != nil {
+		if err := s.Install.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
-	if s.Delete != "" {
-		if err := command.Kubectl().DeleteFile(s.Delete).Cmd().Run(ctx); err != nil {
+	if s.Uninstall != nil {
+		if err := s.Uninstall.Teardown(ctx, command); err != nil {
 			return err
 		}
 	}
@@ -44,20 +44,11 @@ func (s *Step) Ensure(ctx context.Context, command cmd.Factory) error {
 }
 
 func (s *Step) Teardown(ctx context.Context, command cmd.Factory) error {
-	if s.Curl != nil {
-		if err := s.Curl.Teardown(ctx, command); err != nil {
-			return err
-		}
-	}
-	if s.Condition != nil {
-		if err := s.Condition.Teardown(ctx, command); err != nil {
-			return err
-		}
-	}
 	if s.DnsEntry != nil {
 		if err := s.DnsEntry.Teardown(ctx, command); err != nil {
 			return err
 		}
 	}
+	// TODO: Figure out more teardown story for workflows
 	return nil
 }

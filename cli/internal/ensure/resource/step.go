@@ -26,11 +26,38 @@ func (s *Step) Ensure(ctx context.Context, command cmd.Factory) error {
 		}
 	}
 	if s.Curl != nil {
-		return s.Curl.Ensure(ctx, command)
+		if err := s.Curl.Ensure(ctx, command); err != nil {
+			return err
+		}
+	}
+	if s.Condition != nil {
+		if err := s.Condition.Ensure(ctx, command); err != nil {
+			return err
+		}
+	}
+	if s.DnsEntry != nil {
+		if err := s.DnsEntry.Ensure(ctx, command); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 func (s *Step) Teardown(ctx context.Context, command cmd.Factory) error {
+	if s.Curl != nil {
+		if err := s.Curl.Teardown(ctx, command); err != nil {
+			return err
+		}
+	}
+	if s.Condition != nil {
+		if err := s.Condition.Teardown(ctx, command); err != nil {
+			return err
+		}
+	}
+	if s.DnsEntry != nil {
+		if err := s.DnsEntry.Teardown(ctx, command); err != nil {
+			return err
+		}
+	}
 	return nil
 }

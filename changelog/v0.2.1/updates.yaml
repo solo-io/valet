@@ -1,0 +1,4 @@
+changelog:
+  - type: NEW_FEATURE
+    description: Support HostedZone value instead of hard-coding in DNS entry conifg.
+    issueLink: https://github.com/solo-io/valet/issues/78

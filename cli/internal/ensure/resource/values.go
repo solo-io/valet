@@ -1,7 +1,8 @@
 package resource
 
 const (
-	VersionKey   = "Version"
-	NamespaceKey = "Namespace"
-	DomainKey    = "Domain"
+	VersionKey    = "Version"
+	NamespaceKey  = "Namespace"
+	DomainKey     = "Domain"
+	HostedZoneKey = "HostedZone"
 )

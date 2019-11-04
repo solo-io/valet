@@ -20,6 +20,11 @@ func (d *DnsEntry) updateWithValues(values map[string]string) {
 			d.Domain = val
 		}
 	}
+	if d.HostedZone == "" {
+		if val, ok := values[HostedZoneKey]; ok {
+			d.HostedZone = val
+		}
+	}
 }
 
 func (d *DnsEntry) Ensure(ctx context.Context, command cmd.Factory) error {

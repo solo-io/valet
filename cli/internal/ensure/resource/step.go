@@ -12,6 +12,9 @@ type Step struct {
 	DnsEntry  *DnsEntry       `yaml:"dnsEntry"`
 	Install   *ApplicationRef `yaml:"install"`
 	Uninstall *ApplicationRef `yaml:"uninstall"`
+
+	Values map[string]string `yaml:"values"`
+	Flags  []string          `yaml:"flags"`
 }
 
 func (s *Step) Ensure(ctx context.Context, command cmd.Factory) error {

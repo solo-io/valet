@@ -37,7 +37,7 @@ func (a *ApplicationRef) updateWithValues(values map[string]string) {
 	}
 }
 
-func (a *ApplicationRef) load(ctx context.Context) (*Application, error) {
+func (a *ApplicationRef) Load(ctx context.Context) (*Application, error) {
 	app, err := LoadApplication(a.Path)
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func (a *ApplicationRef) load(ctx context.Context) (*Application, error) {
 
 func (a *ApplicationRef) Ensure(ctx context.Context, command cmd.Factory) error {
 	cmd.Stdout().Println("Ensuring application %s %s", a.Path, internal.MapToString(a.Values))
-	app, err := a.load(ctx)
+	app, err := a.Load(ctx)
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func (a *ApplicationRef) Ensure(ctx context.Context, command cmd.Factory) error 
 }
 
 func (a *ApplicationRef) Teardown(ctx context.Context, command cmd.Factory) error {
-	app, err := a.load(ctx)
+	app, err := a.Load(ctx)
 	if err != nil {
 		return err
 	}

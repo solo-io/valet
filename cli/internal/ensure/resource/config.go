@@ -12,9 +12,11 @@ import (
 )
 
 type Config struct {
-	Cluster      *Cluster         `yaml:"cluster"`
-	Applications []ApplicationRef `yaml:"applications"`
-	Workflows    []Workflow       `yaml:"workflows"`
+	Cluster      *Cluster          `yaml:"cluster"`
+	Applications []ApplicationRef  `yaml:"applications"`
+	Workflows    []Workflow        `yaml:"workflows"`
+	Flags        []string          `yaml:"flags"`
+	Values       map[string]string `yaml:"values"`
 }
 
 func (c *Config) Ensure(ctx context.Context, command cmd.Factory) error {
@@ -25,6 +27,12 @@ func (c *Config) Ensure(ctx context.Context, command cmd.Factory) error {
 	}
 
 	for _, application := range c.Applications {
+		if c.Values != nil {
+			application.updateWithValues(c.Values)
+		}
+		if c.Flags != nil {
+			application.Flags = append(application.Flags, c.Flags...)
+		}
 		if err := application.Ensure(ctx, command); err != nil {
 			return err
 		}

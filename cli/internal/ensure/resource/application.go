@@ -25,6 +25,7 @@ type Application struct {
 type ApplicationRef struct {
 	Path   string            `yaml:"path"`
 	Values map[string]string `yaml:"values"`
+	Flags  []string          `yaml:"flags"`
 }
 
 func (a *ApplicationRef) updateWithValues(values map[string]string) {
@@ -47,6 +48,32 @@ func (a *ApplicationRef) load(ctx context.Context) (*Application, error) {
 		}
 		app.Values[k] = v
 	}
+	var filteredResources []ApplicationResource
+	for _, resource := range app.Resources {
+		keep := true
+		// don't keep resources if a required flag is not set
+		for _, requiredFlag := range resource.Flags {
+			missingRequiredFlag := true
+			for _, flag := range a.Flags {
+				if flag == requiredFlag {
+					missingRequiredFlag = false
+					break
+				}
+			}
+			if missingRequiredFlag {
+				keep = false
+				break
+			}
+		}
+		if keep {
+			filteredResources = append(filteredResources, resource)
+			if resource.Application != nil {
+				// pass on the runtime flags, which at this point we know to be a superset of the required flags
+				resource.Application.Flags = a.Flags
+			}
+		}
+	}
+	app.Resources = filteredResources
 	return app, nil
 }
 

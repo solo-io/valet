@@ -12,46 +12,26 @@ const (
 	NamespaceKey  = "Namespace"
 	DomainKey     = "Domain"
 	HostedZoneKey = "HostedZone"
+
+	EnvPrefix = "env:"
+	TemplatePrefix = "template:"
+	KeyPrefix = "key:"
 )
 
 var (
 	ValueNotFoundError = func(key string) error {
 		return errors.Errorf("Value %s not provided", key)
 	}
-	InvalidValueError  = errors.Errorf("Invalid value")
 	RequiredValueNotProvidedError = func(key string) error {
 		return errors.Errorf("Required value %s not found", key)
 	}
 )
 
-type InputValue struct {
-	Value    string `yaml:"value"`
-	Env      string `yaml:"env"`
-	Key      string `yaml:"key"`
-	Template string `yaml:"template"`
-}
-
-func (i InputValue) ToString() string {
-	if i.Value != "" {
-		return i.Value
-	}
-	if i.Env != "" {
-		return fmt.Sprintf("env:%s", i.Env)
-	}
-	if i.Key != "" {
-		return fmt.Sprintf("key:%s", i.Key)
-	}
-	if i.Template != "" {
-		return fmt.Sprintf("template:%s", i.Template)
-	}
-	return ""
-}
-
-type Values map[string]InputValue
+type Values map[string]string
 
 func MergeValues(merge, with Values) Values {
 	if with == nil {
-		with = make(map[string]InputValue)
+		with = make(map[string]string)
 	}
 	for k, v := range merge {
 		with[k] = v
@@ -72,25 +52,24 @@ func (v Values) GetValue(key string) (string, error) {
 	if !ok {
 		return "", ValueNotFoundError(key)
 	}
-	if val.Value != "" {
-		return val.Value, nil
+	if strings.HasPrefix(val, KeyPrefix) {
+		key := strings.TrimPrefix(val, KeyPrefix)
+		return v.GetValue(key)
+	} else if strings.HasPrefix(val, TemplatePrefix) {
+		template := strings.TrimPrefix(val, TemplatePrefix)
+		return LoadTemplate(template, v)
+	} else if strings.HasPrefix(val, EnvPrefix) {
+		env := strings.TrimPrefix(val, EnvPrefix)
+		return os.Getenv(env), nil
+	} else {
+		return val, nil
 	}
-	if val.Key != "" {
-		return v.GetValue(val.Key)
-	}
-	if val.Env != "" {
-		return os.Getenv(val.Env), nil
-	}
-	if val.Template != "" {
-		return LoadTemplate(val.Template, v)
-	}
-	return "", InvalidValueError
 }
 
 func (v Values) ToString() string {
 	var entries []string
 	for k, v := range v {
-		entries = append(entries, fmt.Sprintf("%s=%s", k, v.ToString()))
+		entries = append(entries, fmt.Sprintf("%s=%s", k, v))
 	}
 	return fmt.Sprintf("{%s}", strings.Join(entries, ", "))
 }

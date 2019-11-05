@@ -21,16 +21,20 @@ func (p *Patch) updateWithValues(values Values) {
 }
 
 func (p *Patch) Ensure(ctx context.Context, command cmd.Factory) error {
-	cmd.Stdout().Println("Patching %s.%s (%s) from file %s (%s)", p.Namespace, p.Name, p.KubeType, p.Path, p.PatchType)
-	patchString, err := LoadFile(p.Path)
-	if err != nil {
-		return err
-	}
 	name, err := LoadTemplate(p.Name, p.Values)
 	if err != nil {
 		return err
 	}
 	namespace, err := LoadTemplate(p.Namespace, p.Values)
+	if err != nil {
+		return err
+	}
+	cmd.Stdout().Println("Patching %s.%s (%s) from file %s (%s) %s", namespace, name, p.KubeType, p.Path, p.PatchType, p.Values.ToString())
+	patchTemplate, err := LoadFile(p.Path)
+	if err != nil {
+		return err
+	}
+	patchString, err := LoadTemplate(patchTemplate, p.Values)
 	if err != nil {
 		return err
 	}

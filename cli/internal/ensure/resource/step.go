@@ -14,8 +14,8 @@ type Step struct {
 	Uninstall   *ApplicationRef `yaml:"uninstall"`
 	WorkflowRef *WorkflowRef    `yaml:"workflow"`
 
-	Values map[string]InputValue `yaml:"values"`
-	Flags  []string              `yaml:"flags"`
+	Values Values   `yaml:"values"`
+	Flags  []string `yaml:"flags"`
 }
 
 func (s *Step) updateWithValues(values Values) {

@@ -13,7 +13,7 @@ type Template struct {
 	Values Values `yaml:"values"`
 }
 
-func (t *Template) updateWithValues(values map[string]InputValue) {
+func (t *Template) updateWithValues(values Values) {
 	t.Values = MergeValues(t.Values, values)
 }
 

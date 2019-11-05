@@ -11,17 +11,16 @@ import (
 type WorkflowRef struct {
 	Path string `yaml:"path"`
 
-	Values map[string]string `yaml:"values"`
-	Flags  []string          `yaml:"flags"`
+	Values Values   `yaml:"values"`
+	Flags  []string `yaml:"flags"`
 }
 
-func (w *WorkflowRef) updateWithValues(values map[string]string) {
-	for k, v := range values {
-		if w.Values == nil {
-			w.Values = make(map[string]string)
-		}
-		w.Values[k] = v
-	}
+func (w *WorkflowRef) updateWithValues(values Values) {
+	w.Values = MergeValues(w.Values, values)
+}
+
+func (w *WorkflowRef) updateWithFlags(flags []string) {
+	w.Flags = append(w.Flags, flags...)
 }
 
 func (w *WorkflowRef) Load() (*Workflow, error) {
@@ -29,55 +28,72 @@ func (w *WorkflowRef) Load() (*Workflow, error) {
 	if err != nil {
 		return nil, err
 	}
-	for k, v := range w.Values {
-		if workflow.Values == nil {
-			workflow.Values = make(map[string]string)
-		}
-		workflow.Values[k] = v
-		for _, step := range workflow.Steps {
-			if step.Values == nil {
-				step.Values = make(map[string]string)
-			}
-			step.Values[k] = v
-			if step.Install != nil {
-				step.Install.Flags = w.Flags
-				step.Install.updateWithValues(w.Values)
-			}
-			if step.Uninstall != nil {
-				step.Uninstall.Flags = w.Flags
-				step.Uninstall.updateWithValues(w.Values)
-			}
-		}
-	}
+	workflow.updateWithValues(w.Values)
+	workflow.updateWithFlags(w.Flags)
 	return workflow, nil
 }
 
 func (w *WorkflowRef) Ensure(ctx context.Context, command cmd.Factory) error {
-	workflow, err := LoadWorkflow(w.Path)
+	cmd.Stdout().Println("Ensuring workflow %s", w.Path)
+	workflow, err := w.Load()
 	if err != nil {
 		return err
 	}
-	return workflow.Ensure(ctx, command)
+	if err := workflow.Ensure(ctx, command); err != nil {
+		return err
+	}
+	cmd.Stdout().Println("Done ensuring workflow %s", w.Path)
+	return nil
 }
 
 func (w *WorkflowRef) Teardown(ctx context.Context, command cmd.Factory) error {
-	workflow, err := LoadWorkflow(w.Path)
+	cmd.Stdout().Println("Tearing down workflow %s", w.Path)
+	workflow, err := w.Load()
 	if err != nil {
 		return err
 	}
-	return workflow.Teardown(ctx, command)
+	if err := workflow.Teardown(ctx, command); err != nil {
+		return err
+	}
+	cmd.Stdout().Println("Done tearing down workflow %s", w.Path)
+	return nil
 }
 
 type Workflow struct {
-	Name  string `yaml:"name"`
-	Steps []Step `yaml:"steps"`
+	Steps          []Step   `yaml:"steps"`
+	RequiredValues []string `yaml:"requiredValues"`
 
-	Values map[string]string `yaml:"values"`
-	Flags  []string          `yaml:"flags"`
+	Values Values   `yaml:"values"`
+	Flags  []string `yaml:"flags"`
+}
+
+func (w *Workflow) checkRequiredValues() error {
+	for _, key := range w.RequiredValues {
+		if w.Values == nil {
+			return RequiredValueNotProvidedError(key)
+		}
+		if _, ok := w.Values[key]; !ok {
+			return RequiredValueNotProvidedError(key)
+		}
+	}
+	return nil
+}
+
+func (w *Workflow) updateWithValues(values Values) {
+	w.Values = MergeValues(w.Values, values)
+}
+
+func (w *Workflow) updateWithFlags(flags []string) {
+	w.Flags = flags
 }
 
 func (w *Workflow) Ensure(ctx context.Context, command cmd.Factory) error {
+	if err := w.checkRequiredValues(); err != nil {
+		return err
+	}
 	for _, step := range w.Steps {
+		step.updateWithFlags(w.Flags)
+		step.updateWithValues(w.Values)
 		if err := step.Ensure(ctx, command); err != nil {
 			return err
 		}
@@ -86,7 +102,12 @@ func (w *Workflow) Ensure(ctx context.Context, command cmd.Factory) error {
 }
 
 func (w *Workflow) Teardown(ctx context.Context, command cmd.Factory) error {
+	if err := w.checkRequiredValues(); err != nil {
+		return err
+	}
 	for _, step := range w.Steps {
+		step.updateWithValues(w.Values)
+		step.updateWithFlags(w.Flags)
 		if err := step.Teardown(ctx, command); err != nil {
 			return err
 		}

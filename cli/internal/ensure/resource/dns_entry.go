@@ -14,17 +14,26 @@ type DnsEntry struct {
 	Service    ServiceRef `yaml:"service"`
 }
 
-func (d *DnsEntry) updateWithValues(values map[string]string) {
+func (d *DnsEntry) updateWithValues(values Values) error {
 	if d.Domain == "" {
-		if val, ok := values[DomainKey]; ok {
-			d.Domain = val
+		if values.ContainsKey(DomainKey) {
+			if val, err := values.GetValue(DomainKey); err != nil {
+				return err
+			} else {
+				d.Domain = val
+			}
 		}
 	}
 	if d.HostedZone == "" {
-		if val, ok := values[HostedZoneKey]; ok {
-			d.HostedZone = val
+		if values.ContainsKey(HostedZoneKey) {
+			if val, err := values.GetValue(HostedZoneKey); err != nil {
+				return err
+			} else {
+				d.HostedZone = val
+			}
 		}
 	}
+	return nil
 }
 
 func (d *DnsEntry) Ensure(ctx context.Context, command cmd.Factory) error {

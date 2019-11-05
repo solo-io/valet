@@ -12,7 +12,6 @@ import (
 )
 
 var (
-	NoUrlSetError             = errors.Errorf("no url set")
 	UnexpectedStatusCodeError = func(statusCode int) error {
 		return errors.Errorf("Curl got unexpected status code %d", statusCode)
 	}
@@ -23,13 +22,10 @@ type Curl struct {
 	Host       string            `yaml:"host"`
 	Headers    map[string]string `yaml:"headers"`
 	StatusCode int               `yaml:"statusCode"`
-	URL        string
+	Service    ServiceRef        `yaml:"service"`
 }
 
 func (c *Curl) Ensure(ctx context.Context, command cmd.Factory) error {
-	if c.URL == "" {
-		return NoUrlSetError
-	}
 	return c.doCurl(ctx, command)
 }
 
@@ -38,8 +34,12 @@ func (c *Curl) Teardown(ctx context.Context, command cmd.Factory) error {
 }
 
 func (c *Curl) doCurl(ctx context.Context, command cmd.Factory) error {
-	fullUrl := fmt.Sprintf("%s%s", c.URL, c.Path)
-	body := bytes.NewReader([]byte(c.URL))
+	ip, err := c.Service.getIpAddress(ctx, command)
+	if err != nil {
+		return err
+	}
+	fullUrl := fmt.Sprintf("%s%s", ip, c.Path)
+	body := bytes.NewReader([]byte(ip))
 	req, err := http.NewRequest("GET", fullUrl, body)
 	if err != nil {
 		return err

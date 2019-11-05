@@ -40,43 +40,28 @@ type ApplicationResource struct {
 	Secret      *Secret         `yaml:"secret"`
 	Path        string          `yaml:"path"`
 	Template    *Template       `yaml:"template"`
-	// Deprecated: DnsEntry should be part of a workflow, not part of an application, since it's an imperative step
-	DnsEntry    *DnsEntry       `yaml:"dnsEntry"`
 	Patch       *Patch          `yaml:"patch"`
-	// Deprecated: Condition should be part of a workflow, not part of an application, since it's an imperative step
-	Condition   *Condition      `yaml:"condition"`
 	Application *ApplicationRef `yaml:"application"`
 
-	Values    map[string]string `yaml:"values"`
-	EnvValues map[string]string `yaml:"envValues"`
-	Flags     []string          `yaml:"flags"`
+	Values Values   `yaml:"values"`
+	Flags  []string `yaml:"flags"`
 }
 
-func (a *ApplicationResource) setValue(key, value string) {
-	if a.Values == nil {
-		a.Values = make(map[string]string)
-	}
-	if _, ok := a.Values[key]; !ok {
-		a.Values[key] = value
-	}
-}
-
-func (a *ApplicationResource) setEnvValue(key, value string) {
-	if a.EnvValues == nil {
-		a.EnvValues = make(map[string]string)
-	}
-	if _, ok := a.EnvValues[key]; !ok {
-		a.EnvValues[key] = value
-	}
+func (a *ApplicationResource) updateWithValues(values Values) {
+	a.Values = MergeValues(a.Values, values)
 }
 
 func (a *ApplicationResource) Ensure(ctx context.Context, command cmd.Factory) error {
 	if a.HelmChart != nil {
-		a.HelmChart.updateWithValues(a.Values)
+		if err := a.HelmChart.updateWithValues(a.Values); err != nil {
+			return err
+		}
 		return a.HelmChart.Ensure(ctx, command)
 	}
 	if a.Secret != nil {
-		a.Secret.updateWithValues(a.Values)
+		if err := a.Secret.updateWithValues(a.Values); err != nil {
+			return err
+		}
 		return a.Secret.Ensure(ctx, command)
 	}
 	if a.Path != "" {
@@ -86,19 +71,12 @@ func (a *ApplicationResource) Ensure(ctx context.Context, command cmd.Factory) e
 		return manifest.Ensure(ctx, command)
 	}
 	if a.Template != nil {
-		mergeValuesForTemplate(a, a.Template)
+		a.Template.updateWithValues(a.Values)
 		return a.Template.Ensure(ctx, command)
 	}
-	if a.DnsEntry != nil {
-		a.DnsEntry.updateWithValues(a.Values)
-		return a.DnsEntry.Ensure(ctx, command)
-	}
 	if a.Patch != nil {
-		mergeValuesForPatch(a, a.Patch)
+		a.Patch.updateWithValues(a.Values)
 		return a.Patch.Ensure(ctx, command)
-	}
-	if a.Condition != nil {
-		return a.Condition.Ensure(ctx, command)
 	}
 	if a.Namespace != nil {
 		return a.Namespace.Ensure(ctx, command)
@@ -110,31 +88,17 @@ func (a *ApplicationResource) Ensure(ctx context.Context, command cmd.Factory) e
 	return nil
 }
 
-func mergeValuesForTemplate(resource *ApplicationResource, template *Template) {
-	for k, v := range resource.Values {
-		template.setValue(k, v)
-	}
-	for k, v := range resource.EnvValues {
-		template.setEnvValue(k, v)
-	}
-}
-
-func mergeValuesForPatch(resource *ApplicationResource, patch *Patch) {
-	for k, v := range resource.Values {
-		patch.setValue(k, v)
-	}
-	for k, v := range resource.EnvValues {
-		patch.setEnvValue(k, v)
-	}
-}
-
 func (a *ApplicationResource) Teardown(ctx context.Context, command cmd.Factory) error {
 	if a.HelmChart != nil {
-		a.HelmChart.updateWithValues(a.Values)
+		if err := a.HelmChart.updateWithValues(a.Values); err != nil {
+			return err
+		}
 		return a.HelmChart.Teardown(ctx, command)
 	}
 	if a.Secret != nil {
-		a.Secret.updateWithValues(a.Values)
+		if err := a.Secret.updateWithValues(a.Values); err != nil {
+			return err
+		}
 		return a.Secret.Teardown(ctx, command)
 	}
 	if a.Path != "" {
@@ -144,18 +108,12 @@ func (a *ApplicationResource) Teardown(ctx context.Context, command cmd.Factory)
 		return manifest.Teardown(ctx, command)
 	}
 	if a.Template != nil {
-		mergeValuesForTemplate(a, a.Template)
+		a.Template.updateWithValues(a.Values)
 		return a.Template.Teardown(ctx, command)
 	}
-	if a.DnsEntry != nil {
-		a.DnsEntry.updateWithValues(a.Values)
-		return a.DnsEntry.Teardown(ctx, command)
-	}
 	if a.Patch != nil {
+		a.Patch.updateWithValues(a.Values)
 		return a.Patch.Teardown(ctx, command)
-	}
-	if a.Condition != nil {
-		return a.Condition.Teardown(ctx, command)
 	}
 	if a.Namespace != nil {
 		return a.Namespace.Teardown(ctx, command)

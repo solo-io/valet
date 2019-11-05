@@ -2,7 +2,6 @@ package resource
 
 import (
 	"context"
-	"os"
 	"strings"
 	"text/template"
 
@@ -10,23 +9,12 @@ import (
 )
 
 type Template struct {
-	Path      string            `yaml:"path"`
-	Values    map[string]string `yaml:"values"`
-	EnvValues map[string]string `yaml:"envValues"`
+	Path   string `yaml:"path"`
+	Values Values `yaml:"values"`
 }
 
-func (t *Template) setValue(key, value string) {
-	if t.Values == nil {
-		t.Values = make(map[string]string)
-	}
-	t.Values[key] = value
-}
-
-func (t *Template) setEnvValue(key, value string) {
-	if t.EnvValues == nil {
-		t.EnvValues = make(map[string]string)
-	}
-	t.EnvValues[key] = value
+func (t *Template) updateWithValues(values map[string]InputValue) {
+	t.Values = MergeValues(t.Values, values)
 }
 
 func (t *Template) Ensure(ctx context.Context, command cmd.Factory) error {
@@ -52,29 +40,33 @@ func (t *Template) Load() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return LoadTemplate(tmpl, t.Values, t.EnvValues)
+	return LoadTemplate(tmpl, t.Values)
 }
 
-func LoadTemplate(tmpl string, values, envValues map[string]string) (string, error) {
+func LoadTemplate(tmpl string, values Values) (string, error) {
 	parsed, err := template.New("").Parse(tmpl)
 	if err != nil {
 		return "", err
 	}
 	out := strings.Builder{}
-	vals := renderValues(values, envValues)
+	vals, err := renderValues(values)
+	if err != nil {
+		return "", err
+	}
 	err = parsed.Execute(&out, vals)
 	return out.String(), err
 }
 
-func renderValues(values, envValues map[string]string) map[string]interface{} {
+func renderValues(values Values) (map[string]interface{}, error) {
 	vals := make(map[string]interface{})
-	for k, v := range values {
+	for k := range values {
+		v, err := values.GetValue(k)
+		if err != nil {
+			return nil, err
+		}
 		vals[k] = v
 	}
-	for k, v := range envValues {
-		vals[k] = os.Getenv(v)
-	}
-	return vals
+	return vals, nil
 }
 
 func LoadFile(path string) (string, error) {

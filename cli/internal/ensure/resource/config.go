@@ -12,11 +12,10 @@ import (
 )
 
 type Config struct {
-	Cluster      *Cluster          `yaml:"cluster"`
-	Applications []ApplicationRef  `yaml:"applications"`
-	Workflows    []Workflow        `yaml:"workflows"`
-	Flags        []string          `yaml:"flags"`
-	Values       map[string]string `yaml:"values"`
+	Cluster      *Cluster         `yaml:"cluster"`
+	Workflows    []WorkflowRef    `yaml:"workflows"`
+	Flags        []string         `yaml:"flags"`
+	Values       Values           `yaml:"values"`
 }
 
 func (c *Config) Ensure(ctx context.Context, command cmd.Factory) error {
@@ -25,20 +24,9 @@ func (c *Config) Ensure(ctx context.Context, command cmd.Factory) error {
 			return err
 		}
 	}
-
-	for _, application := range c.Applications {
-		if c.Values != nil {
-			application.updateWithValues(c.Values)
-		}
-		if c.Flags != nil {
-			application.Flags = append(application.Flags, c.Flags...)
-		}
-		if err := application.Ensure(ctx, command); err != nil {
-			return err
-		}
-	}
 	for _, workflow := range c.Workflows {
-		//workflow.URL = proxyUrl
+		workflow.updateWithValues(c.Values)
+		workflow.updateWithFlags(c.Flags)
 		if err := workflow.Ensure(ctx, command); err != nil {
 			return err
 		}
@@ -50,8 +38,10 @@ func (c *Config) Teardown(ctx context.Context, command cmd.Factory) error {
 	if c.Cluster != nil {
 		return c.Cluster.Teardown(ctx, command)
 	}
-	for _, application := range c.Applications {
-		if err := application.Teardown(ctx, command); err != nil {
+	for _, workflow := range c.Workflows {
+		workflow.updateWithValues(c.Values)
+		workflow.updateWithFlags(c.Flags)
+		if err := workflow.Teardown(ctx, command); err != nil {
 			return err
 		}
 	}

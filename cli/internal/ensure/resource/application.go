@@ -3,38 +3,29 @@ package resource
 import (
 	"context"
 
-	"github.com/solo-io/go-utils/errors"
-	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"gopkg.in/yaml.v2"
-)
-
-var (
-	RequiredValueNotProvidedError = func(key string) error {
-		return errors.Errorf("Required value %s not found", key)
-	}
 )
 
 type Application struct {
 	Name           string                `yaml:"name"`
 	Resources      []ApplicationResource `yaml:"resources"`
 	RequiredValues []string              `yaml:"requiredValues"`
-	Values         map[string]string     `yaml:"values"`
+	Values         Values                `yaml:"values"`
 }
 
 type ApplicationRef struct {
-	Path   string            `yaml:"path"`
-	Values map[string]string `yaml:"values"`
-	Flags  []string          `yaml:"flags"`
+	Path   string   `yaml:"path"`
+	Values Values   `yaml:"values"`
+	Flags  []string `yaml:"flags"`
 }
 
-func (a *ApplicationRef) updateWithValues(values map[string]string) {
-	for k, v := range values {
-		if a.Values == nil {
-			a.Values = make(map[string]string)
-		}
-		a.Values[k] = v
-	}
+func (a *ApplicationRef) updateWithValues(values Values) {
+	a.Values = MergeValues(a.Values, values)
+}
+
+func (a *ApplicationRef) updateWithFlags(flags []string) {
+	a.Flags = append(a.Flags, flags...)
 }
 
 func (a *ApplicationRef) Load(ctx context.Context) (*Application, error) {
@@ -42,12 +33,7 @@ func (a *ApplicationRef) Load(ctx context.Context) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
-	for k, v := range a.Values {
-		if app.Values == nil {
-			app.Values = make(map[string]string)
-		}
-		app.Values[k] = v
-	}
+	app.updateWithValues(a.Values)
 	var filteredResources []ApplicationResource
 	for _, resource := range app.Resources {
 		keep := true
@@ -78,7 +64,7 @@ func (a *ApplicationRef) Load(ctx context.Context) (*Application, error) {
 }
 
 func (a *ApplicationRef) Ensure(ctx context.Context, command cmd.Factory) error {
-	cmd.Stdout().Println("Ensuring application %s %s", a.Path, internal.MapToString(a.Values))
+	cmd.Stdout().Println("Ensuring application %s %s", a.Path, a.Values.ToString())
 	app, err := a.Load(ctx)
 	if err != nil {
 		return err
@@ -98,12 +84,16 @@ func (a *ApplicationRef) Teardown(ctx context.Context, command cmd.Factory) erro
 	return app.Teardown(ctx, command)
 }
 
+func (a *Application) updateWithValues(values Values) {
+	a.Values = MergeValues(a.Values, values)
+}
+
 func (a *Application) checkRequiredValues() error {
 	for _, key := range a.RequiredValues {
 		if a.Values == nil {
 			return RequiredValueNotProvidedError(key)
 		}
-		if val, ok := a.Values[key]; !ok || val == "" {
+		if _, ok := a.Values[key]; !ok {
 			return RequiredValueNotProvidedError(key)
 		}
 	}
@@ -117,7 +107,7 @@ func (a *Application) Teardown(ctx context.Context, command cmd.Factory) error {
 	var resources []Resource
 	for i := len(a.Resources) - 1; i >= 0; i-- {
 		r := &a.Resources[i]
-		mergeValues(a, r)
+		r.updateWithValues(a.Values)
 		resources = append(resources, r)
 	}
 	if err := TeardownAll(ctx, command, resources...); err != nil {
@@ -133,19 +123,13 @@ func (a *Application) Ensure(ctx context.Context, command cmd.Factory) error {
 	var resources []Resource
 	for _, resource := range a.Resources {
 		r := resource
-		mergeValues(a, &r)
+		r.updateWithValues(a.Values)
 		resources = append(resources, &r)
 	}
 	if err := EnsureAll(ctx, command, resources...); err != nil {
 		return err
 	}
 	return nil
-}
-
-func mergeValues(app *Application, resource *ApplicationResource) {
-	for k, v := range app.Values {
-		resource.setValue(k, v)
-	}
 }
 
 func LoadApplication(path string) (*Application, error) {

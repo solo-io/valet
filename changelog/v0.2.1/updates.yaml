@@ -2,3 +2,6 @@ changelog:
   - type: NEW_FEATURE
     description: Support HostedZone value instead of hard-coding in DNS entry conifg.
     issueLink: https://github.com/solo-io/valet/issues/78
+  - type: NEW_FEATURE
+    description: Re-enable workflows.
+    issueLink: https://github.com/solo-io/valet/issues/67

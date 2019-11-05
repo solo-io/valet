@@ -34,7 +34,7 @@ func (w *WorkflowRef) Load() (*Workflow, error) {
 }
 
 func (w *WorkflowRef) Ensure(ctx context.Context, command cmd.Factory) error {
-	cmd.Stdout().Println("Ensuring workflow %s", w.Path)
+	cmd.Stdout().Println("Ensuring workflow %s %s", w.Path, w.Values.ToString())
 	workflow, err := w.Load()
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func (w *WorkflowRef) Ensure(ctx context.Context, command cmd.Factory) error {
 }
 
 func (w *WorkflowRef) Teardown(ctx context.Context, command cmd.Factory) error {
-	cmd.Stdout().Println("Tearing down workflow %s", w.Path)
+	cmd.Stdout().Println("Tearing down workflow %s %s", w.Path, w.Values.ToString())
 	workflow, err := w.Load()
 	if err != nil {
 		return err

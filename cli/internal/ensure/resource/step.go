@@ -28,7 +28,9 @@ func (s *Step) updateWithFlags(flags []string) {
 
 func (s *Step) Ensure(ctx context.Context, command cmd.Factory) error {
 	if s.Install != nil {
-		s.Install.updateWithValues(s.Values)
+		if err := s.Install.updateWithValues(s.Values); err != nil {
+			return err
+		}
 		s.Install.updateWithFlags(s.Flags)
 		if err := s.Install.Ensure(ctx, command); err != nil {
 			return err
@@ -36,7 +38,9 @@ func (s *Step) Ensure(ctx context.Context, command cmd.Factory) error {
 	}
 	if s.Uninstall != nil {
 		s.Uninstall.updateWithFlags(s.Flags)
-		s.Uninstall.updateWithValues(s.Values)
+		if err := s.Uninstall.updateWithValues(s.Values); err != nil {
+			return err
+		}
 		if err := s.Uninstall.Teardown(ctx, command); err != nil {
 			return err
 		}
@@ -47,6 +51,9 @@ func (s *Step) Ensure(ctx context.Context, command cmd.Factory) error {
 		}
 	}
 	if s.Condition != nil {
+		if err := s.Condition.updateWithValues(s.Values); err != nil {
+			return err
+		}
 		if err := s.Condition.Ensure(ctx, command); err != nil {
 			return err
 		}

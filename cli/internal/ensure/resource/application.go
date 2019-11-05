@@ -20,8 +20,14 @@ type ApplicationRef struct {
 	Flags  []string `yaml:"flags"`
 }
 
-func (a *ApplicationRef) updateWithValues(values Values) {
+func (a *ApplicationRef) updateWithValues(values Values) error {
 	a.Values = MergeValues(a.Values, values)
+	path, err := LoadTemplate(a.Path, values)
+	if err != nil {
+		return err
+	}
+	a.Path = path
+	return nil
 }
 
 func (a *ApplicationRef) updateWithFlags(flags []string) {

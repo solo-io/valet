@@ -18,7 +18,7 @@ func (t *Template) updateWithValues(values Values) {
 }
 
 func (t *Template) Ensure(ctx context.Context, command cmd.Factory) error {
-	cmd.Stdout().Println("Ensuring template %s", t.Path)
+	cmd.Stdout().Println("Ensuring template %s %s", t.Path, t.Values.ToString())
 	rendered, err := t.Load()
 	if err != nil {
 		return err
@@ -27,7 +27,7 @@ func (t *Template) Ensure(ctx context.Context, command cmd.Factory) error {
 }
 
 func (t *Template) Teardown(ctx context.Context, command cmd.Factory) error {
-	cmd.Stdout().Println("Tearing down template %s", t.Path)
+	cmd.Stdout().Println("Tearing down template %s %s", t.Path, t.Values.ToString())
 	rendered, err := t.Load()
 	if err != nil {
 		return err

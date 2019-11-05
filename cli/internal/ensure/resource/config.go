@@ -12,10 +12,10 @@ import (
 )
 
 type Config struct {
-	Cluster      *Cluster         `yaml:"cluster"`
-	Workflows    []WorkflowRef    `yaml:"workflows"`
-	Flags        []string         `yaml:"flags"`
-	Values       Values           `yaml:"values"`
+	Cluster *Cluster `yaml:"cluster"`
+	Steps   []Step   `yaml:"steps"`
+	Flags   []string `yaml:"flags"`
+	Values  Values   `yaml:"values"`
 }
 
 func (c *Config) Ensure(ctx context.Context, command cmd.Factory) error {
@@ -24,10 +24,10 @@ func (c *Config) Ensure(ctx context.Context, command cmd.Factory) error {
 			return err
 		}
 	}
-	for _, workflow := range c.Workflows {
-		workflow.updateWithValues(c.Values)
-		workflow.updateWithFlags(c.Flags)
-		if err := workflow.Ensure(ctx, command); err != nil {
+	for _, step := range c.Steps {
+		step.updateWithValues(c.Values)
+		step.updateWithFlags(c.Flags)
+		if err := step.Ensure(ctx, command); err != nil {
 			return err
 		}
 	}
@@ -38,10 +38,10 @@ func (c *Config) Teardown(ctx context.Context, command cmd.Factory) error {
 	if c.Cluster != nil {
 		return c.Cluster.Teardown(ctx, command)
 	}
-	for _, workflow := range c.Workflows {
-		workflow.updateWithValues(c.Values)
-		workflow.updateWithFlags(c.Flags)
-		if err := workflow.Teardown(ctx, command); err != nil {
+	for _, step := range c.Steps {
+		step.updateWithValues(c.Values)
+		step.updateWithFlags(c.Flags)
+		if err := step.Teardown(ctx, command); err != nil {
 			return err
 		}
 	}

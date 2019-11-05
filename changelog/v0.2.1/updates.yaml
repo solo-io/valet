@@ -5,3 +5,10 @@ changelog:
   - type: NEW_FEATURE
     description: Re-enable workflows.
     issueLink: https://github.com/solo-io/valet/issues/67
+  - type: BREAKING_CHANGE
+    description: >
+      Remove application resources that can't be rendered precisely and reproducibly as a dry run.
+      For instance a DNS entry depends on a service being deployed and an external IP granted, which can't be
+      determined prior to deploying the application. Imperative steps, like wait for a match on a field of a CRD,
+      are moved into workflow steps. The ensure config now contains a set of steps for a cluster, rather than a set of
+      applications. 

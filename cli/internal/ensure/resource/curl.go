@@ -38,7 +38,7 @@ func (c *Curl) doCurl(ctx context.Context, command cmd.Factory) error {
 	if err != nil {
 		return err
 	}
-	fullUrl := fmt.Sprintf("%s%s", ip, c.Path)
+	fullUrl := fmt.Sprintf("http://%s%s", ip, c.Path)
 	body := bytes.NewReader([]byte(ip))
 	req, err := http.NewRequest("GET", fullUrl, body)
 	if err != nil {

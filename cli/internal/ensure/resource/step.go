@@ -13,6 +13,8 @@ type Step struct {
 	Install     *ApplicationRef `yaml:"install"`
 	Uninstall   *ApplicationRef `yaml:"uninstall"`
 	WorkflowRef *WorkflowRef    `yaml:"workflow"`
+	Apply       *Manifest       `yaml:"apply"`
+	Delete      *Manifest       `yaml:"delete"`
 
 	Values Values   `yaml:"values"`
 	Flags  []string `yaml:"flags"`

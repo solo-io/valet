@@ -23,10 +23,10 @@ const (
 	KeyPrefix      = "key:"
 	CmdPrefix      = "cmd:"
 
-	ValetField = "valet"
+	ValetField  = "valet"
 	TemplateTag = "template"
-	DefaultTag = "default"
-	KeyTag = "key"
+	DefaultTag  = "default"
+	KeyTag      = "key"
 )
 
 var (

@@ -29,7 +29,7 @@ func Application(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *co
 func TeardownApplication(opts *options.Options) error {
 	input := resource.InputParams{
 		Values: opts.Ensure.Values,
-		Flags: opts.Ensure.Flags,
+		Flags:  opts.Ensure.Flags,
 	}
 	cfg, err := common.LoadApplication(opts, input)
 	if err != nil {

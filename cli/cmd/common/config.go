@@ -21,7 +21,7 @@ func LoadApplication(opts *options.Options, input resource.InputParams) (*resour
 	}
 
 	ref := resource.ApplicationRef{
-		Path:   opts.Ensure.File,
+		Path: opts.Ensure.File,
 	}
 
 	app, err := ref.Load(opts.Top.Ctx, input)

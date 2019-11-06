@@ -49,8 +49,8 @@ func (p *Patch) Teardown(ctx context.Context, input InputParams, command cmd.Fac
 
 func (p *Patch) Load(input InputParams) (string, error) {
 	t := Template{
-		Path:      p.Path,
-		Values:    input.Values,
+		Path:   p.Path,
+		Values: input.Values,
 	}
 	return t.Load(input)
 }

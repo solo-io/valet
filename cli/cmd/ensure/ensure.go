@@ -44,7 +44,7 @@ func Ensure(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 func ensure(opts *options.Options) error {
 	input := resource.InputParams{
 		Values: opts.Ensure.Values,
-		Flags: opts.Ensure.Flags,
+		Flags:  opts.Ensure.Flags,
 	}
 	cfg, err := common.LoadConfig(opts)
 	if err != nil {

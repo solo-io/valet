@@ -14,7 +14,7 @@ import (
 type Config struct {
 	Cluster *Cluster `yaml:"cluster"`
 	Steps   []Step   `yaml:"steps"`
-	Flags   Flags `yaml:"flags"`
+	Flags   Flags    `yaml:"flags"`
 	Values  Values   `yaml:"values"`
 }
 

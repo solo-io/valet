@@ -49,7 +49,6 @@ var _ = Describe("Values", func() {
 			Expect(output.Values).Should(Equal(values))
 		})
 
-
 	})
 
 	Context("conditions", func() {
@@ -191,7 +190,7 @@ var _ = Describe("Values", func() {
 	Context("app ref", func() {
 		var (
 			appRef = resource.ApplicationRef{
-				Flags: []string{ "foo1" },
+				Flags: []string{"foo1"},
 				Values: resource.Values{
 					"foo2": "foo3",
 				},

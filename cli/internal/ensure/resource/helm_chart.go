@@ -19,17 +19,26 @@ type HelmChart struct {
 	SetEnv    map[string]string `yaml:"setEnv"`
 }
 
-func (h *HelmChart) updateWithValues(values map[string]string) {
+func (h *HelmChart) updateWithValues(values Values) error {
 	if h.Version == "" {
-		if val, ok := values[VersionKey]; ok {
-			h.Version = val
+		if values.ContainsKey(VersionKey) {
+			if val, err := values.GetValue(VersionKey); err != nil {
+				return err
+			} else {
+				h.Version = val
+			}
 		}
 	}
 	if h.Namespace == "" {
-		if val, ok := values[NamespaceKey]; ok {
-			h.Namespace = val
+		if values.ContainsKey(NamespaceKey) {
+			if val, err := values.GetValue(NamespaceKey); err != nil {
+				return err
+			} else {
+				h.Namespace = val
+			}
 		}
 	}
+	return nil
 }
 
 func (h *HelmChart) Ensure(ctx context.Context, command cmd.Factory) error {

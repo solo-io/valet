@@ -13,36 +13,28 @@ type Patch struct {
 	Namespace string `yaml:"namespace"`
 	KubeType  string `yaml:"kubeType"`
 
-	Values    map[string]string `yaml:"values"`
-	EnvValues map[string]string `yaml:"envValues"`
+	Values Values `yaml:"values"`
 }
 
-func (p *Patch) setValue(key, value string) {
-	if p.Values == nil {
-		p.Values = make(map[string]string)
-	}
-	p.Values[key] = value
+func (p *Patch) updateWithValues(values Values) {
+	p.Values = MergeValues(values, p.Values)
 }
-
-func (p *Patch) setEnvValue(key, value string) {
-	if p.EnvValues == nil {
-		p.EnvValues = make(map[string]string)
-	}
-	p.EnvValues[key] = value
-}
-
 
 func (p *Patch) Ensure(ctx context.Context, command cmd.Factory) error {
-	cmd.Stdout().Println("Patching %s.%s (%s) from file %s (%s)", p.Namespace, p.Name, p.KubeType, p.Path, p.PatchType)
-	patchString, err := LoadFile(p.Path)
+	name, err := LoadTemplate(p.Name, p.Values)
 	if err != nil {
 		return err
 	}
-	name, err := LoadTemplate(p.Name, p.Values, p.EnvValues)
+	namespace, err := LoadTemplate(p.Namespace, p.Values)
 	if err != nil {
 		return err
 	}
-	namespace, err := LoadTemplate(p.Namespace, p.Values, p.EnvValues)
+	cmd.Stdout().Println("Patching %s.%s (%s) from file %s (%s) %s", namespace, name, p.KubeType, p.Path, p.PatchType, p.Values.ToString())
+	patchTemplate, err := LoadFile(p.Path)
+	if err != nil {
+		return err
+	}
+	patchString, err := LoadTemplate(patchTemplate, p.Values)
 	if err != nil {
 		return err
 	}
@@ -63,7 +55,6 @@ func (p *Patch) Load() (string, error) {
 	t := Template{
 		Path:      p.Path,
 		Values:    p.Values,
-		EnvValues: p.EnvValues,
 	}
 	return t.Load()
 }

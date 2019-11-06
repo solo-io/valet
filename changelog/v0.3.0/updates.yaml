@@ -1,0 +1,27 @@
+changelog:
+  - type: NEW_FEATURE
+    description: The hosted zone and domain for a DNS entry in a workflow can be provided via the HostedZone and Domain values respectively.
+    issueLink: https://github.com/solo-io/valet/issues/78
+  - type: NEW_FEATURE
+    description: >
+      Re-enable workflows. Workflows can now have steps that install or uninstall applications, wait for conditions, create DNS entries, curl endpoints, and more.
+      Values can be passed into workflows and required by workflows. Workflows also propagate feature flags.
+    issueLink: https://github.com/solo-io/valet/issues/67
+  - type: BREAKING_CHANGE
+    description: >
+      Remove application resources that can't be rendered precisely and reproducibly as a dry run.
+      For instance a DNS entry depends on a service being deployed and an external IP granted, which can't be
+      determined prior to deploying the application. Imperative steps, like wait for a match on a field of a CRD,
+      are moved into workflow steps. The ensure config now contains a set of steps for a cluster, rather than a set of
+      applications.
+    issueLink: https://github.com/solo-io/valet/issues/81
+  - type: NEW_FEATURE
+    issueLink: https://github.com/solo-io/valet/issues/82
+    description: >
+      Values can now be prepended with "env:" to load the value from an environment variable (i.e. "env:AWS_ACCESS_KEY_ID"),
+      or "template:" to render the template from the values (i.e. "template:{{ .OtherValueName }}"), or
+      "key:" to use the value of a different key in the values map (i.e. "key:OtherValueName"). Values remain a
+      map of string to string.
+  - type: NEW_FEATURE
+    issueLink: https://github.com/solo-io/valet/issues/83
+    description: The name and namespace for a patch can be templates that are rendered using the input values.

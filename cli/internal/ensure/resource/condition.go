@@ -25,8 +25,22 @@ type Condition struct {
 	Timeout   string `yaml:"timeout"`
 }
 
+func (c *Condition) updateWithValues(values Values) error {
+	name, err := LoadTemplate(c.Name, values)
+	if err != nil {
+		return err
+	}
+	c.Name = name
+	timeout, err := LoadTemplate(c.Timeout, values)
+	if err != nil {
+		return err
+	}
+	c.Timeout = timeout
+	return nil
+}
+
 func (c *Condition) Ensure(ctx context.Context, command cmd.Factory) error {
-	cmd.Stdout().Println("Waiting on condition: %s.%s (%s) path %s matches %s (timeout: %s)", c.Namespace, c.Name, c.Timeout, c.Jsonpath, c.Value, c.Timeout)
+	cmd.Stdout().Println("Waiting on condition: %s.%s path %s matches %s (timeout: %s)", c.Namespace, c.Name, c.Jsonpath, c.Value, c.Timeout)
 	if c.Timeout == "" {
 		c.Timeout = DefaultTimeout
 	}
@@ -49,6 +63,7 @@ func (c *Condition) Ensure(ctx context.Context, command cmd.Factory) error {
 				return err
 			}
 			if out == c.Value {
+				cmd.Stdout().Println("Condition met!")
 				return nil
 			}
 		}

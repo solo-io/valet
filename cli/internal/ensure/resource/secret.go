@@ -47,12 +47,17 @@ type GcloudKmsEncryptedFile struct {
 	Key            string `yaml:"key"`
 }
 
-func (s *Secret) updateWithValues(values map[string]string) {
+func (s *Secret) updateWithValues(values Values) error {
 	if s.Namespace == "" {
-		if val, ok := values[NamespaceKey]; ok {
-			s.Namespace = val
+		if values.ContainsKey(NamespaceKey) {
+			if val, err := values.GetValue(NamespaceKey); err != nil {
+				return err
+			} else {
+				s.Namespace = val
+			}
 		}
 	}
+	return nil
 }
 
 func (s *Secret) Ensure(ctx context.Context, command cmd.Factory) error {

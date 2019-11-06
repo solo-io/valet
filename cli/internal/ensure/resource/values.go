@@ -95,3 +95,9 @@ func (v Values) ToString() string {
 	}
 	return fmt.Sprintf("{%s}", strings.Join(entries, ", "))
 }
+
+type Flags []string
+
+func (f Flags) ToString() string {
+	return fmt.Sprintf("[%s]", strings.Join(f, ", "))
+}

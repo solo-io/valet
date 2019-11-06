@@ -20,7 +20,13 @@ func LoadApplication(opts *options.Options) (*resource.Application, error) {
 		return nil, MustProvideFileError
 	}
 
-	cfg, err := resource.LoadApplication(opts.Ensure.File)
+	ref := resource.ApplicationRef{
+		Path:   opts.Ensure.File,
+		Values: opts.Ensure.Values,
+		Flags:  opts.Ensure.Flags,
+	}
+
+	app, err := ref.Load(opts.Top.Ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +34,7 @@ func LoadApplication(opts *options.Options) (*resource.Application, error) {
 	if err := LoadEnv(opts.Top.Ctx); err != nil {
 		return nil, err
 	}
-	return cfg, nil
+	return app, nil
 }
 
 func LoadConfig(opts *options.Options) (*resource.Config, error) {

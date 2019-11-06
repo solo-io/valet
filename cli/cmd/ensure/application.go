@@ -25,16 +25,18 @@ func Application(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *co
 			return err
 		},
 	}
-
+	cmd.PersistentFlags().StringToStringVarP(&opts.Ensure.Values, "values", "v", make(map[string]string), "values to provide to application")
+	cmd.PersistentFlags().StringSliceVarP(&opts.Ensure.Flags, "flags", "", make([]string, 0), "flags to provide to application")
+	cmd.PersistentFlags().BoolVarP(&opts.Ensure.DryRun, "dry-run", "d", false, "path to file containing config to ensure")
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	return cmd
 }
 
 func ensureApplication(opts *options.Options) error {
-	cfg, err := common.LoadApplication(opts)
+	app, err := common.LoadApplication(opts)
 	if err != nil {
 		return err
 	}
 	command := cmd.CommandFactory{}
-	return cfg.Ensure(opts.Top.Ctx, &command)
+	return app.Ensure(opts.Top.Ctx, &command)
 }

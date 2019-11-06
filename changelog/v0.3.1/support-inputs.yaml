@@ -1,0 +1,4 @@
+changelog:
+  - type: NEW_FEATURE
+    issueLink: https://github.com/solo-io/valet/issues/87
+    description: Support values and flags as inputs to `valet ensure application`. 

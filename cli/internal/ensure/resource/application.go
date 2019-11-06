@@ -15,9 +15,9 @@ type Application struct {
 }
 
 type ApplicationRef struct {
-	Path   string   `yaml:"path"`
-	Values Values   `yaml:"values"`
-	Flags  []string `yaml:"flags"`
+	Path   string `yaml:"path"`
+	Values Values `yaml:"values"`
+	Flags  Flags  `yaml:"flags"`
 }
 
 func (a *ApplicationRef) updateWithValues(values Values) error {
@@ -30,7 +30,7 @@ func (a *ApplicationRef) updateWithValues(values Values) error {
 	return nil
 }
 
-func (a *ApplicationRef) updateWithFlags(flags []string) {
+func (a *ApplicationRef) updateWithFlags(flags Flags) {
 	a.Flags = append(a.Flags, flags...)
 }
 
@@ -70,7 +70,7 @@ func (a *ApplicationRef) Load(ctx context.Context) (*Application, error) {
 }
 
 func (a *ApplicationRef) Ensure(ctx context.Context, command cmd.Factory) error {
-	cmd.Stdout().Println("Ensuring application %s %s", a.Path, a.Values.ToString())
+	cmd.Stdout().Println("Ensuring application %s values=%s flags=%s", a.Path, a.Values.ToString(), a.Flags.ToString())
 	app, err := a.Load(ctx)
 	if err != nil {
 		return err

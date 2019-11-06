@@ -33,22 +33,22 @@ func (c *Cluster) SetContext(ctx context.Context, command cmd.Factory) error {
 	return NoClusterDefinedError
 }
 
-func (c *Cluster) Ensure(ctx context.Context, command cmd.Factory) error {
+func (c *Cluster) Ensure(ctx context.Context, inputs InputParams, command cmd.Factory) error {
 	if c.Minikube != nil {
-		return c.Minikube.Ensure(ctx, command)
+		return c.Minikube.Ensure(ctx, inputs, command)
 	}
 	if c.GKE != nil {
-		return c.GKE.Ensure(ctx, command)
+		return c.GKE.Ensure(ctx, inputs, command)
 	}
 	return nil
 }
 
-func (c *Cluster) Teardown(ctx context.Context, command cmd.Factory) error {
+func (c *Cluster) Teardown(ctx context.Context, inputs InputParams, command cmd.Factory) error {
 	if c.Minikube != nil {
-		return c.Minikube.Teardown(ctx, command)
+		return c.Minikube.Teardown(ctx, inputs, command)
 	}
 	if c.GKE != nil {
-		return c.GKE.Teardown(ctx, command)
+		return c.GKE.Teardown(ctx, inputs, command)
 	}
 	return nil
 }

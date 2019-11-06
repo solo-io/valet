@@ -7,8 +7,53 @@ import (
 )
 
 type Resource interface {
-	Ensure(ctx context.Context, command cmd.Factory) error
-	Teardown(ctx context.Context, command cmd.Factory) error
+	Ensure(ctx context.Context, inputs InputParams, command cmd.Factory) error
+	Teardown(ctx context.Context, inputs InputParams, command cmd.Factory) error
+}
+
+type InputParams struct {
+	Values Values
+	Flags  Flags
+}
+
+func (i *InputParams) DeepCopy() InputParams {
+	var flags []string
+	flags = append(flags, i.Flags...)
+	values := make(map[string]string)
+	for k, v := range i.Values {
+		values[k] = v
+	}
+	return InputParams{
+		Flags:  flags,
+		Values: values,
+	}
+}
+
+func (i *InputParams) MergeValues(values Values) InputParams {
+	output := i.DeepCopy()
+	for k, v := range values {
+		if !output.Values.ContainsKey(k) {
+			output.Values[k] = v
+		}
+	}
+	return output
+}
+
+func (i *InputParams) MergeFlags(flags Flags) InputParams {
+	output := i.DeepCopy()
+	for _, flag := range flags {
+		found := false
+		for _, existingFlag := range output.Flags {
+			if flag == existingFlag {
+				found = true
+				break
+			}
+		}
+		if !found {
+			output.Flags = append(output.Flags, flag)
+		}
+	}
+	return output
 }
 
 var (
@@ -43,88 +88,28 @@ type ApplicationResource struct {
 	Patch       *Patch          `yaml:"patch"`
 	Application *ApplicationRef `yaml:"application"`
 
-	Values Values   `yaml:"values"`
-	Flags  []string `yaml:"flags"`
+	Values Values `yaml:"values"`
+	Flags  Flags  `yaml:"flags"`
 }
 
-func (a *ApplicationResource) updateWithValues(values Values) {
-	a.Values = MergeValues(a.Values, values)
-}
-
-func (a *ApplicationResource) Ensure(ctx context.Context, command cmd.Factory) error {
-	if a.HelmChart != nil {
-		if err := a.HelmChart.updateWithValues(a.Values); err != nil {
-			return err
-		}
-		return a.HelmChart.Ensure(ctx, command)
-	}
-	if a.Secret != nil {
-		if err := a.Secret.updateWithValues(a.Values); err != nil {
-			return err
-		}
-		return a.Secret.Ensure(ctx, command)
-	}
+func (a *ApplicationResource) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
+	input = input.MergeValues(a.Values)
+	var manifest *Manifest = nil
 	if a.Path != "" {
-		manifest := Manifest{
-			Path: a.Path,
+		manifest = &Manifest{
+			a.Path,
 		}
-		return manifest.Ensure(ctx, command)
 	}
-	if a.Template != nil {
-		a.Template.updateWithValues(a.Values)
-		return a.Template.Ensure(ctx, command)
-	}
-	if a.Patch != nil {
-		a.Patch.updateWithValues(a.Values)
-		return a.Patch.Ensure(ctx, command)
-	}
-	if a.Namespace != nil {
-		return a.Namespace.Ensure(ctx, command)
-	}
-	if a.Application != nil {
-		if err := a.Application.updateWithValues(a.Values); err != nil {
-			return err
-		}
-		return a.Application.Ensure(ctx, command)
-	}
-	return nil
+	return EnsureFirst(ctx, input, command, a.HelmChart, a.Secret, manifest, a.Template, a.Patch, a.Namespace, a.Application)
 }
 
-func (a *ApplicationResource) Teardown(ctx context.Context, command cmd.Factory) error {
-	if a.HelmChart != nil {
-		if err := a.HelmChart.updateWithValues(a.Values); err != nil {
-			return err
-		}
-		return a.HelmChart.Teardown(ctx, command)
-	}
-	if a.Secret != nil {
-		if err := a.Secret.updateWithValues(a.Values); err != nil {
-			return err
-		}
-		return a.Secret.Teardown(ctx, command)
-	}
+func (a *ApplicationResource) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
+	input = input.MergeValues(a.Values)
+	var manifest *Manifest = nil
 	if a.Path != "" {
-		manifest := Manifest{
-			Path: a.Path,
+		manifest = &Manifest{
+			a.Path,
 		}
-		return manifest.Teardown(ctx, command)
 	}
-	if a.Template != nil {
-		a.Template.updateWithValues(a.Values)
-		return a.Template.Teardown(ctx, command)
-	}
-	if a.Patch != nil {
-		a.Patch.updateWithValues(a.Values)
-		return a.Patch.Teardown(ctx, command)
-	}
-	if a.Namespace != nil {
-		return a.Namespace.Teardown(ctx, command)
-	}
-	if a.Application != nil {
-		if err := a.Application.updateWithValues(a.Values); err != nil {
-			return err
-		}
-		return a.Application.Teardown(ctx, command)
-	}
-	return nil
+	return TeardownFirst(ctx, input, command, a.HelmChart, a.Secret, manifest, a.Template, a.Patch, a.Namespace, a.Application)
 }

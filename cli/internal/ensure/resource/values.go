@@ -3,7 +3,9 @@ package resource
 import (
 	"context"
 	"fmt"
+	"github.com/solo-io/go-utils/stringutils"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/solo-io/go-utils/errors"
@@ -20,6 +22,11 @@ const (
 	TemplatePrefix = "template:"
 	KeyPrefix      = "key:"
 	CmdPrefix      = "cmd:"
+
+	ValetField  = "valet"
+	TemplateTag = "template"
+	DefaultTag  = "default"
+	KeyTag      = "key"
 )
 
 var (
@@ -94,6 +101,51 @@ func (v Values) ToString() string {
 		entries = append(entries, fmt.Sprintf("%s=%s", k, v))
 	}
 	return fmt.Sprintf("{%s}", strings.Join(entries, ", "))
+}
+
+func (v Values) RenderFields(input interface{}) error {
+	structVal := reflect.ValueOf(input).Elem()
+	structType := reflect.TypeOf(input).Elem()
+	for i := 0; i < structType.NumField(); i++ {
+		fieldType := structType.Field(i)
+		fieldValue := structVal.Field(i)
+		if fieldValue.Kind() == reflect.String {
+			rendered := fieldValue.String()
+			valetTags := strings.Split(fieldType.Tag.Get(ValetField), ",")
+			if stringutils.ContainsString(TemplateTag, valetTags) {
+				loaded, err := LoadTemplate(rendered, v)
+				if err != nil {
+					return err
+				}
+				rendered = loaded
+			}
+			if rendered == "" {
+				key := getTagValue(valetTags, KeyTag)
+				if key != "" && v.ContainsKey(key) {
+					val, err := v.GetValue(key)
+					if err != nil {
+						return err
+					}
+					rendered = val
+				}
+			}
+			if rendered == "" {
+				rendered = getTagValue(valetTags, DefaultTag)
+			}
+			fieldValue.SetString(rendered)
+		}
+	}
+	return nil
+}
+
+func getTagValue(fieldTags []string, tag string) string {
+	prefix := fmt.Sprintf("%s=", tag)
+	for _, fieldTag := range fieldTags {
+		if strings.HasPrefix(fieldTag, prefix) {
+			return strings.TrimPrefix(fieldTag, prefix)
+		}
+	}
+	return ""
 }
 
 type Flags []string

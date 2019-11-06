@@ -18,32 +18,18 @@ var (
 
 type Condition struct {
 	Type      string `yaml:"type"`
-	Name      string `yaml:"name"`
+	Name      string `yaml:"name" valet:"template"`
 	Namespace string `yaml:"namespace"`
 	Jsonpath  string `yaml:"jsonpath"`
 	Value     string `yaml:"value"`
-	Timeout   string `yaml:"timeout"`
+	Timeout   string `yaml:"timeout" valet:"template,default=120s"`
 }
 
-func (c *Condition) updateWithValues(values Values) error {
-	name, err := LoadTemplate(c.Name, values)
-	if err != nil {
+func (c *Condition) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
+	if err := input.Values.RenderFields(c); err != nil {
 		return err
 	}
-	c.Name = name
-	timeout, err := LoadTemplate(c.Timeout, values)
-	if err != nil {
-		return err
-	}
-	c.Timeout = timeout
-	return nil
-}
-
-func (c *Condition) Ensure(ctx context.Context, command cmd.Factory) error {
 	cmd.Stdout().Println("Waiting on condition: %s.%s path %s matches %s (timeout: %s)", c.Namespace, c.Name, c.Jsonpath, c.Value, c.Timeout)
-	if c.Timeout == "" {
-		c.Timeout = DefaultTimeout
-	}
 	timeoutDuration, err := time.ParseDuration(c.Timeout)
 	if err != nil {
 		return err
@@ -70,7 +56,7 @@ func (c *Condition) Ensure(ctx context.Context, command cmd.Factory) error {
 	}
 }
 
-func (*Condition) Teardown(ctx context.Context, command cmd.Factory) error {
+func (*Condition) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
 	cmd.Stdout().Println("Skipping teardown for condition")
 	return nil
 }

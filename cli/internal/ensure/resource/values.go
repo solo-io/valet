@@ -95,20 +95,6 @@ func (v Values) GetValue(key string) (string, error) {
 	}
 }
 
-func (v Values) UpdateFieldIfEmpty(field *string, key string) error {
-	if *field != "" {
-		return nil
-	}
-	if v.ContainsKey(key) {
-		val, err := v.GetValue(key)
-		if err != nil {
-			return err
-		}
-		*field = val
-	}
-	return nil
-}
-
 func (v Values) ToString() string {
 	var entries []string
 	for k, v := range v {

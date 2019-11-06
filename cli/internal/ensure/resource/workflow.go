@@ -53,10 +53,11 @@ func (w *WorkflowRef) Teardown(ctx context.Context, input InputParams, command c
 
 type Workflow struct {
 	Steps          []Step   `yaml:"steps"`
+	CleanupSteps   []Step   `yaml:"cleanupSteps"`
 	RequiredValues []string `yaml:"requiredValues"`
 
-	Values Values   `yaml:"values"`
-	Flags  []string `yaml:"flags"`
+	Values Values `yaml:"values"`
+	Flags  Flags  `yaml:"flags"`
 }
 
 func (w *Workflow) checkRequiredValues(input InputParams) error {
@@ -77,6 +78,12 @@ func (w *Workflow) Ensure(ctx context.Context, input InputParams, command cmd.Fa
 		return err
 	}
 	for _, step := range w.Steps {
+		if err := step.Ensure(ctx, input, command); err != nil {
+			return err
+		}
+	}
+	cmd.Stdout().Println("Workflow successful, cleaning up")
+	for _, step := range w.CleanupSteps {
 		if err := step.Ensure(ctx, input, command); err != nil {
 			return err
 		}

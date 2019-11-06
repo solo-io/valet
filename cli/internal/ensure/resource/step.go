@@ -22,10 +22,13 @@ type Step struct {
 
 func (s *Step) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
 	input = input.MergeValues(s.Values)
-	return EnsureFirst(ctx, input, command, s.Curl, s.Condition, s.DnsEntry, s.Install, s.Uninstall, s.WorkflowRef)
+	if s.Delete != nil {
+		return s.Delete.Teardown(ctx, input, command)
+	}
+	return EnsureFirst(ctx, input, command, s.Curl, s.Condition, s.DnsEntry, s.Install, s.Uninstall, s.WorkflowRef, s.Apply)
 }
 
 func (s *Step) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
 	input = input.MergeValues(s.Values)
-	return TeardownFirst(ctx, input, command, s.Condition, s.DnsEntry, s.Install, s.Uninstall, s.WorkflowRef)
+	return TeardownFirst(ctx, input, command, s.Condition, s.DnsEntry, s.Install, s.Uninstall, s.WorkflowRef, s.Apply)
 }

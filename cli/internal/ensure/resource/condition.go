@@ -26,10 +26,10 @@ type Condition struct {
 }
 
 func (c *Condition) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
-	cmd.Stdout().Println("Waiting on condition: %s.%s path %s matches %s (timeout: %s)", c.Namespace, c.Name, c.Jsonpath, c.Value, c.Timeout)
 	if err := input.Values.RenderFields(c); err != nil {
 		return err
 	}
+	cmd.Stdout().Println("Waiting on condition: %s.%s path %s matches %s (timeout: %s)", c.Namespace, c.Name, c.Jsonpath, c.Value, c.Timeout)
 	timeoutDuration, err := time.ParseDuration(c.Timeout)
 	if err != nil {
 		return err

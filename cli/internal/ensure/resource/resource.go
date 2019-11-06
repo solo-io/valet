@@ -26,11 +26,11 @@ var (
 	_ Resource = new(Namespace)
 	_ Resource = new(Template)
 	_ Resource = new(Patch)
-	_ Resource = new(DnsEntry)
-	_ Resource = new(Condition)
 
 	_ Resource = new(Workflow)
+	_ Resource = new(Condition)
 	_ Resource = new(Curl)
+	_ Resource = new(DnsEntry)
 	_ Resource = new(Step)
 )
 
@@ -82,7 +82,9 @@ func (a *ApplicationResource) Ensure(ctx context.Context, command cmd.Factory) e
 		return a.Namespace.Ensure(ctx, command)
 	}
 	if a.Application != nil {
-		a.Application.updateWithValues(a.Values)
+		if err := a.Application.updateWithValues(a.Values); err != nil {
+			return err
+		}
 		return a.Application.Ensure(ctx, command)
 	}
 	return nil
@@ -119,7 +121,9 @@ func (a *ApplicationResource) Teardown(ctx context.Context, command cmd.Factory)
 		return a.Namespace.Teardown(ctx, command)
 	}
 	if a.Application != nil {
-		a.Application.updateWithValues(a.Values)
+		if err := a.Application.updateWithValues(a.Values); err != nil {
+			return err
+		}
 		return a.Application.Teardown(ctx, command)
 	}
 	return nil

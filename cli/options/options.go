@@ -23,6 +23,10 @@ type Ensure struct {
 	// if true, attempt teardown after ensure finishes.
 	// return error if ensure returned error
 	TeardownOnFinish bool
+
+	Values map[string]string
+	Flags  []string
+	DryRun bool
 }
 
 type Build struct {

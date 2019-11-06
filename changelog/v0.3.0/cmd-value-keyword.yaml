@@ -1,4 +1,4 @@
 changelog:
 - type: NEW_FEATURE
-  description: Add cmd keyword to values to execute shell commandsg.
+  description: Add cmd keyword to values to execute shell command.
   issueLink: https://github.com/solo-io/valet/issues/86

@@ -39,6 +39,16 @@ var _ = Describe("Values", func() {
 			Expect(input.Values).Should(Equal(resource.Values{}))
 		})
 
+		It("doesn't override values already supplied", func() {
+			input := resource.InputParams{
+				Values: values,
+			}
+			otherValues := input.DeepCopy().Values
+			otherValues[resource.NamespaceKey] = "other-namespace"
+			output := input.MergeValues(otherValues)
+			Expect(output.Values).Should(Equal(values))
+		})
+
 
 	})
 

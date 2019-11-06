@@ -1,4 +1,3 @@
 changelog:
   - type: NON_USER_FACING
     description: Support struct tags for rendering, clean up how values and flags are managed through the ensure API.
-    

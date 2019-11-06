@@ -10,9 +10,10 @@ import (
 var _ ClusterResource = new(GKE)
 
 type GKE struct {
-	Name     string `yaml:"name"`
-	Location string `yaml:"location"`
-	Project  string `yaml:"project"`
+	Name     string                `yaml:"name"`
+	Location string                `yaml:"location"`
+	Project  string                `yaml:"project"`
+	Options  *client.CreateOptions `yaml:"options"`
 }
 
 func (g *GKE) Ensure(ctx context.Context, command cmd.Factory) error {
@@ -26,7 +27,7 @@ func (g *GKE) Ensure(ctx context.Context, command cmd.Factory) error {
 		return err
 	}
 	if !running {
-		if err := gkeClient.Create(ctx, g.Name, g.Project, g.Location); err != nil {
+		if err := gkeClient.Create(ctx, g.Name, g.Project, g.Location, g.Options); err != nil {
 			return err
 		}
 	}

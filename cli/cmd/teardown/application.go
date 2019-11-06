@@ -5,6 +5,7 @@ import (
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/cmd/common"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
+	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 )
@@ -26,10 +27,14 @@ func Application(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *co
 }
 
 func TeardownApplication(opts *options.Options) error {
-	cfg, err := common.LoadApplication(opts)
+	input := resource.InputParams{
+		Values: opts.Ensure.Values,
+		Flags: opts.Ensure.Flags,
+	}
+	cfg, err := common.LoadApplication(opts, input)
 	if err != nil {
 		return err
 	}
 	command := cmd.CommandFactory{}
-	return cfg.Teardown(opts.Top.Ctx, &command)
+	return cfg.Teardown(opts.Top.Ctx, input, &command)
 }

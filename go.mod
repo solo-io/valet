@@ -20,4 +20,4 @@ require (
 	k8s.io/apimachinery v0.0.0-20190104073114-849b284f3b75+incompatible
 )
 
-replace github.com/Sirupsen/logrus v1.4.2 => github.com/sirupsen/logrus v1.0.6
+replace github.com/Sirupsen/logrus v1.4.2 => github.com/Sirupsen/logrus v1.0.6

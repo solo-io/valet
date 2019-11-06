@@ -14,8 +14,9 @@ type Template struct {
 }
 
 func (t *Template) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
-	cmd.Stdout().Println("Ensuring template %s %s", t.Path, t.Values.ToString())
-	rendered, err := t.Load()
+	input = input.MergeValues(t.Values)
+	cmd.Stdout().Println("Ensuring template %s %s", t.Path, input.Values.ToString())
+	rendered, err := t.Load(input)
 	if err != nil {
 		return err
 	}
@@ -23,20 +24,21 @@ func (t *Template) Ensure(ctx context.Context, input InputParams, command cmd.Fa
 }
 
 func (t *Template) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
-	cmd.Stdout().Println("Tearing down template %s %s", t.Path, t.Values.ToString())
-	rendered, err := t.Load()
+	input = input.MergeValues(t.Values)
+	cmd.Stdout().Println("Tearing down template %s %s", t.Path, input.Values.ToString())
+	rendered, err := t.Load(input)
 	if err != nil {
 		return err
 	}
 	return command.Kubectl().DeleteStdIn(rendered).Cmd().Run(ctx)
 }
 
-func (t *Template) Load() (string, error) {
+func (t *Template) Load(input InputParams) (string, error) {
 	tmpl, err := LoadFile(t.Path)
 	if err != nil {
 		return "", err
 	}
-	return LoadTemplate(tmpl, t.Values)
+	return LoadTemplate(tmpl, input.Values)
 }
 
 func LoadTemplate(tmpl string, values Values) (string, error) {

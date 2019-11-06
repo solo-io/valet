@@ -14,8 +14,8 @@ type Step struct {
 	Uninstall   *ApplicationRef `yaml:"uninstall"`
 	WorkflowRef *WorkflowRef    `yaml:"workflow"`
 
-	Values Values   `yaml:"values"`
-	Flags  []string `yaml:"flags"`
+	Values Values `yaml:"values"`
+	Flags  Flags  `yaml:"flags"`
 }
 
 func (s *Step) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {

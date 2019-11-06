@@ -17,16 +17,16 @@ type Patch struct {
 }
 
 func (p *Patch) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
-	input.MergeValues(p.Values)
+	input = input.MergeValues(p.Values)
 	if err := input.Values.RenderFields(p); err != nil {
 		return err
 	}
-	cmd.Stdout().Println("Patching %s.%s (%s) from file %s (%s) %s", p.Namespace, p.Name, p.KubeType, p.Path, p.PatchType, p.Values.ToString())
+	cmd.Stdout().Println("Patching %s.%s (%s) from file %s (%s) %s", p.Namespace, p.Name, p.KubeType, p.Path, p.PatchType, input.Values.ToString())
 	patchTemplate, err := LoadFile(p.Path)
 	if err != nil {
 		return err
 	}
-	patchString, err := LoadTemplate(patchTemplate, p.Values)
+	patchString, err := LoadTemplate(patchTemplate, input.Values)
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (p *Patch) Ensure(ctx context.Context, input InputParams, command cmd.Facto
 }
 
 func (p *Patch) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
-	input.MergeValues(p.Values)
+	input = input.MergeValues(p.Values)
 	if err := input.Values.RenderFields(p); err != nil {
 		return err
 	}
@@ -47,10 +47,10 @@ func (p *Patch) Teardown(ctx context.Context, input InputParams, command cmd.Fac
 	return nil
 }
 
-func (p *Patch) Load() (string, error) {
+func (p *Patch) Load(input InputParams) (string, error) {
 	t := Template{
 		Path:      p.Path,
-		Values:    p.Values,
+		Values:    input.Values,
 	}
-	return t.Load()
+	return t.Load(input)
 }

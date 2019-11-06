@@ -1,10 +1,13 @@
 package resource
 
 import (
+	"context"
 	"fmt"
-	"github.com/solo-io/go-utils/errors"
 	"os"
 	"strings"
+
+	"github.com/solo-io/go-utils/errors"
+	cmd_runner "github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
 const (
@@ -13,9 +16,10 @@ const (
 	DomainKey     = "Domain"
 	HostedZoneKey = "HostedZone"
 
-	EnvPrefix = "env:"
+	EnvPrefix      = "env:"
 	TemplatePrefix = "template:"
-	KeyPrefix = "key:"
+	KeyPrefix      = "key:"
+	CmdPrefix      = "cmd:"
 )
 
 var (
@@ -61,6 +65,24 @@ func (v Values) GetValue(key string) (string, error) {
 	} else if strings.HasPrefix(val, EnvPrefix) {
 		env := strings.TrimPrefix(val, EnvPrefix)
 		return os.Getenv(env), nil
+	} else if strings.HasPrefix(val, CmdPrefix) {
+		cmdString := strings.TrimPrefix(val, CmdPrefix)
+		splitCmd := strings.Split(cmdString, " ")
+		switch len(splitCmd) {
+		case 0:
+			return "", nil
+		case 1:
+			cmd := &cmd_runner.Command{
+				Name: splitCmd[0],
+			}
+			return cmd.Output(context.TODO())
+		default:
+			cmd := &cmd_runner.Command{
+				Name: splitCmd[0],
+				Args: splitCmd[1:],
+			}
+			return cmd.Output(context.TODO())
+		}
 	} else {
 		return val, nil
 	}

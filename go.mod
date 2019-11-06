@@ -4,7 +4,6 @@ go 1.12
 
 require (
 	cloud.google.com/go v0.43.0
-	github.com/Sirupsen/logrus v1.4.2
 	github.com/avast/retry-go v2.2.0+incompatible
 	github.com/aws/aws-sdk-go v1.21.10
 	github.com/ghodss/yaml v1.0.0

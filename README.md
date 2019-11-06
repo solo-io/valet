@@ -7,207 +7,187 @@ powerful tools in the community:
 * `Helm` gives you the ability to package complex applications into a single, configurable chart, and deploy those charts
 * `Kustomize` gives the the ability to patch a Kubernetes manifest before deploying to adjust it for the particular deployment environment
 
-`Valet` extends these tools and ideas, giving Kubernetes operators the ability to:
-* Manage many applications and resources, potentially for an entire cluster, with a simple declarative configuration
-* Easily customize an application by bundling a set of resources, such as helm charts, manifests, patches, secrets, or other applications
+Valet introduces the concept of a declarative **Application**, consisting of a list of resources 
+(namespaces, secrets, helm charts, manifests, templates, patches, and other applications). Given a set of 
+user values, Valet can render an application into an exact Kubernetes manifest. Valet can **ensure**
+applications on a cluster, dry run to output the rendered manifest without touching a cluster, and 
+**teardown** (uninstall) the application. 
+
+Valet also introduces the concept of a **Workflow**, consisting of a set of steps that are run in order on a cluster. 
+Steps could include installing or uninstalling an **Application**, setting up a DNS entry, curling an endpoint, 
+waiting for a Kubernetes resource to meet a condition, or running another **Workflow**.  
+
+With **Applications** and **Workflows**, Valet enables Kubernetes operators to:
+* Ensure the state of an entire cluster, with a simple declarative configuration, with native GitOps support
+* Easily customize an application by bundling extra resources and custom values, including secrets
+* Easily automate demo and test workflows, or replicate real environments in a staging cluster
 * Organize DevOps across many engineering teams, without having to write custom helm charts or automation 
-* Ensure the state of a production cluster as part of a GitOps workflow 
-
-Valet was also written with the developer in mind: developers can easily deploy a cluster configuration to 
-Minikube or a dev cluster to replicate a realistic Kubernetes environment. This makes it a powerful tool 
-for sharing new complex demos or reproducing bugs that only appear in a production environment. 
-
-## Valet example
-
-To see the power of Valet, consider this example of a valet configuration:
-
-```yaml
-cluster:
-  gke:
-    name: glooe-petclinic-demo
-    location: us-central1-a
-    project: solo-test-236622
-applications:
-  - path: registry/apps/cert-manager.yaml
-  - path: registry/apps/gloo-enterprise-app.yaml
-    values:
-      Domain: valet-glooui-example.corp.solo.io
-      Version: 0.20.4
-  - path: registry/apps/petclinic-app.yaml
-    values:
-      Domain: valet-petclinic-example.corp.solo.io
-```
-
-This configuration specifies a GKE cluster that should have several applications deployed: cert manager, gloo-enterprise 0.20.4, and 
-the petclinic demo application. Valet can ensure this configuration with `valet ensure -f path/to/config.yaml`, causing it to 
-create the cluster if necessary and make sure all the applications are deployed. 
-
-### Example app configuration: gloo-enterprise-app
-
-Let's look at `gloo-enterprise-app.yaml`, one of the applications referenced in the valet config:
-
-```yaml
-name: gloo-enterprise-app
-requiredValues:
-  - Domain
-  - Version
-values:
-  Namespace: gloo-system
-  UpstreamName: gloo-system-apiserver-ui-8080
-  UpstreamNamespace: gloo-system
-  VirtualServiceName: glooui
-resources:
-  - application:
-      path: registry/apps/gloo-enterprise.yaml
-  - application:
-      path: registry/apps/gloo-app.yaml
-```
-
-At the top, this application requires `Domain` and `Version` variables. These are provided above in the cluster config. 
-The rest of the values needed by the resources for this application are provided at the top. This application contains 
-two resources, which are each applications themselves. 
-
-#### gloo-enterprise
-
-First is `gloo-enterprise.yaml`:
-
-```yaml
-name: gloo-enterprise
-requiredValues:
-  - Version
-values:
-  Namespace: gloo-system
-resources:
-  - helmChart:
-      repoUrl: "https://storage.googleapis.com/gloo-ee-helm/"
-      chartName: gloo-ee
-      repoName: gloo-ee
-      set:
-        - "gloo.namespace.create=true"
-        - "prometheus.enabled=false"
-        - "grafana.defaultInstallationEnabled=false"
-        - "gloo.gatewayProxies.gatewayProxyV2.readConfig=true"
-      setEnv:
-        license_key: LICENSE_KEY
-```
-
-This is an application that deploys a single resource -- the enterprise Gloo Helm chart, with several values explicitly 
-provided, or set based on environment variables. 
-
-#### gloo-app
-
-The other application is called `gloo-app.yaml` which bundles the resources necessary to expose a Kubernetes service
-in Gloo behind a domain registered with AWS Route53 and with a valid certificate. 
-
-```yaml
-# This is a wrapper for the resources (virtual services, certificate, and dns entry) that are necessary to
-# configure a simple application in Gloo
-
-name: gloo-app
-requiredValues:
-  - Domain
-  - Namespace
-  - VirtualServiceName
-  - UpstreamName
-  - UpstreamNamespace
-resources:
-  - template:
-      path: registry/templates/cert.yaml
-  - dnsEntry:
-      hostedZone: corp.solo.io.
-      service:
-        namespace: gloo-system
-        name: gateway-proxy-v2
-  - template:
-      path: registry/templates/virtual-service-ssl.yaml
-```
-
-In this case, we are trying to deploy a `gloo-app` to expose the Gloo UI via the domain provided in the 
-valet config: `valet-glooui-example.corp.solo.io`.
-
-## Clusters
-
-Valet currently supports managing Minikube and GKE clusters, through the `cluster` section of the config. 
-
-If no cluster is defined in the valet config, valet will ensure the applications against the current kube config. 
-
-### GKE
-
-The example above ensures a GKE cluster:
-```yaml
-cluster:
-  gke:
-    name: glooe-petclinic-demo
-    location: us-central1-a
-    project: solo-test-236622
-```
-
-In order to manage a GKE cluster, valet needs the following permissions on the project:
-* Kubernetes Engine Cluster Admin
-* Cloud Build Service Account (when running valet in cloud build)
-* Service Account User (when running valet in cloud build)
-
-To provide credentials, you can use the `GOOGLE_APPLICATION_CREDENTIALS` environment variable, for instance:
-`GOOGLE_APPLICATION_CREDENTIALS=path/to/google/creds.json valet ensure -f path/to/config.yaml`
-
-See below for configuring this and other variables globally for your local client. 
-
-### Minikube
-
-To ensure a Minikube cluster instead, use:
-```yaml
-cluster:
-  minikube: {}
-```
-
-By default, this will start a new Minikube cluster with 8192MB RAM, 4 CPUs, and Kube version v1.13.0. 
 
 ## Applications
 
-As we saw above, an application in Valet is a bundle of a bunch of resources. A valet config can have one 
-or more applications:
+An **Application** in Valet is a declarative configuration that specifies a set of resources that can be rendered
+into an exact Kubernetes manifest, given a set of (possibly empty) user **values** and **flags**. 
+
+Here's an example application configuration for the service-mesh-hub application:
 
 ```yaml
-applications:
-  - path: path/to/app.yaml
+name: service-mesh-hub
+requiredValues:
+  - Version
+values:
+  Namespace: sm-marketplace
+resources:
+  - namespace:
+      name: sm-marketplace
+  - secret:
+      name: github-token
+      entries:
+        token:
+          envVar: GITHUB_TOKEN
+  - helmChart:
+      repoUrl: "https://storage.googleapis.com/sm-marketplace-helm/"
+      chartName: sm-marketplace
+      repoName: sm-marketplace
+      set:
+        - "namespace.create=true"
+  - application:
+      path: registry/apps/gloo-app.yaml
     values:
-      Foo: bar
-  - path: https://url/to/app.yaml
-  - path: ...
+      VirtualServiceName: smh
+      Namespace: sm-marketplace
+      UpstreamName: sm-marketplace-smm-apiserver-8080
+      UpstreamNamespace: gloo-system
+    flags:
+      - gloo-app
 ```
 
-All paths in Valet can be either relative paths from the valet working directory, or URLs. Here, the path points
-to a file containing yaml that implements the Application API. In addition to the path, the valet config may 
-provide values that will be passed into the application and any resources that need values from the application. 
+This is an application that consists of a namespace, a secret, a helm chart, and another application that deploys a Gloo
+virtual service to create an ingress route to the application.
 
-### Basic Application API
+Let's look section by section: 
 
-An application has a few required fields:
 ```yaml
-name: app-name
-values: {...}
-requiredValues: [...]
-resources: [...]
+name: service-mesh-hub
 ```
 
-The **name** currently is just a convenient name for the application. In the future, this may become used to identify
-an application inside of a registry. 
+Currently applications have a name field, that is only used for convenience. In the future, this may be used to identify 
+applications in a registry. 
 
-The **values** are a map of key-value string pairs that will be provided to resources in the application. If values 
-were provided to the application, they will be merged with the values defined on the application, with the inherited 
-values taking precedence. This allows the person assembling applications to override values as necessary. 
+```yaml
+requiredValues:
+  - Version
+```
 
-The **requiredValues** are a map of string keys that must be present in the **values** or inherited values. When ensuring
-a valet config, an error will be returned if a required value is not provided. 
+This application requires a value called `Version` passed in. Values are passed through the application to all the resources, 
+and in this case the version is used to determine which helm chart tag to use. By calling the value required, `Valet` can 
+return a useful error to the user when it is missing. 
 
-The **resources** are a list of application resources that will be ensured in order. 
+```yaml
+values:
+  Namespace: sm-marketplace
+```
+
+By default, this application uses `sm-marketplace` as the namespace value. 
+
+```yaml
+resources:
+  - namespace:
+      name: sm-marketplace
+  - secret:
+      name: github-token
+      entries:
+        token:
+          envVar: GITHUB_TOKEN
+```
+
+Before the helm chart is applied, service-mesh-hub wants a github token to be present in the install namespace. Here, we 
+create that by grabbing the token from an environment variable. 
+
+```yaml
+  - helmChart:
+      repoUrl: "https://storage.googleapis.com/sm-marketplace-helm/"
+      chartName: sm-marketplace
+      repoName: sm-marketplace
+      set:
+        - "namespace.create=true"
+```
+
+After the namespace and token are created, the helm chart is applied. In this case, there is only one value provided via a set command;
+a values file could be provided instead. 
+```yaml
+  - application:
+      path: registry/apps/gloo-app.yaml
+    values:
+      VirtualServiceName: smh
+      Namespace: sm-marketplace
+      UpstreamName: sm-marketplace-smm-apiserver-8080
+      UpstreamNamespace: gloo-system
+    flags:
+      - gloo-app
+```
+
+The last resource in the application is a Gloo virtual service to create a route to the service mesh hub UI. The gloo-app.yaml
+is a generic application that is reused for other products, so specific values are provided to construct the service mesh hub 
+virtual service. This resource has a flag `gloo-app`, which must be provided or the resource will be omitted during rendering. 
+
+### Values
+
+A user can provide two types of inputs when specifying a workflow, cluster config, or ensuring a specific application: 
+**values** and **flags**. 
+
+**Values** are a map (string -> string) that most commonly contains values that are string constants, as demonstrated above:
+
+```yaml
+values:
+  VirtualServiceName: smh
+  Namespace: sm-marketplace
+  UpstreamName: sm-marketplace-smm-apiserver-8080
+  UpstreamNamespace: gloo-system
+```
+
+However, there are a few prefixes that enable specifying other types of values:
+
+```yaml
+values:
+  EnvExample: "env:EXAMPLE_ONE" # This populates the value by reading this environment variable
+  CmdExample: "cmd:minikube ip" # This populates the value by running this command
+  KeyExample: "key:EnvExample" # This creates a value that is an alias for another key
+  TemplateExample: "template:{{ .KeyExample }}" # This creates a value by executing a go template using the other values
+```
+
+Conventionally, values are written in CamelCase, as demonstrated here. 
+
+An application may specify certain values are **required**, to help validate an input when trying to render an application. 
+
+### Flags
+
+**Flags** are string labels that can be associated with certain resources in an application. If a flag on a resource is not
+provided by a user, that resource is omitted during rendering.  
+
+```yaml
+  - application:
+      path: registry/apps/gloo-app.yaml
+    values:
+      VirtualServiceName: smh
+      Namespace: sm-marketplace
+      UpstreamName: sm-marketplace-smm-apiserver-8080
+      UpstreamNamespace: gloo-system
+    flags:
+      - gloo-app
+```
+
+In this example, this resource (an application) will only be rendered if the `gloo-app` flag is provided. 
 
 ### Application Resources
 
-Valet defines a `Resource` interface that requires specifying an `Ensure` and `Teardown` function. Anything that can implement
-these functions could be considered a resource in Valet, and it currently supports: **yaml manifests**, **helm charts**, 
-**secrets**, **templates**, **patches**, **namespaces**, **DNS entries**, **conditions**, and **applications**. Valet will ensure the 
-resources for an application in order.
+Valet defines a `Resource` interface that requires specifying an `Ensure` and `Teardown` function. For application resources,
+they must also be fully renderable without deploying any resources to a cluster, to enable `dry-run`. 
+
+Valet currently supports the following types of application resources: **yaml manifests**, **helm charts**, 
+**secrets**, **templates**, **patches**, **namespaces**, and **applications**. 
+
+Valet will render resources for an application in order. When rendering, it will pass user values and flags to each 
+resource and, depending on the resource, may update certain fields on the resource based on the values.  
 
 #### Manifests
 
@@ -332,7 +312,7 @@ spec:
 This is a template for a certificate that extracts `Domain` and `Namespace` variables. These can be provided to the application 
 in a few ways:
 
-1. As `values` or `envValues` on the template directly
+1. As `values` on the template directly
 
 ```yaml
 name: template-example
@@ -341,8 +321,7 @@ resources:
       path: path/to/template.yaml
       values: 
         Domain: foo
-      envValues:
-        Namespace: BAR # reads environment variable BAR
+      	Namespace: "env:NAMESPACE"
 ```
 
 2. As `values` on the application
@@ -413,6 +392,8 @@ resources:
 Note that the semantics of patching can be complex, and `strategic` is not always a desirable patch type. The goal here
 was to expose the Kubernetes semantics, for more background check out [these docs](https://kubernetes.io/docs/tasks/run-application/update-api-object-kubectl-patch/).
 
+A patch can omit the `name` and `namespace` field if `Name` and `Namespace` are provided as values instead. 
+
 #### Namespaces
 
 It may be desirable to create namespaces as part of managing an application, or to update existing namespaces with a label. 
@@ -430,14 +411,99 @@ resources:
 This ensures there's a namespace called `ns` with the istio injection label. Valet will use `kubectl apply` to create this, 
 so that it will be upserted. 
 
+#### Applications
+
+Valet naturally supports nesting applications as resources inside an application. This makes it very easy to extend 
+applications and maximize the re-usability of configuration. An application is referenced just as it is in the valet
+config:
+
+```yaml
+name: application-dependency-example
+resources:
+  - application:
+      path: path/to/other/app.yaml
+      values:
+        Foo: bar
+``` 
+
+Values can be provided when specifying the resource, or they can be inherited, or both. Just as before, inherited values 
+override values defined on the resource, to simplify things for the application assembler. 
+
+## Workflows
+
+Valet supports defining **Workflows**, which are like **Applications** but with slightly different semantics. 
+**Workflows** consist of a list of **Steps**, that are performed in order. Unlike **Applications**, **Steps** 
+in a **Workflow** may depend on side effects of previous steps, and thus may not be executed as a meaningful dry-run
+without affecting the cluster. 
+
+For instance, after installing Gloo it may be desirable to set up a DNS entry for the Gloo proxy service. However, 
+this requires (a) modifying another system outside Kubernetes, and (b) waiting for the service to be assigned an 
+external IP. 
+
+Like **Applications**, users can provide **Values** and **Flags** to workflows to help influence how the steps are 
+executed. 
+
+Here's an example workflow that installs Gloo Enterprise with a DNS entry to the proxy, and (if a flag is provided)
+a virtual service to create a route to the Gloo UI:
+
+```yaml
+requiredValues:
+  - Version
+  - DnsHostedZone
+  - DnsDomain
+  - GlooUiDomain
+values:
+  Namespace: gloo-system
+steps:
+  - install:
+      path: registry/apps/gloo-enterprise.yaml
+      values:
+        UpstreamName: gloo-system-apiserver-ui-8080
+        UpstreamNamespace: "key:Namespace"
+        VirtualServiceName: glooui
+        Domain: "key:GlooUiDomain"
+      flags:
+        - glooui-app
+  - dnsEntry:
+      service:
+        namespace: gloo-system
+        name: gateway-proxy-v2
+    values:
+      HostedZone: "key:DnsHostedZone"
+      Domain: "key:DnsDomain"
+```
+
+### Steps
+
+Valet supports workflows that include **installing and uninstalling applications**, setting up **dns entries**, 
+waiting for a **condition** to be met on a Kubernetes resource, waiting for a **curl** request to return an 
+expected status, or running another **workflow**. 
+
+#### Installing applications
+
+A common workflow step is installing (or uninstalling) an application. Here's an example of referencing an application, 
+providing values and flags. 
+
+```yaml
+steps:
+  - install:
+      path: registry/apps/gloo-enterprise.yaml
+      values:
+        UpstreamName: gloo-system-apiserver-ui-8080
+        UpstreamNamespace: "key:Namespace"
+        VirtualServiceName: glooui
+        Domain: "key:GlooUiDomain"
+      flags:
+        - gloo-app
+```
+
 #### DNS entries
 
 A common use case when setting up clusters is to define DNS mappings from new domain names to IP addressed exposed by
 services in the cluster. Valet currently supports this with Amazon Route53 DNS. 
 
 ```yaml
-application: dns-example
-resources: 
+steps: 
   - dnsEntry:
       domain: example.my.hosted.zone
       hostedZone: my.hosted.zone.
@@ -473,8 +539,7 @@ resources for an application. This condition was modeled as a resource to precis
 occur. For instance, to wait for a field on a CRD to change, use:
 
 ```yaml
-name: condition-example
-resources:
+steps:
   - condition:
       type: MyCustomType
       name: example
@@ -486,23 +551,77 @@ resources:
 
 This waits until the `spec.my.status` field on the specified resource matches the value `OK`, or fails after 240s. 
 
-#### Applications
+#### Curl
 
-Valet naturally supports nesting applications as resources inside an application. This makes it very easy to extend 
-applications and maximize the re-usability of configuration. An application is referenced just as it is in the valet
-config:
+It may be desirable to create a workflow that involves changing some resources and then curling an endpoint to 
+check for an expected result. A curl command could look like:
 
 ```yaml
-name: application-dependency-example
-resources:
-  - application:
-      path: path/to/other/app.yaml
-      values:
-        Foo: bar
-``` 
+steps:
+  - curl:
+      path: /
+      host: example.com
+      headers:
+        Authorization: "token foo"
+      statusCode: 200
+      service:
+        name: gateway-proxy-v2
+        namespace: gloo-system
+```
 
-Values can be provided when specifying the resource, or they can be inherited, or both. Just as before, inherited values 
-override values defined on the resource, to simplify things for the application assembler. 
+The host and service ref are both configurable to support cases where, for instance, you are trying to test 
+a service by routing to the IP directly, but the routing rules are configured for a particular domain. This example
+curls the Gloo proxy IP, but with the host header set, to match on a virtual service for the "example.com" domain. 
+
+#### Workflows
+
+Workflows may reference other workflows, loaded via a path just like applications:  
+
+```yaml
+  - workflow:
+      path: registry/workflows/deploy-smh-app.yaml
+      values:
+        ApplicationPath: registry/apps/istio.yaml
+        ApplicationName: istio-demo
+```
+
+## Clusters
+
+Putting it all together, Valet enables managing configurations for entire **Clusters** in a single config. 
+
+Valet currently supports managing Minikube and GKE clusters, through the `cluster` section of the config. 
+If no cluster is defined in the valet config, valet will ensure the applications against the current kube config. 
+
+### GKE
+
+The example above ensures a GKE cluster:
+```yaml
+cluster:
+  gke:
+    name: glooe-petclinic-demo
+    location: us-central1-a
+    project: solo-test-236622
+```
+
+In order to manage a GKE cluster, valet needs the following permissions on the project:
+* Kubernetes Engine Cluster Admin
+* Cloud Build Service Account (when running valet in cloud build)
+* Service Account User (when running valet in cloud build)
+
+To provide credentials, you can use the `GOOGLE_APPLICATION_CREDENTIALS` environment variable, for instance:
+`GOOGLE_APPLICATION_CREDENTIALS=path/to/google/creds.json valet ensure -f path/to/config.yaml`
+
+See below for configuring this and other variables globally for your local client. 
+
+### Minikube
+
+To ensure a Minikube cluster instead, use:
+```yaml
+cluster:
+  minikube: {}
+```
+
+By default, this will start a new Minikube cluster with 8192MB RAM, 4 CPUs, and Kube version v1.13.0. 
 
 ## Running Valet in CI 
 

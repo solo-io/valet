@@ -13,11 +13,7 @@ type Template struct {
 	Values Values `yaml:"values"`
 }
 
-func (t *Template) updateWithValues(values Values) {
-	t.Values = MergeValues(t.Values, values)
-}
-
-func (t *Template) Ensure(ctx context.Context, command cmd.Factory) error {
+func (t *Template) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
 	cmd.Stdout().Println("Ensuring template %s %s", t.Path, t.Values.ToString())
 	rendered, err := t.Load()
 	if err != nil {
@@ -26,7 +22,7 @@ func (t *Template) Ensure(ctx context.Context, command cmd.Factory) error {
 	return command.Kubectl().ApplyStdIn(rendered).Cmd().Run(ctx)
 }
 
-func (t *Template) Teardown(ctx context.Context, command cmd.Factory) error {
+func (t *Template) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
 	cmd.Stdout().Println("Tearing down template %s %s", t.Path, t.Values.ToString())
 	rendered, err := t.Load()
 	if err != nil {

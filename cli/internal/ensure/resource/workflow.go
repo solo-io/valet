@@ -15,44 +15,36 @@ type WorkflowRef struct {
 	Flags  []string `yaml:"flags"`
 }
 
-func (w *WorkflowRef) updateWithValues(values Values) {
-	w.Values = MergeValues(w.Values, values)
-}
-
-func (w *WorkflowRef) updateWithFlags(flags []string) {
-	w.Flags = append(w.Flags, flags...)
-}
-
 func (w *WorkflowRef) Load() (*Workflow, error) {
 	workflow, err := LoadWorkflow(w.Path)
 	if err != nil {
 		return nil, err
 	}
-	workflow.updateWithValues(w.Values)
-	workflow.updateWithFlags(w.Flags)
 	return workflow, nil
 }
 
-func (w *WorkflowRef) Ensure(ctx context.Context, command cmd.Factory) error {
+func (w *WorkflowRef) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
+	input = input.MergeValues(w.Values)
 	cmd.Stdout().Println("Ensuring workflow %s %s", w.Path, w.Values.ToString())
 	workflow, err := w.Load()
 	if err != nil {
 		return err
 	}
-	if err := workflow.Ensure(ctx, command); err != nil {
+	if err := workflow.Ensure(ctx, input, command); err != nil {
 		return err
 	}
 	cmd.Stdout().Println("Done ensuring workflow %s", w.Path)
 	return nil
 }
 
-func (w *WorkflowRef) Teardown(ctx context.Context, command cmd.Factory) error {
+func (w *WorkflowRef) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
+	input = input.MergeValues(w.Values)
 	cmd.Stdout().Println("Tearing down workflow %s %s", w.Path, w.Values.ToString())
 	workflow, err := w.Load()
 	if err != nil {
 		return err
 	}
-	if err := workflow.Teardown(ctx, command); err != nil {
+	if err := workflow.Teardown(ctx, input, command); err != nil {
 		return err
 	}
 	cmd.Stdout().Println("Done tearing down workflow %s", w.Path)
@@ -67,48 +59,38 @@ type Workflow struct {
 	Flags  []string `yaml:"flags"`
 }
 
-func (w *Workflow) checkRequiredValues() error {
+func (w *Workflow) checkRequiredValues(input InputParams) error {
 	for _, key := range w.RequiredValues {
-		if w.Values == nil {
+		if input.Values == nil {
 			return RequiredValueNotProvidedError(key)
 		}
-		if _, ok := w.Values[key]; !ok {
+		if _, ok := input.Values[key]; !ok {
 			return RequiredValueNotProvidedError(key)
 		}
 	}
 	return nil
 }
 
-func (w *Workflow) updateWithValues(values Values) {
-	w.Values = MergeValues(w.Values, values)
-}
-
-func (w *Workflow) updateWithFlags(flags []string) {
-	w.Flags = flags
-}
-
-func (w *Workflow) Ensure(ctx context.Context, command cmd.Factory) error {
-	if err := w.checkRequiredValues(); err != nil {
+func (w *Workflow) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
+	input = input.MergeValues(w.Values)
+	if err := w.checkRequiredValues(input); err != nil {
 		return err
 	}
 	for _, step := range w.Steps {
-		step.updateWithFlags(w.Flags)
-		step.updateWithValues(w.Values)
-		if err := step.Ensure(ctx, command); err != nil {
+		if err := step.Ensure(ctx, input, command); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (w *Workflow) Teardown(ctx context.Context, command cmd.Factory) error {
-	if err := w.checkRequiredValues(); err != nil {
+func (w *Workflow) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
+	input = input.MergeValues(w.Values)
+	if err := w.checkRequiredValues(input); err != nil {
 		return err
 	}
 	for _, step := range w.Steps {
-		step.updateWithValues(w.Values)
-		step.updateWithFlags(w.Flags)
-		if err := step.Teardown(ctx, command); err != nil {
+		if err := step.Teardown(ctx, input, command); err != nil {
 			return err
 		}
 	}

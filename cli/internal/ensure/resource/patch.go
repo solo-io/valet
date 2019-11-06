@@ -9,27 +9,19 @@ import (
 type Patch struct {
 	Path      string `yaml:"path"`
 	PatchType string `yaml:"patchType"`
-	Name      string `yaml:"name"`
-	Namespace string `yaml:"namespace"`
+	Name      string `yaml:"name" valet:"template"`
+	Namespace string `yaml:"namespace" valet:"template"`
 	KubeType  string `yaml:"kubeType"`
 
 	Values Values `yaml:"values"`
 }
 
-func (p *Patch) updateWithValues(values Values) {
-	p.Values = MergeValues(values, p.Values)
-}
-
-func (p *Patch) Ensure(ctx context.Context, command cmd.Factory) error {
-	name, err := LoadTemplate(p.Name, p.Values)
-	if err != nil {
+func (p *Patch) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
+	input.MergeValues(p.Values)
+	if err := input.Values.RenderFields(p); err != nil {
 		return err
 	}
-	namespace, err := LoadTemplate(p.Namespace, p.Values)
-	if err != nil {
-		return err
-	}
-	cmd.Stdout().Println("Patching %s.%s (%s) from file %s (%s) %s", namespace, name, p.KubeType, p.Path, p.PatchType, p.Values.ToString())
+	cmd.Stdout().Println("Patching %s.%s (%s) from file %s (%s) %s", p.Namespace, p.Name, p.KubeType, p.Path, p.PatchType, p.Values.ToString())
 	patchTemplate, err := LoadFile(p.Path)
 	if err != nil {
 		return err
@@ -39,14 +31,18 @@ func (p *Patch) Ensure(ctx context.Context, command cmd.Factory) error {
 		return err
 	}
 	kubectl := command.Kubectl().
-		With("patch", p.KubeType, name).
-		Namespace(namespace).
+		With("patch", p.KubeType, p.Name).
+		Namespace(p.Namespace).
 		With("--type", p.PatchType).
 		With("--patch", patchString)
 	return kubectl.Cmd().Run(ctx)
 }
 
-func (p *Patch) Teardown(ctx context.Context, command cmd.Factory) error {
+func (p *Patch) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
+	input.MergeValues(p.Values)
+	if err := input.Values.RenderFields(p); err != nil {
+		return err
+	}
 	cmd.Stdout().Println("Skipping teardown for patch")
 	return nil
 }

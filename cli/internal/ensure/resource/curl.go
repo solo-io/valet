@@ -25,11 +25,11 @@ type Curl struct {
 	Service    ServiceRef        `yaml:"service"`
 }
 
-func (c *Curl) Ensure(ctx context.Context, command cmd.Factory) error {
+func (c *Curl) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
 	return c.doCurl(ctx, command)
 }
 
-func (c *Curl) Teardown(ctx context.Context, command cmd.Factory) error {
+func (c *Curl) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
 	return nil
 }
 

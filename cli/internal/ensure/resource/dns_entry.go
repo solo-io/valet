@@ -8,35 +8,16 @@ import (
 )
 
 type DnsEntry struct {
-	Domain string `yaml:"domain"`
+	Domain string `yaml:"domain" valet:"key=Domain"`
 	// This is "HostedZone" in AWS / Route53 DNS
-	HostedZone string     `yaml:"hostedZone"`
+	HostedZone string     `yaml:"hostedZone" valet:"key=HostedZone"`
 	Service    ServiceRef `yaml:"service"`
 }
 
-func (d *DnsEntry) updateWithValues(values Values) error {
-	if d.Domain == "" {
-		if values.ContainsKey(DomainKey) {
-			if val, err := values.GetValue(DomainKey); err != nil {
-				return err
-			} else {
-				d.Domain = val
-			}
-		}
+func (d *DnsEntry) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
+	if err := input.Values.RenderFields(d); err != nil {
+		return err
 	}
-	if d.HostedZone == "" {
-		if values.ContainsKey(HostedZoneKey) {
-			if val, err := values.GetValue(HostedZoneKey); err != nil {
-				return err
-			} else {
-				d.HostedZone = val
-			}
-		}
-	}
-	return nil
-}
-
-func (d *DnsEntry) Ensure(ctx context.Context, command cmd.Factory) error {
 	awsClient, err := client.NewAwsDnsClient()
 	if err != nil {
 		return err
@@ -51,7 +32,7 @@ func (d *DnsEntry) Ensure(ctx context.Context, command cmd.Factory) error {
 	return nil
 }
 
-func (d *DnsEntry) Teardown(ctx context.Context, command cmd.Factory) error {
+func (d *DnsEntry) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
 	cmd.Stderr().Println("Teardown not implemented")
 	return nil
 }

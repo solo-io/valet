@@ -19,7 +19,7 @@ type Namespace struct {
 	Annotations map[string]string `yaml:"annotations"`
 }
 
-func (n *Namespace) Ensure(ctx context.Context, command cmd.Factory) error {
+func (n *Namespace) Ensure(ctx context.Context, inputs InputParams, command cmd.Factory) error {
 	cmd.Stdout().Println("Ensuring namespace %s", n.Name)
 	err := command.Kubectl().Create(ns).WithName(n.Name).DryRunAndApply(ctx, command)
 	if err != nil {
@@ -40,7 +40,7 @@ func (n *Namespace) Ensure(ctx context.Context, command cmd.Factory) error {
 	return nil
 }
 
-func (n *Namespace) Teardown(ctx context.Context, command cmd.Factory) error {
+func (n *Namespace) Teardown(ctx context.Context, inputs InputParams, command cmd.Factory) error {
 	cmd.Stdout().Println("Tearing down namespace %s", n.Name)
 	return command.Kubectl().Delete(ns).WithName(n.Name).Cmd().Run(ctx)
 }

@@ -15,7 +15,7 @@ type GKE struct {
 	Project  string `yaml:"project"`
 }
 
-func (g *GKE) Ensure(ctx context.Context, command cmd.Factory) error {
+func (g *GKE) Ensure(ctx context.Context, _ InputParams, command cmd.Factory) error {
 	cmd.Stdout().Println("Ensuring GKE cluster %s (project: %s, location: %s)", g.Name, g.Project, g.Location)
 	gkeClient, err := client.NewGkeClient(ctx)
 	if err != nil {
@@ -37,7 +37,7 @@ func (g *GKE) SetContext(ctx context.Context, command cmd.Factory) error {
 	return command.Gcloud().GetCredentials().Project(g.Project).Zone(g.Location).WithName(g.Name).Cmd().Run(ctx)
 }
 
-func (g *GKE) Teardown(ctx context.Context, command cmd.Factory) error {
+func (g *GKE) Teardown(ctx context.Context, _ InputParams, command cmd.Factory) error {
 	gkeClient, err := client.NewGkeClient(ctx)
 	if err != nil {
 		return err

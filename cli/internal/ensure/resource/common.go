@@ -2,64 +2,54 @@ package resource
 
 import (
 	"context"
-	"os"
-
-	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
+	"reflect"
 )
 
-var (
-	EnvVarNotFound = func(envVar string) error {
-		return errors.Errorf("%s not found", envVar)
-	}
-)
-
-const (
-	AwsAccessKeyIdEnvVar        = "AWS_ACCESS_KEY_ID"
-	AwsSecretAccessKeyEnvVar    = "AWS_SECRET_ACCESS_KEY"
-	AwsAccessKeyIdSecretVar     = "access_key_id"
-	AwsSecretAccessKeySecretVar = "secret_access_key"
-)
-
-func EnsureAll(ctx context.Context, command cmd.Factory, resources ...Resource) error {
+func EnsureAll(ctx context.Context, input InputParams, command cmd.Factory, resources ...Resource) error {
 	for _, resource := range resources {
-		if resource == nil {
+		t := reflect.ValueOf(resource)
+		if t.IsNil() {
 			continue
 		}
-		if err := resource.Ensure(ctx, command); err != nil {
+		if err := resource.Ensure(ctx, input, command); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func TeardownAll(ctx context.Context, command cmd.Factory, resources ...Resource) error {
+func EnsureFirst(ctx context.Context, input InputParams, command cmd.Factory, resources ...Resource) error {
 	for _, resource := range resources {
-		if resource == nil {
+		t := reflect.ValueOf(resource)
+		if t.IsNil() {
 			continue
 		}
-		if err := resource.Teardown(ctx, command); err != nil {
+		return resource.Ensure(ctx, input, command)
+	}
+	return nil
+}
+
+func TeardownAll(ctx context.Context, input InputParams, command cmd.Factory, resources ...Resource) error {
+	for _, resource := range resources {
+		t := reflect.ValueOf(resource)
+		if t.IsNil() {
+			continue
+		}
+		if err := resource.Teardown(ctx, input, command); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func GetEnvVar(envVar string) (string, error) {
-	val := os.Getenv(envVar)
-	if val == "" {
-		return "", EnvVarNotFound(envVar)
+func TeardownFirst(ctx context.Context, input InputParams, command cmd.Factory, resources ...Resource) error {
+	for _, resource := range resources {
+		t := reflect.ValueOf(resource)
+		if t.IsNil() {
+			continue
+		}
+		return resource.Teardown(ctx, input, command)
 	}
-	return val, nil
-}
-
-func AwsSecret(namespace, name string) *Secret {
-	return &Secret{
-		Name:      name,
-		Namespace: namespace,
-		Entries: map[string]SecretValue{
-			AwsAccessKeyIdSecretVar:     {EnvVar: AwsAccessKeyIdEnvVar},
-			AwsSecretAccessKeySecretVar: {EnvVar: AwsSecretAccessKeyEnvVar},
-		},
-	}
+	return nil
 }

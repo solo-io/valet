@@ -6,6 +6,7 @@ import (
 	"github.com/solo-io/valet/cli/cmd/common"
 	"github.com/solo-io/valet/cli/cmd/teardown"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
+	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 )
@@ -33,10 +34,16 @@ func Application(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *co
 }
 
 func ensureApplication(opts *options.Options) error {
-	app, err := common.LoadApplication(opts)
-	if err != nil {
-		return err
+	input := resource.InputParams{
+		Values: opts.Ensure.Values,
+		Flags:  opts.Ensure.Flags,
+	}
+	if opts.Ensure.File == "" {
+		return common.MustProvideFileError
+	}
+	ref := resource.ApplicationRef{
+		Path: opts.Ensure.File,
 	}
 	command := cmd.CommandFactory{}
-	return app.Ensure(opts.Top.Ctx, &command)
+	return ref.Ensure(opts.Top.Ctx, input, &command)
 }

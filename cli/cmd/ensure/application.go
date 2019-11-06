@@ -36,13 +36,14 @@ func Application(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *co
 func ensureApplication(opts *options.Options) error {
 	input := resource.InputParams{
 		Values: opts.Ensure.Values,
-		Flags: opts.Ensure.Flags,
+		Flags:  opts.Ensure.Flags,
 	}
-	app, err := common.LoadApplication(opts, input)
-	if err != nil {
-		return err
+	if opts.Ensure.File == "" {
+		return common.MustProvideFileError
+	}
+	ref := resource.ApplicationRef{
+		Path: opts.Ensure.File,
 	}
 	command := cmd.CommandFactory{}
-
-	return app.Ensure(opts.Top.Ctx, input, &command)
+	return ref.Ensure(opts.Top.Ctx, input, &command)
 }

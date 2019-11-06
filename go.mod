@@ -9,6 +9,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang/mock v1.3.1
 	github.com/google/go-github v17.0.0+incompatible
+	github.com/sirupsen/logrus v1.2.0
 	github.com/solo-io/go-utils v0.9.17
 	github.com/spf13/cobra v0.0.3
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
@@ -20,8 +21,4 @@ require (
 	k8s.io/apimachinery v0.0.0-20190104073114-849b284f3b75+incompatible
 )
 
-replace (
-	github.com/Sirupsen/logrus v1.0.5 => github.com/sirupsen/logrus v1.0.5
-	github.com/Sirupsen/logrus v1.3.0 => github.com/Sirupsen/logrus v1.0.6
-	github.com/Sirupsen/logrus v1.4.2 => github.com/Sirupsen/logrus v1.0.6
-)
+replace github.com/Sirupsen/logrus v1.4.2 => github.com/sirupsen/logrus v1.0.6

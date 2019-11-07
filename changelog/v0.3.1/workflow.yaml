@@ -1,0 +1,10 @@
+changelog:
+  - type: NEW_FEATURE
+    description: Infer IP for service correctly on any cluster (GKE or Minikube).
+    issueLink: https://github.com/solo-io/valet/issues/93
+  - type: NEW_FEATURE
+    description: Allow cleanup steps for workflows after a workflow is complete.
+    issueLink: https://github.com/solo-io/valet/issues/93
+  - type: NEW_FEATURE
+    description: Allow simple apply / delete steps in workflows.
+    issueLink: https://github.com/solo-io/valet/issues/93

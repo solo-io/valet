@@ -37,15 +37,15 @@ func (c *Curl) Ensure(ctx context.Context, input InputParams, command cmd.Factor
 	if err := input.Values.RenderFields(c); err != nil {
 		return err
 	}
-	return c.doCurl(ctx, command)
+	return c.doCurl(ctx, input, command)
 }
 
 func (c *Curl) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
 	return nil
 }
 
-func (c *Curl) doCurl(ctx context.Context, command cmd.Factory) error {
-	ip, err := c.Service.getIpAddress(ctx, command)
+func (c *Curl) doCurl(ctx context.Context, input InputParams, command cmd.Factory) error {
+	ip, err := c.Service.getAddress(ctx, input, command)
 	if err != nil {
 		return err
 	}

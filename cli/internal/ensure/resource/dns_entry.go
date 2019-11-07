@@ -2,9 +2,10 @@ package resource
 
 import (
 	"context"
-
+	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal/ensure/client"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
+	"strings"
 )
 
 type DnsEntry struct {
@@ -22,7 +23,7 @@ func (d *DnsEntry) Ensure(ctx context.Context, input InputParams, command cmd.Fa
 	if err != nil {
 		return err
 	}
-	ip, err := d.Service.getIpAddress(ctx, command)
+	ip, err := d.Service.getIp(ctx, input, command)
 	if err != nil {
 		return err
 	}
@@ -40,8 +41,24 @@ func (d *DnsEntry) Teardown(ctx context.Context, input InputParams, command cmd.
 type ServiceRef struct {
 	Name      string `yaml:"name"`
 	Namespace string `yaml:"namespace"`
+	Port      string `yaml:"port" valet:"default=http"`
 }
 
-func (s *ServiceRef) getIpAddress(ctx context.Context, command cmd.Factory) (string, error) {
-	return command.Kubectl().GetServiceIP(ctx, s.Namespace, s.Name)
+func (s *ServiceRef) getAddress(ctx context.Context, input InputParams, command cmd.Factory) (string, error) {
+	if err := input.Values.RenderFields(s); err != nil {
+		return "", err
+	}
+	return client.GetIngressHost(s.Name, s.Namespace, s.Port)
+}
+
+func (s *ServiceRef) getIp(ctx context.Context, input InputParams, command cmd.Factory) (string, error) {
+	url, err := s.getAddress(ctx, input, command)
+	if err != nil {
+		return "", err
+	}
+	parts := strings.Split(url, ":")
+	if len(parts) <= 2 {
+		return parts[0], nil
+	}
+	return "", errors.Errorf("Unexpected url %s", url)
 }

@@ -18,5 +18,5 @@ func (m *Manifest) Ensure(ctx context.Context, _ InputParams, command cmd.Factor
 
 func (m *Manifest) Teardown(ctx context.Context, _ InputParams, command cmd.Factory) error {
 	cmd.Stdout().Println("Tearing down manifest %s", m.Path)
-	return command.Kubectl().DeleteFile(m.Path).Cmd().Run(ctx)
+	return command.Kubectl().DeleteFile(m.Path).IgnoreNotFound().Cmd().Run(ctx)
 }

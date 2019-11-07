@@ -1,0 +1,4 @@
+changelog:
+  - type: NEW_FEATURE
+    description: Support `--step` or -s` when calling `valet ensure [application]` to pause before each step or resource. Press enter to ensure the step or resource and advance the workflow / install. 
+    issueLink: https://github.com/solo-io/valet/issues/96 

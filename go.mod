@@ -4,7 +4,6 @@ go 1.12
 
 require (
 	cloud.google.com/go v0.43.0
-	github.com/Sirupsen/logrus v1.4.2 // indirect
 	github.com/avast/retry-go v2.2.0+incompatible
 	github.com/aws/aws-sdk-go v1.21.10
 	github.com/ghodss/yaml v1.0.0
@@ -23,8 +22,4 @@ require (
 	k8s.io/apimachinery v0.0.0-20190104073114-849b284f3b75+incompatible
 )
 
-replace (
-	github.com/Sirupsen/logrus v1.0.5 => github.com/sirupsen/logrus v1.0.5
-	github.com/Sirupsen/logrus v1.3.0 => github.com/sirupsen/logrus v1.0.6
-	github.com/Sirupsen/logrus v1.4.2 => github.com/sirupsen/logrus v1.0.6
-)
+replace github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.0.6

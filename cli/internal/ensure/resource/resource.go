@@ -14,6 +14,7 @@ type Resource interface {
 type InputParams struct {
 	Values Values
 	Flags  Flags
+	Step   bool
 }
 
 func (i *InputParams) DeepCopy() InputParams {
@@ -26,6 +27,7 @@ func (i *InputParams) DeepCopy() InputParams {
 	return InputParams{
 		Flags:  flags,
 		Values: values,
+		Step:   i.Step,
 	}
 }
 

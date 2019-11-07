@@ -28,7 +28,6 @@ func Application(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *co
 	}
 	cmd.PersistentFlags().StringToStringVarP(&opts.Ensure.Values, "values", "v", make(map[string]string), "values to provide to application")
 	cmd.PersistentFlags().StringSliceVarP(&opts.Ensure.Flags, "flags", "", make([]string, 0), "flags to provide to application")
-	cmd.PersistentFlags().BoolVarP(&opts.Ensure.DryRun, "dry-run", "d", false, "path to file containing config to ensure")
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	return cmd
 }
@@ -37,6 +36,7 @@ func ensureApplication(opts *options.Options) error {
 	input := resource.InputParams{
 		Values: opts.Ensure.Values,
 		Flags:  opts.Ensure.Flags,
+		Step:   opts.Ensure.Step,
 	}
 	if opts.Ensure.File == "" {
 		return common.MustProvideFileError

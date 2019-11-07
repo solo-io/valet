@@ -12,6 +12,11 @@ func EnsureAll(ctx context.Context, input InputParams, command cmd.Factory, reso
 		if t.IsNil() {
 			continue
 		}
+		if input.Step {
+			if err := cmd.PromptPressAnyKeyToContinue(); err != nil {
+				return err
+			}
+		}
 		if err := resource.Ensure(ctx, input, command); err != nil {
 			return err
 		}

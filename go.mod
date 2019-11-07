@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	cloud.google.com/go v0.43.0
+	github.com/Sirupsen/logrus v1.4.2 // indirect
 	github.com/avast/retry-go v2.2.0+incompatible
 	github.com/aws/aws-sdk-go v1.21.10
 	github.com/ghodss/yaml v1.0.0
@@ -11,7 +12,7 @@ require (
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
-	github.com/solo-io/go-utils v0.9.17
+	github.com/solo-io/go-utils v0.10.26-0.20191107155107-eb3fe699c48f
 	github.com/spf13/cobra v0.0.3
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	google.golang.org/api v0.7.0

@@ -109,6 +109,10 @@ func (s *Secret) Teardown(ctx context.Context, input render.InputParams, command
 
 func (s *Secret) Render(ctx context.Context, input render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
 	secret := v1.Secret{
+		TypeMeta: v12.TypeMeta{
+			Kind: "Secret",
+			APIVersion: "v1",
+		},
 		Type: v1.SecretTypeOpaque,
 		ObjectMeta: v12.ObjectMeta{
 			Name:      s.Name,

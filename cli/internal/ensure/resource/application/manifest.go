@@ -28,6 +28,7 @@ func (m *Manifest) Teardown(ctx context.Context, _ render.InputParams, command c
 }
 
 func (m *Manifest) Render(ctx context.Context, _ render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
+	cmd.Stdout().Println("Rendering manifest %s", m.Path)
 	contents, err := render.LoadFile(m.Path)
 	if err != nil {
 		return nil, err

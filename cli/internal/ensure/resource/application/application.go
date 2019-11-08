@@ -3,11 +3,10 @@ package application
 import (
 	"context"
 	"fmt"
+	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/go-utils/installutils/kuberesource"
-	"github.com/solo-io/valet/cli/internal/ensure/resource"
-	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
-
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"gopkg.in/yaml.v2"
 )
 
@@ -17,6 +16,7 @@ const (
 
 type Application struct {
 	Name           string        `yaml:"name"`
+	Namespace      string        `yaml:"namespace" valet:"key=Namespace,default=default"`
 	Resources      []Resource    `yaml:"resources"`
 	RequiredValues []string      `yaml:"requiredValues"`
 	Values         render.Values `yaml:"values"`
@@ -39,13 +39,13 @@ func (a *Application) Teardown(ctx context.Context, input render.InputParams, co
 	if err := a.checkRequiredValues(input); err != nil {
 		return err
 	}
-	var resources []resource.Resource
-	for i := len(a.Resources) - 1; i >= 0; i-- {
-		r := &a.Resources[i]
-		resources = append(resources, r)
-	}
-	if err := resource.TeardownAll(ctx, input, command, resources...); err != nil {
+	if err := input.Values.RenderFields(a); err != nil {
 		return err
+	}
+	for i := len(a.Resources) - 1; i >= 0; i-- {
+		if err := a.Resources[i].Teardown(ctx, input, command); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -55,15 +55,19 @@ func (a *Application) Ensure(ctx context.Context, input render.InputParams, comm
 	if err := a.checkRequiredValues(input); err != nil {
 		return err
 	}
-	var resources []resource.Resource
-	for _, resource := range a.Resources {
-		r := resource
-		resources = append(resources, &r)
-	}
-	if err := resource.EnsureAll(ctx, input, command, resources...); err != nil {
+	if err := input.Values.RenderFields(a); err != nil {
 		return err
 	}
+	for _, r := range a.Resources {
+		if err := r.Ensure(ctx, input, command); err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+func (a *Application) getLabel(step int) string {
+	return fmt.Sprintf("valet.%s.%d", a.Name, step)
 }
 
 func (a *Application) Render(ctx context.Context, input render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
@@ -74,7 +78,7 @@ func (a *Application) Render(ctx context.Context, input render.InputParams, comm
 	var allResources kuberesource.UnstructuredResources
 	for i, appResource := range a.Resources {
 		if appResource.Patch != nil {
-			continue
+			return nil, errors.Errorf("Applications with patches currently can't be rendered as dry-run")
 		}
 		renderedResource, err := appResource.Render(ctx, input, command)
 		if err != nil {
@@ -86,7 +90,7 @@ func (a *Application) Render(ctx context.Context, input render.InputParams, comm
 			if labels == nil {
 				labels = make(map[string]string)
 			}
-			labels[InstallationStepLabel] = fmt.Sprintf("valet.%s.%d", a.Name, i)
+			labels[InstallationStepLabel] = a.getLabel(i)
 			unstructuredResource.SetLabels(labels)
 			allResources = append(allResources, unstructuredResource)
 		}

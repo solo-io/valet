@@ -57,6 +57,10 @@ func (n *Namespace) Render(ctx context.Context, inputs render.InputParams, comma
 		return nil, err
 	}
 	namespace := corev1.Namespace{
+		TypeMeta: metav1.TypeMeta{
+			Kind: "Namespace",
+			APIVersion: "v1",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        n.Name,
 			Labels:      n.Labels,

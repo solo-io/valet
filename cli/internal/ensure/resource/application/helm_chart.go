@@ -3,10 +3,10 @@ package application
 import (
 	"context"
 	"fmt"
+	"github.com/avast/retry-go"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/go-utils/installutils/helmchart"
 	"github.com/solo-io/go-utils/installutils/kuberesource"
-	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"os"
 	"path/filepath"
@@ -17,7 +17,6 @@ import (
 )
 
 var (
-	_ resource.Resource = new(HelmChart)
 	_ Renderable = new(HelmChart)
 )
 
@@ -45,7 +44,15 @@ func (h *HelmChart) Ensure(ctx context.Context, input render.InputParams, comman
 	if h.Namespace != "" {
 		kubectl = kubectl.Namespace(h.Namespace)
 	}
-	if err := kubectl.Cmd().Run(ctx); err != nil {
+	cmd.Stdout().Println("Applying manifest")
+	err = retry.Do(func() error {
+		out, err := kubectl.SwallowErrorLog(true).Cmd().Output(ctx)
+		if err != nil {
+			return errors.Wrapf(err, out)
+		}
+		return nil
+	}, retry.Attempts(3))
+	if err != nil {
 		return err
 	}
 	return internal.WaitUntilPodsRunning(h.Namespace)
@@ -60,7 +67,7 @@ func (h *HelmChart) renderManifest(ctx context.Context, command cmd.Factory) (st
 	if err != nil {
 		return "", err
 	}
-	cmd.Stdout().Println("Rendering and applying manifest for application")
+	cmd.Stdout().Println("Rendering manifest for application")
 	helmCmd := command.Helm().Template().Namespace(h.Namespace)
 	for _, set := range h.Set {
 		helmCmd = helmCmd.Set(set)
@@ -80,6 +87,7 @@ func (h *HelmChart) Teardown(ctx context.Context, input render.InputParams, comm
 	if err != nil {
 		return err
 	}
+	cmd.Stdout().Println("Deleting manifest")
 	kubectl := command.Kubectl().DeleteStdIn(manifest).IgnoreNotFound()
 	if h.Namespace != "" {
 		kubectl = kubectl.Namespace(h.Namespace)

@@ -12,21 +12,27 @@ import (
 
 func Application(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "teardown",
+		Use:   "application",
 		Short: "tears down application based on configuration",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return TeardownApplication(opts)
 		},
 	}
 
+	cmd.PersistentFlags().StringToStringVarP(&opts.Ensure.Values, "values", "v", make(map[string]string), "values to provide to application")
+	cmd.PersistentFlags().StringSliceVarP(&opts.Ensure.Flags, "flags", "", make([]string, 0), "flags to provide to application")
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	return cmd
 }
 
 func TeardownApplication(opts *options.Options) error {
+	if err := common.LoadEnv(opts.Top.Ctx); err != nil {
+		return err
+	}
 	input := render.InputParams{
 		Values: opts.Ensure.Values,
 		Flags:  opts.Ensure.Flags,
+		Step:   opts.Ensure.Step,
 	}
 	if opts.Ensure.File == "" {
 		return common.MustProvideFileError

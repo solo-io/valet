@@ -2,6 +2,7 @@ package resource
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -17,6 +18,8 @@ type HelmChart struct {
 	Namespace string            `yaml:"namespace"` // a bit redundant
 	Set       []string          `yaml:"set"`
 	SetEnv    map[string]string `yaml:"setEnv"`
+	Values    Values            `yaml:"values"`
+	Files     Values            `yaml:"files"`
 }
 
 func (h *HelmChart) updateWithValues(values Values) error {
@@ -38,6 +41,7 @@ func (h *HelmChart) updateWithValues(values Values) error {
 			}
 		}
 	}
+	h.Values = MergeValues(h.Values, values)
 	return nil
 }
 
@@ -73,6 +77,20 @@ func (h *HelmChart) renderManifest(ctx context.Context, command cmd.Factory) (st
 	}
 	for set, envVar := range h.SetEnv {
 		helmCmd = helmCmd.SetEnv(set, envVar)
+	}
+	vals, err := renderStringValues(h.Values)
+	if err != nil {
+		return "", err
+	}
+	for key, val := range vals {
+		helmCmd = helmCmd.Set(fmt.Sprintf("%s=%s", key, val))
+	}
+	files, err := renderStringValues(h.Files)
+	if err != nil {
+		return"", err
+	}
+	for key, file := range files {
+		helmCmd = helmCmd.SetFile(fmt.Sprintf("%s=%s", key, file))
 	}
 	return helmCmd.Target(chartDir).Cmd().Output(ctx)
 }

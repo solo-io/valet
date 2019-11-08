@@ -3,6 +3,7 @@ package resource
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -20,6 +21,7 @@ const (
 	TemplatePrefix = "template:"
 	KeyPrefix      = "key:"
 	CmdPrefix      = "cmd:"
+	FilePrefix     = "file:"
 )
 
 var (
@@ -83,6 +85,13 @@ func (v Values) GetValue(key string) (string, error) {
 			}
 			return cmd.Output(context.TODO())
 		}
+	} else if strings.HasPrefix(val, FilePrefix) {
+		fileString := strings.TrimPrefix(val, FilePrefix)
+		content, err := ioutil.ReadFile(fileString)
+		if err != nil {
+			return  "", err
+		}
+		return string(content), nil
 	} else {
 		return val, nil
 	}

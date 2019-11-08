@@ -25,13 +25,15 @@ type CreateOptions struct {
 	InitialNodeCount int32 `yaml:"initialNodeCount"`
 }
 
-func (c *CreateOptions) WithDefaults() {
+func (c *CreateOptions) WithDefaults() *CreateOptions {
+	optsShadow := c
 	if c == nil {
-		*c = CreateOptions{}
+		optsShadow = &CreateOptions{InitialNodeCount: defaultInitialNodeCount}
 	}
-	if c.InitialNodeCount == 0 {
-		c.InitialNodeCount = defaultInitialNodeCount
+	if optsShadow.InitialNodeCount == 0 {
+		optsShadow.InitialNodeCount = defaultInitialNodeCount
 	}
+	return optsShadow
 }
 
 type GkeClient interface {
@@ -52,7 +54,7 @@ func NewGkeClient(ctx context.Context) (*gkeClient, error) {
 		return nil, err
 	}
 	return &gkeClient{
-		client: client,
+			client: client,
 	}, nil
 }
 
@@ -98,7 +100,7 @@ func (c *gkeClient) getCluster(ctx context.Context, name, project, zone string) 
 }
 
 func (c *gkeClient) Create(ctx context.Context, name, project, zone string, opts *CreateOptions) error {
-	opts.WithDefaults()
+	opts = opts.WithDefaults()
 	cmd.Stdout().Println("Creating cluster %s", name)
 	nodePool := container2.NodePool{
 		Name:             "pool-1",

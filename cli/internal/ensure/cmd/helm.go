@@ -37,6 +37,10 @@ func (h *Helm) Set(set string) *Helm {
 	return h.With("--set", set)
 }
 
+func (h *Helm) SetFile(set string) *Helm {
+	return h.With("--set-file", set)
+}
+
 func (h *Helm) SetEnv(set, envVar string) *Helm {
 	envVarValue := os.Getenv(envVar)
 	unredacted := fmt.Sprintf("%s=%s", set, envVarValue)

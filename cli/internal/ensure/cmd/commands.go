@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"io"
 	"os/exec"
 	"strings"
 
@@ -46,9 +47,18 @@ func (c *Command) Output(ctx context.Context) (string, error) {
 	return runner.Output(ctx, c)
 }
 
+func (c *Command) Stream(ctx context.Context) (*CommandStreamHandler, error) {
+	runner := c.CommandRunner
+	if runner == nil {
+		runner = &commandRunner{}
+	}
+	return runner.Stream(ctx, c)
+}
+
 type CommandRunner interface {
 	Run(ctx context.Context, c *Command) error
 	Output(ctx context.Context, c *Command) (string, error)
+	Stream(ctx context.Context, c *Command) (*CommandStreamHandler, error)
 }
 
 type commandRunner struct {
@@ -69,9 +79,40 @@ func (r *commandRunner) Output(ctx context.Context, c *Command) (string, error) 
 			Stderr().Println("Error running command: %s", err.Error())
 			Stderr().Println(string(bytes))
 		}
-		return "", CommandError(err)
+		return string(bytes), CommandError(err)
 	}
 	return string(bytes), nil
+}
+
+type CommandStreamHandler struct {
+	WaitFunc func() error
+	Stdout   io.Reader
+	Stderr   io.Reader
+}
+
+func (r *commandRunner) Stream(ctx context.Context, c *Command) (*CommandStreamHandler, error) {
+	c.logCommand(ctx)
+	cmd := exec.Command(c.Name, c.Args...)
+	cmd.Stdin = strings.NewReader(c.StdIn)
+	outReader, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+	errReader, err := cmd.StderrPipe()
+	if err != nil {
+		return nil, err
+	}
+	err = cmd.Start()
+	if err != nil {
+		return nil, err
+	}
+	return &CommandStreamHandler{
+		WaitFunc: func() error {
+			return cmd.Wait()
+		},
+		Stdout: outReader,
+		Stderr: errReader,
+	}, nil
 }
 
 func (c *Command) logCommand(ctx context.Context) {

@@ -67,6 +67,18 @@ func renderValues(values Values) (map[string]interface{}, error) {
 	return vals, nil
 }
 
+func renderStringValues(values Values) (map[string]string, error) {
+	vals := make(map[string]string)
+	for k := range values {
+		v, err := values.GetValue(k)
+		if err != nil {
+			return nil, err
+		}
+		vals[k] = v
+	}
+	return vals, nil
+}
+
 func LoadFile(path string) (string, error) {
 	b, err := loadBytesFromPath(path)
 	if err != nil {

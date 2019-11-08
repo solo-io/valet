@@ -2,10 +2,11 @@ package resource
 
 import (
 	"context"
+	"strings"
+
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal/ensure/client"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"strings"
 )
 
 type DnsEntry struct {

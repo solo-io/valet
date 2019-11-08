@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/avast/retry-go"
 	"io"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/avast/retry-go"
 
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"

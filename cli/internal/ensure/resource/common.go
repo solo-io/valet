@@ -2,8 +2,9 @@ package resource
 
 import (
 	"context"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"reflect"
+
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
 func EnsureAll(ctx context.Context, input InputParams, command cmd.Factory, resources ...Resource) error {

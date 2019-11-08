@@ -17,8 +17,27 @@ import (
 	"google.golang.org/api/option"
 )
 
+const (
+	defaultInitialNodeCount = int32(1)
+)
+
+type CreateOptions struct {
+	InitialNodeCount int32 `yaml:"initialNodeCount"`
+}
+
+func (c *CreateOptions) WithDefaults() *CreateOptions {
+	optsShadow := c
+	if c == nil {
+		optsShadow = &CreateOptions{InitialNodeCount: defaultInitialNodeCount}
+	}
+	if optsShadow.InitialNodeCount == 0 {
+		optsShadow.InitialNodeCount = defaultInitialNodeCount
+	}
+	return optsShadow
+}
+
 type GkeClient interface {
-	Create(ctx context.Context, name, project, zone string) error
+	Create(ctx context.Context, name, project, zone string, opts *CreateOptions) error
 	Destroy(ctx context.Context, name, project, zone string) error
 	IsRunning(ctx context.Context, name, project, zone string) (bool, error)
 }
@@ -80,11 +99,12 @@ func (c *gkeClient) getCluster(ctx context.Context, name, project, zone string) 
 	return cluster, nil
 }
 
-func (c *gkeClient) Create(ctx context.Context, name, project, zone string) error {
+func (c *gkeClient) Create(ctx context.Context, name, project, zone string, opts *CreateOptions) error {
+	opts = opts.WithDefaults()
 	cmd.Stdout().Println("Creating cluster %s", name)
 	nodePool := container2.NodePool{
 		Name:             "pool-1",
-		InitialNodeCount: 1,
+		InitialNodeCount: opts.InitialNodeCount,
 		Autoscaling: &container2.NodePoolAutoscaling{
 			Enabled:      true,
 			MinNodeCount: 1,

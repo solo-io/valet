@@ -3,12 +3,13 @@ package resource
 import (
 	"context"
 	"fmt"
-	"github.com/solo-io/go-utils/stringutils"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
 
 	"github.com/solo-io/go-utils/errors"
+	"github.com/solo-io/go-utils/stringutils"
 	cmd_runner "github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
@@ -22,6 +23,7 @@ const (
 	TemplatePrefix = "template:"
 	KeyPrefix      = "key:"
 	CmdPrefix      = "cmd:"
+	FilePrefix     = "file:"
 
 	ValetField  = "valet"
 	TemplateTag = "template"
@@ -90,6 +92,13 @@ func (v Values) GetValue(key string) (string, error) {
 			}
 			return cmd.Output(context.TODO())
 		}
+	} else if strings.HasPrefix(val, FilePrefix) {
+		fileString := strings.TrimPrefix(val, FilePrefix)
+		content, err := ioutil.ReadFile(fileString)
+		if err != nil {
+			return "", err
+		}
+		return string(content), nil
 	} else {
 		return val, nil
 	}

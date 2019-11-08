@@ -56,7 +56,7 @@ func (s *Secret) Ensure(ctx context.Context, input InputParams, command cmd.Fact
 	var toCleanup []string
 	for name, v := range s.Entries {
 		if v.File != "" {
-			fromFile := fmt.Sprintf("--from-file=%s=%s", name, v.File)
+			fromFile := fmt.Sprintf("--from-file=%s=%s", name, os.ExpandEnv(v.File))
 			toRun = toRun.With(fromFile)
 		} else if v.EnvVar != "" {
 			template := "--from-literal=%s=%s"

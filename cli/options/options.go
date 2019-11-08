@@ -27,6 +27,7 @@ type Ensure struct {
 	Values map[string]string
 	Flags  []string
 	Step   bool
+	DryRun bool
 }
 
 type Build struct {

@@ -78,9 +78,9 @@ func (r *commandRunner) Output(ctx context.Context, c *Command) (string, error) 
 			Stderr().Println("Error running command: %s", err.Error())
 			Stderr().Println(string(bytes))
 		}
-		return string(bytes), CommandError(err)
+		err = CommandError(err)
 	}
-	return string(bytes), nil
+	return string(bytes), err
 }
 
 type CommandStreamHandler struct {

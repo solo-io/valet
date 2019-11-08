@@ -3,7 +3,9 @@ package resource_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/solo-io/valet/cli/internal/ensure/resource"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
 )
 
 var _ = Describe("Values", func() {
@@ -18,33 +20,33 @@ var _ = Describe("Values", func() {
 	)
 
 	var (
-		emptyValues = resource.Values{}
-		values      = resource.Values{
-			resource.NamespaceKey:  namespace,
-			resource.VersionKey:    version,
-			"Timeout":              timeout,
-			"RandomValue":          randomValue,
-			resource.DomainKey:     domain,
-			resource.HostedZoneKey: hostedZone,
+		emptyValues = render.Values{}
+		values      = render.Values{
+			render.NamespaceKey:  namespace,
+			render.VersionKey:    version,
+			"Timeout":            timeout,
+			"RandomValue":        randomValue,
+			render.DomainKey:     domain,
+			render.HostedZoneKey: hostedZone,
 		}
 	)
 
 	Context("merge values", func() {
 		It("doesn't modify the input", func() {
-			input := resource.InputParams{
+			input := render.InputParams{
 				Values: emptyValues,
 			}
 			output := input.MergeValues(values)
 			Expect(output.Values).Should(Equal(values))
-			Expect(input.Values).Should(Equal(resource.Values{}))
+			Expect(input.Values).Should(Equal(render.Values{}))
 		})
 
 		It("doesn't override values already supplied", func() {
-			input := resource.InputParams{
+			input := render.InputParams{
 				Values: values,
 			}
 			otherValues := input.DeepCopy().Values
-			otherValues[resource.NamespaceKey] = "other-namespace"
+			otherValues[render.NamespaceKey] = "other-namespace"
 			output := input.MergeValues(otherValues)
 			Expect(output.Values).Should(Equal(values))
 		})
@@ -53,8 +55,8 @@ var _ = Describe("Values", func() {
 
 	Context("conditions", func() {
 		var (
-			emptyCondition = resource.Condition{}
-			condition      = resource.Condition{
+			emptyCondition = workflow.Condition{}
+			condition      = workflow.Condition{
 				Timeout:   "foo1",
 				Type:      "foo2",
 				Namespace: "foo3",
@@ -72,7 +74,7 @@ var _ = Describe("Values", func() {
 		})
 
 		It("should render templated values for conditions", func() {
-			c := resource.Condition{
+			c := workflow.Condition{
 				Timeout: "{{ .Timeout }}",
 				Name:    "{{ .RandomValue }}",
 			}
@@ -86,14 +88,14 @@ var _ = Describe("Values", func() {
 			c := emptyCondition
 			err := emptyValues.RenderFields(&c)
 			Expect(err).To(BeNil())
-			Expect(c.Timeout).To(Equal(resource.DefaultTimeout))
+			Expect(c.Timeout).To(Equal(workflow.DefaultTimeout))
 		})
 	})
 
 	Context("helm charts", func() {
 		var (
-			emptyHelmChart = resource.HelmChart{}
-			helmChart      = resource.HelmChart{
+			emptyHelmChart = application.HelmChart{}
+			helmChart      = application.HelmChart{
 				Namespace: "foo1",
 				Version:   "foo2",
 				ChartName: "foo3",
@@ -120,11 +122,11 @@ var _ = Describe("Values", func() {
 
 	Context("secrets", func() {
 		var (
-			emptySecret = resource.Secret{}
-			secret      = resource.Secret{
+			emptySecret = application.Secret{}
+			secret      = application.Secret{
 				Namespace: "foo1",
 				Name:      "foo2",
-				Entries: map[string]resource.SecretValue{
+				Entries: map[string]application.SecretValue{
 					"foo3": {
 						File: "foo4",
 					},
@@ -132,7 +134,7 @@ var _ = Describe("Values", func() {
 						EnvVar: "FOO6",
 					},
 					"foo7": {
-						GcloudKmsEncryptedFile: &resource.GcloudKmsEncryptedFile{
+						GcloudKmsEncryptedFile: &application.GcloudKmsEncryptedFile{
 							Key:            "foo8",
 							Keyring:        "foo9",
 							GcloudProject:  "foo10",
@@ -160,11 +162,11 @@ var _ = Describe("Values", func() {
 
 	Context("dns entries", func() {
 		var (
-			emptyDnsEntry = resource.DnsEntry{}
-			dnsEntry      = resource.DnsEntry{
+			emptyDnsEntry = workflow.DnsEntry{}
+			dnsEntry      = workflow.DnsEntry{
 				HostedZone: "foo1",
 				Domain:     "foo2",
-				Service: resource.ServiceRef{
+				Service: workflow.ServiceRef{
 					Name:      "foo3",
 					Namespace: "foo4",
 				},
@@ -189,14 +191,14 @@ var _ = Describe("Values", func() {
 
 	Context("app ref", func() {
 		var (
-			appRef = resource.ApplicationRef{
+			appRef = application.Ref{
 				Flags: []string{"foo1"},
-				Values: resource.Values{
+				Values: render.Values{
 					"foo2": "foo3",
 				},
 				Path: "foo4",
 			}
-			templatedAppRef = resource.ApplicationRef{
+			templatedAppRef = application.Ref{
 				Path: "{{ .RandomValue }}",
 			}
 		)

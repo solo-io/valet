@@ -1,7 +1,9 @@
-package resource
+package cluster
 
 import (
 	"context"
+
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
 	"github.com/solo-io/valet/cli/internal/ensure/client"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
@@ -16,7 +18,7 @@ type GKE struct {
 	Options  *client.CreateOptions `yaml:"options"`
 }
 
-func (g *GKE) Ensure(ctx context.Context, _ InputParams, command cmd.Factory) error {
+func (g *GKE) Ensure(ctx context.Context, _ render.InputParams, command cmd.Factory) error {
 	cmd.Stdout().Println("Ensuring GKE cluster %s (project: %s, location: %s)", g.Name, g.Project, g.Location)
 	gkeClient, err := client.NewGkeClient(ctx)
 	if err != nil {
@@ -38,7 +40,7 @@ func (g *GKE) SetContext(ctx context.Context, command cmd.Factory) error {
 	return command.Gcloud().GetCredentials().Project(g.Project).Zone(g.Location).WithName(g.Name).Cmd().Run(ctx)
 }
 
-func (g *GKE) Teardown(ctx context.Context, _ InputParams, command cmd.Factory) error {
+func (g *GKE) Teardown(ctx context.Context, _ render.InputParams, command cmd.Factory) error {
 	gkeClient, err := client.NewGkeClient(ctx)
 	if err != nil {
 		return err

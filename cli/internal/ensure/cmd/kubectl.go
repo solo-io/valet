@@ -9,6 +9,11 @@ type Kubectl struct {
 	cmd *Command
 }
 
+func (k *Kubectl) SwallowErrorLog(swallow bool) *Kubectl {
+	k.cmd.SwallowErrorLog = swallow
+	return k
+}
+
 func (k *Kubectl) Cmd() *Command {
 	return k.cmd
 }

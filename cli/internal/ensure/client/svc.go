@@ -3,16 +3,18 @@ package client
 import (
 	"bytes"
 	"fmt"
+	"os/exec"
+
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/go-utils/kubeutils"
 	v1 "k8s.io/api/core/v1"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"os/exec"
 
-	"k8s.io/client-go/kubernetes"
 	"os"
 	"strings"
+
+	"k8s.io/client-go/kubernetes"
 )
 
 const (

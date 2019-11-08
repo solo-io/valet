@@ -11,6 +11,7 @@ type Factory interface {
 	Gcloud() *Gcloud
 	Minikube() *Minikube
 	Helm() *Helm
+	EksCtl() *EksCtl
 }
 
 type CommandFactory struct {
@@ -69,5 +70,10 @@ func (c *CommandFactory) Minikube() *Minikube {
 func (c *CommandFactory) Helm() *Helm {
 	return &Helm{
 		cmd: c.getCommand("helm"),
+	}
+}
+func (c *CommandFactory) EksCtl() *EksCtl {
+	return &EksCtl{
+		cmd: c.getCommand("eksctl"),
 	}
 }

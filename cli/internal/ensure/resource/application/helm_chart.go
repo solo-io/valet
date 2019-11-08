@@ -36,7 +36,7 @@ func (h *HelmChart) Ensure(ctx context.Context, input render.InputParams, comman
 	if err := input.Values.RenderFields(h); err != nil {
 		return err
 	}
-	manifest, err := h.renderManifest(ctx, command)
+	manifest, err := h.renderManifest(ctx, input, command)
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (h *HelmChart) Ensure(ctx context.Context, input render.InputParams, comman
 	return internal.WaitUntilPodsRunning(h.Namespace)
 }
 
-func (h *HelmChart) renderManifest(ctx context.Context, command cmd.Factory) (string, error) {
+func (h *HelmChart) renderManifest(ctx context.Context, input render.InputParams, command cmd.Factory) (string, error) {
 	if err := h.addHelmRepo(ctx, command); err != nil {
 		return "", err
 	}
@@ -75,6 +75,20 @@ func (h *HelmChart) renderManifest(ctx context.Context, command cmd.Factory) (st
 	for set, envVar := range h.SetEnv {
 		helmCmd = helmCmd.SetEnv(set, envVar)
 	}
+	vals, err := renderStringValues(h.Values)
+	if err != nil {
+		return "", err
+	}
+	for key, val := range vals {
+		helmCmd = helmCmd.Set(fmt.Sprintf("%s=%s", key, val))
+	}
+	files, err := renderStringValues(h.Files)
+	if err != nil {
+		return "", err
+	}
+	for key, file := range files {
+		helmCmd = helmCmd.SetFile(fmt.Sprintf("%s=%s", key, file))
+	}
 	return helmCmd.Target(chartDir).Cmd().Output(ctx)
 }
 
@@ -83,7 +97,7 @@ func (h *HelmChart) Teardown(ctx context.Context, input render.InputParams, comm
 	if err := input.Values.RenderFields(h); err != nil {
 		return err
 	}
-	manifest, err := h.renderManifest(ctx, command)
+	manifest, err := h.renderManifest(ctx, input, command)
 	if err != nil {
 		return err
 	}

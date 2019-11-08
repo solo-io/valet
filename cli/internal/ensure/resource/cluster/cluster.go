@@ -23,6 +23,7 @@ var (
 type Cluster struct {
 	Minikube *Minikube `yaml:"minikube"`
 	GKE      *GKE      `yaml:"gke"`
+	EKS      *EKS      `yaml:"eks"`
 }
 
 func (c *Cluster) SetContext(ctx context.Context, command cmd.Factory) error {
@@ -32,6 +33,10 @@ func (c *Cluster) SetContext(ctx context.Context, command cmd.Factory) error {
 	if c.GKE != nil {
 		return c.GKE.SetContext(ctx, command)
 	}
+	if c.EKS != nil {
+		return c.EKS.SetContext(ctx, command)
+	}
+
 	return NoClusterDefinedError
 }
 
@@ -42,6 +47,9 @@ func (c *Cluster) Ensure(ctx context.Context, inputs render.InputParams, command
 	if c.GKE != nil {
 		return c.GKE.Ensure(ctx, inputs, command)
 	}
+	if c.EKS != nil {
+		return c.EKS.Ensure(ctx, inputs, command)
+	}
 	return nil
 }
 
@@ -51,6 +59,9 @@ func (c *Cluster) Teardown(ctx context.Context, inputs render.InputParams, comma
 	}
 	if c.GKE != nil {
 		return c.GKE.Teardown(ctx, inputs, command)
+	}
+	if c.EKS != nil {
+		return c.EKS.Teardown(ctx, inputs, command)
 	}
 	return nil
 }

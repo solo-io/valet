@@ -2,11 +2,12 @@ package workflow
 
 import (
 	"context"
+	"strings"
+
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal/ensure/client"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
-	"strings"
 )
 
 type DnsEntry struct {

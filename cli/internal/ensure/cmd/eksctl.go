@@ -70,7 +70,7 @@ func (e *EksCtl) DeleteCluster(ctx context.Context, name, region string) error {
 	}()
 	stderr, _ := ioutil.ReadAll(streamHandler.Stderr)
 	if err := streamHandler.WaitFunc(); err != nil {
-		fmt.Printf("%s\n", stderr)
+		Stderr().Println(fmt.Sprintf("%s\n", stderr))
 		return errors.Errorf("unable to delete cluster resources")
 	}
 	return nil
@@ -92,7 +92,7 @@ func (e *EksCtl) CreateCluster(ctx context.Context, name, region string) error {
 	}()
 	stderr, _ := ioutil.ReadAll(streamHandler.Stderr)
 	if err := streamHandler.WaitFunc(); err != nil {
-		fmt.Printf("%s\n", stderr)
+		Stderr().Println(fmt.Sprintf("%s\n", stderr))
 		return errors.Errorf("unable to create cluster resources")
 	}
 	return nil

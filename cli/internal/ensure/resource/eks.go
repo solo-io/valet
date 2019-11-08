@@ -3,7 +3,6 @@ package resource
 import (
 	"context"
 
-	"github.com/solo-io/valet/cli/internal/ensure/client"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
@@ -12,7 +11,6 @@ var _ ClusterResource = new(EKS)
 type EKS struct {
 	Name    string                `yaml:"name"`
 	Region  string                `yaml:"region"`
-	Options *client.CreateOptions `yaml:"options"`
 }
 
 func (e *EKS) Ensure(ctx context.Context, command cmd.Factory) error {

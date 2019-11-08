@@ -5,7 +5,7 @@ import (
 	"github.com/solo-io/valet/cli/cmd/common"
 	"github.com/solo-io/valet/cli/cmd/teardown"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"github.com/solo-io/valet/cli/internal/ensure/resource"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 )
@@ -43,7 +43,7 @@ func Ensure(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 }
 
 func ensure(opts *options.Options) error {
-	input := resource.InputParams{
+	input := render.InputParams{
 		Values: opts.Ensure.Values,
 		Flags:  opts.Ensure.Flags,
 		Step:   opts.Ensure.Step,

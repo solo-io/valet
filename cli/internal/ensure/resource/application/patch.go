@@ -1,7 +1,9 @@
-package resource
+package application
 
 import (
 	"context"
+
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
@@ -13,20 +15,20 @@ type Patch struct {
 	Namespace string `yaml:"namespace" valet:"template"`
 	KubeType  string `yaml:"kubeType"`
 
-	Values Values `yaml:"values"`
+	Values render.Values `yaml:"values"`
 }
 
-func (p *Patch) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
+func (p *Patch) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
 	input = input.MergeValues(p.Values)
 	if err := input.Values.RenderFields(p); err != nil {
 		return err
 	}
 	cmd.Stdout().Println("Patching %s.%s (%s) from file %s (%s) %s", p.Namespace, p.Name, p.KubeType, p.Path, p.PatchType, input.Values.ToString())
-	patchTemplate, err := LoadFile(p.Path)
+	patchTemplate, err := render.LoadFile(p.Path)
 	if err != nil {
 		return err
 	}
-	patchString, err := LoadTemplate(patchTemplate, input.Values)
+	patchString, err := render.LoadTemplate(patchTemplate, input.Values)
 	if err != nil {
 		return err
 	}
@@ -38,7 +40,7 @@ func (p *Patch) Ensure(ctx context.Context, input InputParams, command cmd.Facto
 	return kubectl.Cmd().Run(ctx)
 }
 
-func (p *Patch) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
+func (p *Patch) Teardown(ctx context.Context, input render.InputParams, command cmd.Factory) error {
 	input = input.MergeValues(p.Values)
 	if err := input.Values.RenderFields(p); err != nil {
 		return err
@@ -47,7 +49,7 @@ func (p *Patch) Teardown(ctx context.Context, input InputParams, command cmd.Fac
 	return nil
 }
 
-func (p *Patch) Load(input InputParams) (string, error) {
+func (p *Patch) Load(input render.InputParams) (string, error) {
 	t := Template{
 		Path:   p.Path,
 		Values: input.Values,

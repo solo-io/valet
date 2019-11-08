@@ -1,0 +1,12 @@
+changelog:
+  - type: NEW_FEATURE
+    issueLink: https://github.com/solo-io/valet/issues/100
+    description: Values files can now be provided to helm chart resources. 
+  - type: NEW_FEATURE
+    issueLink: https://github.com/solo-io/valet/issues/84
+    description: Run `kubectl ensure application -f ... --dry-run` to compute a manifest without applying. Note taht this currently doesn't work for applications with patches. 
+  - type: FIX
+    issueLink: https://github.com/solo-io/valet/issues/101
+    description: Add retry when applying helm manifests to account for minor race conditions. 
+  - type: NON_USER_FACING
+    description: Refactor packages for resources to prepare for more granular docs nested in the repo structure. 

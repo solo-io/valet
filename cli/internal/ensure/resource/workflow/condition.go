@@ -1,8 +1,10 @@
-package resource
+package workflow
 
 import (
 	"context"
 	"time"
+
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
@@ -25,7 +27,7 @@ type Condition struct {
 	Timeout   string `yaml:"timeout" valet:"template,default=120s"`
 }
 
-func (c *Condition) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
+func (c *Condition) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
 	if err := input.Values.RenderFields(c); err != nil {
 		return err
 	}
@@ -56,7 +58,7 @@ func (c *Condition) Ensure(ctx context.Context, input InputParams, command cmd.F
 	}
 }
 
-func (*Condition) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
+func (*Condition) Teardown(ctx context.Context, input render.InputParams, command cmd.Factory) error {
 	cmd.Stdout().Println("Skipping teardown for condition")
 	return nil
 }

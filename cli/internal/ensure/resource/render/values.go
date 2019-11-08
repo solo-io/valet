@@ -1,4 +1,4 @@
-package resource
+package render
 
 import (
 	"context"
@@ -41,16 +41,6 @@ var (
 )
 
 type Values map[string]string
-
-func MergeValues(merge, with Values) Values {
-	if with == nil {
-		with = make(map[string]string)
-	}
-	for k, v := range merge {
-		with[k] = v
-	}
-	return with
-}
 
 func (v Values) ContainsKey(key string) bool {
 	if v == nil {
@@ -145,6 +135,30 @@ func (v Values) RenderFields(input interface{}) error {
 		}
 	}
 	return nil
+}
+
+func (v Values) RenderValues() (map[string]interface{}, error) {
+	vals := make(map[string]interface{})
+	for k := range v {
+		v, err := v.GetValue(k)
+		if err != nil {
+			return nil, err
+		}
+		vals[k] = v
+	}
+	return vals, nil
+}
+
+func (v Values) RenderStringValues() (map[string]string, error) {
+	vals := make(map[string]string)
+	for k := range v {
+		v, err := v.GetValue(k)
+		if err != nil {
+			return nil, err
+		}
+		vals[k] = v
+	}
+	return vals, nil
 }
 
 func getTagValue(fieldTags []string, tag string) string {

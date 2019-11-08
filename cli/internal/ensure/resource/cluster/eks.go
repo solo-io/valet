@@ -1,7 +1,9 @@
-package resource
+package cluster
 
 import (
 	"context"
+
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
@@ -13,7 +15,7 @@ type EKS struct {
 	Region string `yaml:"region"`
 }
 
-func (e *EKS) Ensure(ctx context.Context, inputs InputParams, command cmd.Factory) error {
+func (e *EKS) Ensure(ctx context.Context, inputs render.InputParams, command cmd.Factory) error {
 	cmd.Stdout().Println("Ensuring eks cluster %s (region : %s)", e.Name, e.Region)
 	running, err := command.EksCtl().IsRunning(ctx, e.Name, e.Region)
 	if err != nil {
@@ -25,7 +27,7 @@ func (e *EKS) Ensure(ctx context.Context, inputs InputParams, command cmd.Factor
 	return command.EksCtl().CreateCluster(ctx, e.Name, e.Region)
 }
 
-func (e *EKS) Teardown(ctx context.Context, inputs InputParams, command cmd.Factory) error {
+func (e *EKS) Teardown(ctx context.Context, inputs render.InputParams, command cmd.Factory) error {
 	cmd.Stdout().Println("tearing down eks cluster %s (region : %s)", e.Name, e.Region)
 	running, err := command.EksCtl().IsRunning(ctx, e.Name, e.Region)
 	if err != nil {

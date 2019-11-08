@@ -1,7 +1,9 @@
-package resource
+package cluster
 
 import (
 	"context"
+
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
@@ -17,7 +19,7 @@ var _ ClusterResource = new(Minikube)
 
 type Minikube struct{}
 
-func (m *Minikube) Ensure(ctx context.Context, _ InputParams, command cmd.Factory) error {
+func (m *Minikube) Ensure(ctx context.Context, _ render.InputParams, command cmd.Factory) error {
 	cmd.Stdout().Println("Ensuring minikube cluster")
 	// If minikube status seems healthy, just set context and return
 	if err := command.Minikube().Status().SwallowError().Cmd().Run(ctx); err == nil {
@@ -31,7 +33,7 @@ func (m *Minikube) SetContext(ctx context.Context, command cmd.Factory) error {
 	return command.Kubectl().UseContext(MinikubeContext).Cmd().Run(ctx)
 }
 
-func (m *Minikube) Teardown(ctx context.Context, _ InputParams, command cmd.Factory) error {
+func (m *Minikube) Teardown(ctx context.Context, _ render.InputParams, command cmd.Factory) error {
 	cmd.Stdout().Println("Tearing down minikube cluster")
 	return command.Minikube().Delete().SwallowError().Cmd().Run(ctx)
 }

@@ -5,9 +5,15 @@ import (
 	"reflect"
 
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 )
 
-func EnsureAll(ctx context.Context, input InputParams, command cmd.Factory, resources ...Resource) error {
+type Resource interface {
+	Ensure(ctx context.Context, inputs render.InputParams, command cmd.Factory) error
+	Teardown(ctx context.Context, inputs render.InputParams, command cmd.Factory) error
+}
+
+func EnsureAll(ctx context.Context, input render.InputParams, command cmd.Factory, resources ...Resource) error {
 	for _, resource := range resources {
 		t := reflect.ValueOf(resource)
 		if t.IsNil() {
@@ -25,7 +31,7 @@ func EnsureAll(ctx context.Context, input InputParams, command cmd.Factory, reso
 	return nil
 }
 
-func EnsureFirst(ctx context.Context, input InputParams, command cmd.Factory, resources ...Resource) error {
+func EnsureFirst(ctx context.Context, input render.InputParams, command cmd.Factory, resources ...Resource) error {
 	for _, resource := range resources {
 		t := reflect.ValueOf(resource)
 		if t.IsNil() {
@@ -36,7 +42,7 @@ func EnsureFirst(ctx context.Context, input InputParams, command cmd.Factory, re
 	return nil
 }
 
-func TeardownAll(ctx context.Context, input InputParams, command cmd.Factory, resources ...Resource) error {
+func TeardownAll(ctx context.Context, input render.InputParams, command cmd.Factory, resources ...Resource) error {
 	for _, resource := range resources {
 		t := reflect.ValueOf(resource)
 		if t.IsNil() {
@@ -49,7 +55,7 @@ func TeardownAll(ctx context.Context, input InputParams, command cmd.Factory, re
 	return nil
 }
 
-func TeardownFirst(ctx context.Context, input InputParams, command cmd.Factory, resources ...Resource) error {
+func TeardownFirst(ctx context.Context, input render.InputParams, command cmd.Factory, resources ...Resource) error {
 	for _, resource := range resources {
 		t := reflect.ValueOf(resource)
 		if t.IsNil() {

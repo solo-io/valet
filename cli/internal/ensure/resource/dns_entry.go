@@ -2,46 +2,29 @@ package resource
 
 import (
 	"context"
+	"strings"
 
+	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal/ensure/client"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
 type DnsEntry struct {
-	Domain string `yaml:"domain"`
+	Domain string `yaml:"domain" valet:"key=Domain"`
 	// This is "HostedZone" in AWS / Route53 DNS
-	HostedZone string     `yaml:"hostedZone"`
+	HostedZone string     `yaml:"hostedZone" valet:"key=HostedZone"`
 	Service    ServiceRef `yaml:"service"`
 }
 
-func (d *DnsEntry) updateWithValues(values Values) error {
-	if d.Domain == "" {
-		if values.ContainsKey(DomainKey) {
-			if val, err := values.GetValue(DomainKey); err != nil {
-				return err
-			} else {
-				d.Domain = val
-			}
-		}
+func (d *DnsEntry) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
+	if err := input.Values.RenderFields(d); err != nil {
+		return err
 	}
-	if d.HostedZone == "" {
-		if values.ContainsKey(HostedZoneKey) {
-			if val, err := values.GetValue(HostedZoneKey); err != nil {
-				return err
-			} else {
-				d.HostedZone = val
-			}
-		}
-	}
-	return nil
-}
-
-func (d *DnsEntry) Ensure(ctx context.Context, command cmd.Factory) error {
 	awsClient, err := client.NewAwsDnsClient()
 	if err != nil {
 		return err
 	}
-	ip, err := d.Service.getIpAddress(ctx, command)
+	ip, err := d.Service.getIp(ctx, input, command)
 	if err != nil {
 		return err
 	}
@@ -51,7 +34,7 @@ func (d *DnsEntry) Ensure(ctx context.Context, command cmd.Factory) error {
 	return nil
 }
 
-func (d *DnsEntry) Teardown(ctx context.Context, command cmd.Factory) error {
+func (d *DnsEntry) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
 	cmd.Stderr().Println("Teardown not implemented")
 	return nil
 }
@@ -59,8 +42,24 @@ func (d *DnsEntry) Teardown(ctx context.Context, command cmd.Factory) error {
 type ServiceRef struct {
 	Name      string `yaml:"name"`
 	Namespace string `yaml:"namespace"`
+	Port      string `yaml:"port" valet:"default=http"`
 }
 
-func (s *ServiceRef) getIpAddress(ctx context.Context, command cmd.Factory) (string, error) {
-	return command.Kubectl().GetServiceIP(ctx, s.Namespace, s.Name)
+func (s *ServiceRef) getAddress(ctx context.Context, input InputParams, command cmd.Factory) (string, error) {
+	if err := input.Values.RenderFields(s); err != nil {
+		return "", err
+	}
+	return client.GetIngressHost(s.Name, s.Namespace, s.Port)
+}
+
+func (s *ServiceRef) getIp(ctx context.Context, input InputParams, command cmd.Factory) (string, error) {
+	url, err := s.getAddress(ctx, input, command)
+	if err != nil {
+		return "", err
+	}
+	parts := strings.Split(url, ":")
+	if len(parts) <= 2 {
+		return parts[0], nil
+	}
+	return "", errors.Errorf("Unexpected url %s", url)
 }

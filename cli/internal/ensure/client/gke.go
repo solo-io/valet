@@ -54,7 +54,7 @@ func NewGkeClient(ctx context.Context) (*gkeClient, error) {
 		return nil, err
 	}
 	return &gkeClient{
-			client: client,
+		client: client,
 	}, nil
 }
 

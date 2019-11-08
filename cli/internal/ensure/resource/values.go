@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/solo-io/go-utils/errors"
+	"github.com/solo-io/go-utils/stringutils"
 	cmd_runner "github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
@@ -22,6 +24,11 @@ const (
 	KeyPrefix      = "key:"
 	CmdPrefix      = "cmd:"
 	FilePrefix     = "file:"
+
+	ValetField  = "valet"
+	TemplateTag = "template"
+	DefaultTag  = "default"
+	KeyTag      = "key"
 )
 
 var (
@@ -89,7 +96,7 @@ func (v Values) GetValue(key string) (string, error) {
 		fileString := strings.TrimPrefix(val, FilePrefix)
 		content, err := ioutil.ReadFile(fileString)
 		if err != nil {
-			return  "", err
+			return "", err
 		}
 		return string(content), nil
 	} else {
@@ -103,6 +110,51 @@ func (v Values) ToString() string {
 		entries = append(entries, fmt.Sprintf("%s=%s", k, v))
 	}
 	return fmt.Sprintf("{%s}", strings.Join(entries, ", "))
+}
+
+func (v Values) RenderFields(input interface{}) error {
+	structVal := reflect.ValueOf(input).Elem()
+	structType := reflect.TypeOf(input).Elem()
+	for i := 0; i < structType.NumField(); i++ {
+		fieldType := structType.Field(i)
+		fieldValue := structVal.Field(i)
+		if fieldValue.Kind() == reflect.String {
+			rendered := fieldValue.String()
+			valetTags := strings.Split(fieldType.Tag.Get(ValetField), ",")
+			if stringutils.ContainsString(TemplateTag, valetTags) {
+				loaded, err := LoadTemplate(rendered, v)
+				if err != nil {
+					return err
+				}
+				rendered = loaded
+			}
+			if rendered == "" {
+				key := getTagValue(valetTags, KeyTag)
+				if key != "" && v.ContainsKey(key) {
+					val, err := v.GetValue(key)
+					if err != nil {
+						return err
+					}
+					rendered = val
+				}
+			}
+			if rendered == "" {
+				rendered = getTagValue(valetTags, DefaultTag)
+			}
+			fieldValue.SetString(rendered)
+		}
+	}
+	return nil
+}
+
+func getTagValue(fieldTags []string, tag string) string {
+	prefix := fmt.Sprintf("%s=", tag)
+	for _, fieldTag := range fieldTags {
+		if strings.HasPrefix(fieldTag, prefix) {
+			return strings.TrimPrefix(fieldTag, prefix)
+		}
+	}
+	return ""
 }
 
 type Flags []string

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 )
 
@@ -44,4 +45,8 @@ func (m *Minikube) Cpus(cpus int) *Minikube {
 
 func (m *Minikube) KubeVersion(kubeVersion string) *Minikube {
 	return m.With(fmt.Sprintf("--kubernetes-version=%s", kubeVersion))
+}
+
+func (m *Minikube) IP(ctx context.Context) (string, error) {
+	return m.With("ip").Cmd().Output(ctx)
 }

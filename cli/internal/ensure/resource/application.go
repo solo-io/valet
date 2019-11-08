@@ -15,38 +15,23 @@ type Application struct {
 }
 
 type ApplicationRef struct {
-	Path   string `yaml:"path"`
+	Path   string `yaml:"path" valet:"template"`
 	Values Values `yaml:"values"`
 	Flags  Flags  `yaml:"flags"`
 }
 
-func (a *ApplicationRef) updateWithValues(values Values) error {
-	a.Values = MergeValues(a.Values, values)
-	path, err := LoadTemplate(a.Path, values)
-	if err != nil {
-		return err
-	}
-	a.Path = path
-	return nil
-}
-
-func (a *ApplicationRef) updateWithFlags(flags Flags) {
-	a.Flags = append(a.Flags, flags...)
-}
-
-func (a *ApplicationRef) Load(ctx context.Context) (*Application, error) {
+func (a *ApplicationRef) Load(ctx context.Context, input InputParams) (*Application, error) {
 	app, err := LoadApplication(a.Path)
 	if err != nil {
 		return nil, err
 	}
-	app.updateWithValues(a.Values)
 	var filteredResources []ApplicationResource
 	for _, resource := range app.Resources {
 		keep := true
 		// don't keep resources if a required flag is not set
 		for _, requiredFlag := range resource.Flags {
 			missingRequiredFlag := true
-			for _, flag := range a.Flags {
+			for _, flag := range input.Flags {
 				if flag == requiredFlag {
 					missingRequiredFlag = false
 					break
@@ -59,80 +44,80 @@ func (a *ApplicationRef) Load(ctx context.Context) (*Application, error) {
 		}
 		if keep {
 			filteredResources = append(filteredResources, resource)
-			if resource.Application != nil {
-				// pass on the runtime flags, which at this point we know to be a superset of the required flags
-				resource.Application.Flags = a.Flags
-			}
 		}
 	}
 	app.Resources = filteredResources
 	return app, nil
 }
 
-func (a *ApplicationRef) Ensure(ctx context.Context, command cmd.Factory) error {
-	cmd.Stdout().Println("Ensuring application %s values=%s flags=%s", a.Path, a.Values.ToString(), a.Flags.ToString())
-	app, err := a.Load(ctx)
+func (a *ApplicationRef) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
+	input = input.MergeValues(a.Values)
+	if err := input.Values.RenderFields(a); err != nil {
+		return err
+	}
+	cmd.Stdout().Println("Ensuring application %s values=%s flags=%s", a.Path, input.Values.ToString(), input.Flags.ToString())
+	app, err := a.Load(ctx, input)
 	if err != nil {
 		return err
 	}
-	err = app.Ensure(ctx, command)
+	err = app.Ensure(ctx, input, command)
 	if err == nil {
 		cmd.Stdout().Println("Done ensuring application %s", a.Path)
 	}
 	return err
 }
 
-func (a *ApplicationRef) Teardown(ctx context.Context, command cmd.Factory) error {
-	app, err := a.Load(ctx)
+func (a *ApplicationRef) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
+	input = input.MergeValues(a.Values)
+	if err := input.Values.RenderFields(a); err != nil {
+		return err
+	}
+	app, err := a.Load(ctx, input)
 	if err != nil {
 		return err
 	}
-	return app.Teardown(ctx, command)
+	return app.Teardown(ctx, input, command)
 }
 
-func (a *Application) updateWithValues(values Values) {
-	a.Values = MergeValues(a.Values, values)
-}
-
-func (a *Application) checkRequiredValues() error {
+func (a *Application) checkRequiredValues(input InputParams) error {
 	for _, key := range a.RequiredValues {
-		if a.Values == nil {
+		if input.Values == nil {
 			return RequiredValueNotProvidedError(key)
 		}
-		if _, ok := a.Values[key]; !ok {
+		if _, ok := input.Values[key]; !ok {
 			return RequiredValueNotProvidedError(key)
 		}
 	}
 	return nil
 }
 
-func (a *Application) Teardown(ctx context.Context, command cmd.Factory) error {
-	if err := a.checkRequiredValues(); err != nil {
+func (a *Application) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
+	input = input.MergeValues(a.Values)
+	if err := a.checkRequiredValues(input); err != nil {
 		return err
 	}
 	var resources []Resource
 	for i := len(a.Resources) - 1; i >= 0; i-- {
 		r := &a.Resources[i]
-		r.updateWithValues(a.Values)
 		resources = append(resources, r)
 	}
-	if err := TeardownAll(ctx, command, resources...); err != nil {
+	if err := TeardownAll(ctx, input, command, resources...); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (a *Application) Ensure(ctx context.Context, command cmd.Factory) error {
-	if err := a.checkRequiredValues(); err != nil {
+func (a *Application) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
+	input = input.MergeValues(a.Values)
+	if err := a.checkRequiredValues(input); err != nil {
 		return err
 	}
 	var resources []Resource
 	for _, resource := range a.Resources {
 		r := resource
-		r.updateWithValues(a.Values)
 		resources = append(resources, &r)
 	}
-	if err := EnsureAll(ctx, command, resources...); err != nil {
+	if err := EnsureAll(ctx, input, command, resources...); err != nil {
 		return err
 	}
 	return nil

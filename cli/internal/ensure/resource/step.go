@@ -13,75 +13,22 @@ type Step struct {
 	Install     *ApplicationRef `yaml:"install"`
 	Uninstall   *ApplicationRef `yaml:"uninstall"`
 	WorkflowRef *WorkflowRef    `yaml:"workflow"`
+	Apply       *Manifest       `yaml:"apply"`
+	Delete      *Manifest       `yaml:"delete"`
 
-	Values Values   `yaml:"values"`
-	Flags  []string `yaml:"flags"`
+	Values Values `yaml:"values"`
+	Flags  Flags  `yaml:"flags"`
 }
 
-func (s *Step) updateWithValues(values Values) {
-	s.Values = MergeValues(values, s.Values)
+func (s *Step) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
+	input = input.MergeValues(s.Values)
+	if s.Delete != nil {
+		return s.Delete.Teardown(ctx, input, command)
+	}
+	return EnsureFirst(ctx, input, command, s.Curl, s.Condition, s.DnsEntry, s.Install, s.Uninstall, s.WorkflowRef, s.Apply)
 }
 
-func (s *Step) updateWithFlags(flags []string) {
-	s.Flags = append(s.Flags, flags...)
-}
-
-func (s *Step) Ensure(ctx context.Context, command cmd.Factory) error {
-	if s.Install != nil {
-		if err := s.Install.updateWithValues(s.Values); err != nil {
-			return err
-		}
-		s.Install.updateWithFlags(s.Flags)
-		if err := s.Install.Ensure(ctx, command); err != nil {
-			return err
-		}
-	}
-	if s.Uninstall != nil {
-		s.Uninstall.updateWithFlags(s.Flags)
-		if err := s.Uninstall.updateWithValues(s.Values); err != nil {
-			return err
-		}
-		if err := s.Uninstall.Teardown(ctx, command); err != nil {
-			return err
-		}
-	}
-	if s.Curl != nil {
-		if err := s.Curl.Ensure(ctx, command); err != nil {
-			return err
-		}
-	}
-	if s.Condition != nil {
-		if err := s.Condition.updateWithValues(s.Values); err != nil {
-			return err
-		}
-		if err := s.Condition.Ensure(ctx, command); err != nil {
-			return err
-		}
-	}
-	if s.DnsEntry != nil {
-		if err := s.DnsEntry.updateWithValues(s.Values); err != nil {
-			return err
-		}
-		if err := s.DnsEntry.Ensure(ctx, command); err != nil {
-			return err
-		}
-	}
-	if s.WorkflowRef != nil {
-		s.WorkflowRef.updateWithValues(s.Values)
-		s.WorkflowRef.updateWithFlags(s.Flags)
-		if err := s.WorkflowRef.Ensure(ctx, command); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (s *Step) Teardown(ctx context.Context, command cmd.Factory) error {
-	if s.DnsEntry != nil {
-		if err := s.DnsEntry.Teardown(ctx, command); err != nil {
-			return err
-		}
-	}
-	// TODO: Figure out more teardown story for workflows
-	return nil
+func (s *Step) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
+	input = input.MergeValues(s.Values)
+	return TeardownFirst(ctx, input, command, s.Condition, s.DnsEntry, s.Install, s.Uninstall, s.WorkflowRef, s.Apply)
 }

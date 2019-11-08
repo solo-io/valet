@@ -14,8 +14,8 @@ type HelmChart struct {
 	RepoUrl   string            `yaml:"repoUrl"`
 	ChartName string            `yaml:"chartName"`
 	RepoName  string            `yaml:"repoName"`
-	Version   string            `yaml:"version"`
-	Namespace string            `yaml:"namespace"` // a bit redundant
+	Version   string            `yaml:"version" valet:"key=Version"`
+	Namespace string            `yaml:"namespace" valet:"key=Namespace"`
 	Set       []string          `yaml:"set"`
 	SetEnv    map[string]string `yaml:"setEnv"`
 	Values    Values            `yaml:"values"`
@@ -45,8 +45,11 @@ func (h *HelmChart) updateWithValues(values Values) error {
 	return nil
 }
 
-func (h *HelmChart) Ensure(ctx context.Context, command cmd.Factory) error {
+func (h *HelmChart) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
 	cmd.Stdout().Println("Preparing to install %s version %s", h.ChartName, h.Version)
+	if err := input.Values.RenderFields(h); err != nil {
+		return err
+	}
 	manifest, err := h.renderManifest(ctx, command)
 	if err != nil {
 		return err
@@ -87,7 +90,7 @@ func (h *HelmChart) renderManifest(ctx context.Context, command cmd.Factory) (st
 	}
 	files, err := renderStringValues(h.Files)
 	if err != nil {
-		return"", err
+		return "", err
 	}
 	for key, file := range files {
 		helmCmd = helmCmd.SetFile(fmt.Sprintf("%s=%s", key, file))
@@ -95,8 +98,11 @@ func (h *HelmChart) renderManifest(ctx context.Context, command cmd.Factory) (st
 	return helmCmd.Target(chartDir).Cmd().Output(ctx)
 }
 
-func (h *HelmChart) Teardown(ctx context.Context, command cmd.Factory) error {
+func (h *HelmChart) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
 	cmd.Stdout().Println("Preparing to uninstall %s version %s", h.ChartName, h.Version)
+	if err := input.Values.RenderFields(h); err != nil {
+		return err
+	}
 	manifest, err := h.renderManifest(ctx, command)
 	if err != nil {
 		return err

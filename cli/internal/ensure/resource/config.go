@@ -12,40 +12,39 @@ import (
 )
 
 type Config struct {
-	Cluster *Cluster `yaml:"cluster"`
-	Steps   []Step   `yaml:"steps"`
-	Flags   []string `yaml:"flags"`
-	Values  Values   `yaml:"values"`
+	Cluster      *Cluster `yaml:"cluster"`
+	CleanupSteps []Step   `yaml:"cleanupSteps"`
+	Steps        []Step   `yaml:"steps"`
+	Flags        Flags    `yaml:"flags"`
+	Values       Values   `yaml:"values"`
 }
 
-func (c *Config) Ensure(ctx context.Context, command cmd.Factory) error {
+func (c *Config) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
+	input = input.MergeValues(c.Values)
+	input = input.MergeFlags(c.Flags)
 	if c.Cluster != nil {
-		if err := c.Cluster.Ensure(ctx, command); err != nil {
+		if err := c.Cluster.Ensure(ctx, input, command); err != nil {
 			return err
 		}
 	}
-	for _, step := range c.Steps {
-		step.updateWithValues(c.Values)
-		step.updateWithFlags(c.Flags)
-		if err := step.Ensure(ctx, command); err != nil {
-			return err
-		}
+	workflow := Workflow{
+		Steps:        c.Steps,
+		CleanupSteps: c.CleanupSteps,
 	}
-	return nil
+	return workflow.Ensure(ctx, input, command)
 }
 
-func (c *Config) Teardown(ctx context.Context, command cmd.Factory) error {
+func (c *Config) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
+	input = input.MergeValues(c.Values)
+	input = input.MergeFlags(c.Flags)
 	if c.Cluster != nil {
-		return c.Cluster.Teardown(ctx, command)
+		return c.Cluster.Teardown(ctx, input, command)
 	}
-	for _, step := range c.Steps {
-		step.updateWithValues(c.Values)
-		step.updateWithFlags(c.Flags)
-		if err := step.Teardown(ctx, command); err != nil {
-			return err
-		}
+	workflow := Workflow{
+		Steps:        c.Steps,
+		CleanupSteps: c.CleanupSteps,
 	}
-	return nil
+	return workflow.Teardown(ctx, input, command)
 }
 
 func LoadConfig(path string) (*Config, error) {

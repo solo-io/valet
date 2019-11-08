@@ -30,7 +30,7 @@ var (
 
 type Secret struct {
 	Name      string                 `yaml:"name"`
-	Namespace string                 `yaml:"namespace"`
+	Namespace string                 `yaml:"namespace" valet:"key=Namespace"`
 	Entries   map[string]SecretValue `yaml:"entries"`
 }
 
@@ -47,20 +47,10 @@ type GcloudKmsEncryptedFile struct {
 	Key            string `yaml:"key"`
 }
 
-func (s *Secret) updateWithValues(values Values) error {
-	if s.Namespace == "" {
-		if values.ContainsKey(NamespaceKey) {
-			if val, err := values.GetValue(NamespaceKey); err != nil {
-				return err
-			} else {
-				s.Namespace = val
-			}
-		}
+func (s *Secret) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
+	if err := input.Values.RenderFields(s); err != nil {
+		return err
 	}
-	return nil
-}
-
-func (s *Secret) Ensure(ctx context.Context, command cmd.Factory) error {
 	cmd.Stdout().Println("Ensuring secret %s.%s with %d entries", s.Namespace, s.Name, len(s.Entries))
 	toRun := command.Kubectl().Create(secret).With(generic).WithName(s.Name).Namespace(s.Namespace)
 	var toCleanup []string
@@ -103,7 +93,10 @@ func (s *Secret) Ensure(ctx context.Context, command cmd.Factory) error {
 	return nil
 }
 
-func (s *Secret) Teardown(ctx context.Context, command cmd.Factory) error {
+func (s *Secret) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
+	if err := input.Values.RenderFields(s); err != nil {
+		return err
+	}
 	cmd.Stdout().Println("Tearing down secret %s.%s", s.Namespace, s.Name)
 	return command.Kubectl().Delete(secret).Namespace(s.Namespace).WithName(s.Name).IgnoreNotFound().Cmd().Run(ctx)
 }

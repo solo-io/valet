@@ -77,5 +77,3 @@ func (c *CommandFactory) EksCtl() *EksCtl {
 		cmd: c.getCommand("eksctl"),
 	}
 }
-
-

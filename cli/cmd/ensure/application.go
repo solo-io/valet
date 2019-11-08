@@ -6,6 +6,7 @@ import (
 	"github.com/solo-io/valet/cli/cmd/common"
 	"github.com/solo-io/valet/cli/cmd/teardown"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
+	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 )
@@ -27,16 +28,22 @@ func Application(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *co
 	}
 	cmd.PersistentFlags().StringToStringVarP(&opts.Ensure.Values, "values", "v", make(map[string]string), "values to provide to application")
 	cmd.PersistentFlags().StringSliceVarP(&opts.Ensure.Flags, "flags", "", make([]string, 0), "flags to provide to application")
-	cmd.PersistentFlags().BoolVarP(&opts.Ensure.DryRun, "dry-run", "d", false, "path to file containing config to ensure")
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	return cmd
 }
 
 func ensureApplication(opts *options.Options) error {
-	app, err := common.LoadApplication(opts)
-	if err != nil {
-		return err
+	input := resource.InputParams{
+		Values: opts.Ensure.Values,
+		Flags:  opts.Ensure.Flags,
+		Step:   opts.Ensure.Step,
+	}
+	if opts.Ensure.File == "" {
+		return common.MustProvideFileError
+	}
+	ref := resource.ApplicationRef{
+		Path: opts.Ensure.File,
 	}
 	command := cmd.CommandFactory{}
-	return app.Ensure(opts.Top.Ctx, &command)
+	return ref.Ensure(opts.Top.Ctx, input, &command)
 }

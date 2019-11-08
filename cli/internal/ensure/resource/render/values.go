@@ -137,6 +137,30 @@ func (v Values) RenderFields(input interface{}) error {
 	return nil
 }
 
+func (v Values) RenderValues() (map[string]interface{}, error) {
+	vals := make(map[string]interface{})
+	for k := range v {
+		v, err := v.GetValue(k)
+		if err != nil {
+			return nil, err
+		}
+		vals[k] = v
+	}
+	return vals, nil
+}
+
+func (v Values) RenderStringValues() (map[string]string, error) {
+	vals := make(map[string]string)
+	for k := range v {
+		v, err := v.GetValue(k)
+		if err != nil {
+			return nil, err
+		}
+		vals[k] = v
+	}
+	return vals, nil
+}
+
 func getTagValue(fieldTags []string, tag string) string {
 	prefix := fmt.Sprintf("%s=", tag)
 	for _, fieldTag := range fieldTags {

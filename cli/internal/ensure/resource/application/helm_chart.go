@@ -29,6 +29,7 @@ type HelmChart struct {
 	Set         []string          `yaml:"set"`
 	SetEnv      map[string]string `yaml:"setEnv"`
 	ValuesFiles []string          `yaml:"valuesFiles"`
+	Files       render.Values     `yaml:"files"`
 }
 
 func (h *HelmChart) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
@@ -75,14 +76,14 @@ func (h *HelmChart) renderManifest(ctx context.Context, input render.InputParams
 	for set, envVar := range h.SetEnv {
 		helmCmd = helmCmd.SetEnv(set, envVar)
 	}
-	vals, err := renderStringValues(h.Values)
+	vals, err := input.Values.RenderValues()
 	if err != nil {
 		return "", err
 	}
 	for key, val := range vals {
 		helmCmd = helmCmd.Set(fmt.Sprintf("%s=%s", key, val))
 	}
-	files, err := renderStringValues(h.Files)
+	files, err := h.Files.RenderStringValues()
 	if err != nil {
 		return "", err
 	}
@@ -201,6 +202,13 @@ func (h *HelmChart) getParams() (map[string]string, error) {
 			return nil, errors.Errorf("Environment variable %s not set", envVar)
 		}
 		params[param] = val
+	}
+	for param, file := range h.Files {
+		contents, err := render.LoadFile(file)
+		if err != nil {
+			return nil, err
+		}
+		params[param] = contents
 	}
 	return params, nil
 }

@@ -20,7 +20,7 @@ func (e *EKS) Ensure(ctx context.Context, inputs InputParams, command cmd.Factor
 		return err
 	}
 	if running {
-		return nil
+		return e.SetContext(ctx, command)
 	}
 	return command.EksCtl().CreateCluster(ctx, e.Name, e.Region)
 }

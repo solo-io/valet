@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 
 	"github.com/solo-io/go-utils/errors"
@@ -63,10 +62,10 @@ func (e *EksCtl) DeleteCluster(ctx context.Context, name, region string) error {
 	go func() {
 		stdoutScanner := bufio.NewScanner(streamHandler.Stdout)
 		for stdoutScanner.Scan() {
-			fmt.Println(stdoutScanner.Text()) // Println will add back the final '\n'
+			Stdout().Println(stdoutScanner.Text())
 		}
 		if err := stdoutScanner.Err(); err != nil {
-			fmt.Fprintln(os.Stderr, "reading stdout from current command context:", err)
+			Stderr().Println("reading stdout from current command context:", err)
 		}
 	}()
 	stderr, _ := ioutil.ReadAll(streamHandler.Stderr)
@@ -85,10 +84,10 @@ func (e *EksCtl) CreateCluster(ctx context.Context, name, region string) error {
 	go func() {
 		stdoutScanner := bufio.NewScanner(streamHandler.Stdout)
 		for stdoutScanner.Scan() {
-			fmt.Println(stdoutScanner.Text()) // Println will add back the final '\n'
+			Stdout().Println(stdoutScanner.Text())
 		}
 		if err := stdoutScanner.Err(); err != nil {
-			fmt.Fprintln(os.Stderr, "reading stdout from current command context:", err)
+			Stderr().Println("reading stdout from current command context:", err)
 		}
 	}()
 	stderr, _ := ioutil.ReadAll(streamHandler.Stderr)

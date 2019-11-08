@@ -22,29 +22,6 @@ type HelmChart struct {
 	Files     Values            `yaml:"files"`
 }
 
-func (h *HelmChart) updateWithValues(values Values) error {
-	if h.Version == "" {
-		if values.ContainsKey(VersionKey) {
-			if val, err := values.GetValue(VersionKey); err != nil {
-				return err
-			} else {
-				h.Version = val
-			}
-		}
-	}
-	if h.Namespace == "" {
-		if values.ContainsKey(NamespaceKey) {
-			if val, err := values.GetValue(NamespaceKey); err != nil {
-				return err
-			} else {
-				h.Namespace = val
-			}
-		}
-	}
-	h.Values = MergeValues(h.Values, values)
-	return nil
-}
-
 func (h *HelmChart) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
 	cmd.Stdout().Println("Preparing to install %s version %s", h.ChartName, h.Version)
 	if err := input.Values.RenderFields(h); err != nil {

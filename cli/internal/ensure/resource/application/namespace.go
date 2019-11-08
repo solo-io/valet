@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"fmt"
+
 	"github.com/solo-io/go-utils/installutils/kuberesource"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource"
@@ -17,7 +18,7 @@ const (
 
 var (
 	_ resource.Resource = new(Namespace)
-	_ Renderable = new(Namespace)
+	_ Renderable        = new(Namespace)
 )
 
 type Namespace struct {
@@ -58,7 +59,7 @@ func (n *Namespace) Render(ctx context.Context, inputs render.InputParams, comma
 	}
 	namespace := corev1.Namespace{
 		TypeMeta: metav1.TypeMeta{
-			Kind: "Namespace",
+			Kind:       "Namespace",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{

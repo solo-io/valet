@@ -1,12 +1,13 @@
 package render
 
 import (
+	"regexp"
+
 	"github.com/solo-io/go-utils/installutils/helmchart"
 	"github.com/solo-io/go-utils/installutils/kuberesource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	yaml2json "k8s.io/apimachinery/pkg/util/yaml"
-	"regexp"
 )
 
 var (

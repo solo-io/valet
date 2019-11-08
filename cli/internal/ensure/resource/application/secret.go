@@ -3,13 +3,14 @@ package application
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/solo-io/go-utils/installutils/kuberesource"
 	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	v1 "k8s.io/api/core/v1"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"os"
-	"strings"
 
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
@@ -110,7 +111,7 @@ func (s *Secret) Teardown(ctx context.Context, input render.InputParams, command
 func (s *Secret) Render(ctx context.Context, input render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
 	secret := v1.Secret{
 		TypeMeta: v12.TypeMeta{
-			Kind: "Secret",
+			Kind:       "Secret",
 			APIVersion: "v1",
 		},
 		Type: v1.SecretTypeOpaque,

@@ -23,7 +23,6 @@ var (
 	_ resource.Resource = new(application.Template)
 	_ resource.Resource = new(application.Patch)
 
-
 	_ resource.Resource = new(workflow.Workflow)
 	_ resource.Resource = new(workflow.Condition)
 	_ resource.Resource = new(workflow.Curl)

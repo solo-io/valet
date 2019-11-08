@@ -1,6 +1,5 @@
 package render
 
-
 type InputParams struct {
 	Values Values
 	Flags  Flags

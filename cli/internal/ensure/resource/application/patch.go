@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"

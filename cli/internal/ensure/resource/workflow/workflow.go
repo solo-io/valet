@@ -2,13 +2,12 @@ package workflow
 
 import (
 	"context"
+
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"gopkg.in/yaml.v2"
 )
-
-
 
 type Workflow struct {
 	Steps          []Step   `yaml:"steps"`

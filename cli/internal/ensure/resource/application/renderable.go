@@ -2,10 +2,11 @@ package application
 
 import (
 	"context"
+	"reflect"
+
 	"github.com/solo-io/go-utils/installutils/kuberesource"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
-	"reflect"
 )
 
 type Renderable interface {

@@ -2,9 +2,10 @@ package resource
 
 import (
 	"context"
+	"reflect"
+
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
-	"reflect"
 )
 
 type Resource interface {

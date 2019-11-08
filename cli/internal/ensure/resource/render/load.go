@@ -2,12 +2,13 @@ package render
 
 import (
 	"bytes"
-	"github.com/solo-io/go-utils/osutils"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"net/http"
 	"net/url"
 	"strings"
 	"text/template"
+
+	"github.com/solo-io/go-utils/osutils"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
 func LoadTemplate(tmpl string, values Values) (string, error) {

@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"context"
+
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/cluster"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
@@ -10,10 +11,10 @@ import (
 
 type Config struct {
 	Cluster      *cluster.Cluster `yaml:"cluster"`
-	CleanupSteps []Step   `yaml:"cleanupSteps"`
-	Steps        []Step   `yaml:"steps"`
-	Flags        render.Flags    `yaml:"flags"`
-	Values       render.Values   `yaml:"values"`
+	CleanupSteps []Step           `yaml:"cleanupSteps"`
+	Steps        []Step           `yaml:"steps"`
+	Flags        render.Flags     `yaml:"flags"`
+	Values       render.Values    `yaml:"values"`
 }
 
 func (c *Config) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {

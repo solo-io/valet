@@ -2,8 +2,9 @@ package workflow
 
 import (
 	"context"
-	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"time"
+
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"

@@ -2,10 +2,11 @@ package common
 
 import (
 	"context"
+	"os"
+
 	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
-	"os"
 
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/cmd/config"

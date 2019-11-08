@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"text/template"
 
@@ -54,9 +55,10 @@ func LoadBytes(path string) ([]byte, error) {
 	}
 
 	osClient := osutils.NewOsClient()
-	contents, err := osClient.ReadFile(path)
+	expandedPath := os.ExpandEnv(path)
+	contents, err := osClient.ReadFile(expandedPath)
 	if err != nil {
-		cmd.Stderr().Println("Failed to read file '%s': %s", path, err.Error())
+		cmd.Stderr().Println("Failed to read file '%s': %s", expandedPath, err.Error())
 		return nil, err
 	}
 	return contents, nil

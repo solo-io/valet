@@ -1,4 +1,4 @@
-package resource
+package render
 
 import (
 	"context"
@@ -39,16 +39,6 @@ var (
 )
 
 type Values map[string]string
-
-func MergeValues(merge, with Values) Values {
-	if with == nil {
-		with = make(map[string]string)
-	}
-	for k, v := range merge {
-		with[k] = v
-	}
-	return with
-}
 
 func (v Values) ContainsKey(key string) bool {
 	if v == nil {

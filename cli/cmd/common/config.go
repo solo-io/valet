@@ -2,12 +2,14 @@ package common
 
 import (
 	"context"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
 	"os"
 
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/cmd/config"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"github.com/solo-io/valet/cli/options"
 )
 
@@ -15,12 +17,12 @@ var (
 	MustProvideFileError = errors.Errorf("Must provide file option or subcommand")
 )
 
-func LoadApplication(opts *options.Options, input resource.InputParams) (*resource.Application, error) {
+func LoadApplication(opts *options.Options, input render.InputParams) (*application.Application, error) {
 	if opts.Ensure.File == "" {
 		return nil, MustProvideFileError
 	}
 
-	ref := resource.ApplicationRef{
+	ref := application.Ref{
 		Path: opts.Ensure.File,
 	}
 
@@ -35,12 +37,12 @@ func LoadApplication(opts *options.Options, input resource.InputParams) (*resour
 	return app, nil
 }
 
-func LoadConfig(opts *options.Options) (*resource.Config, error) {
+func LoadConfig(opts *options.Options) (*workflow.Config, error) {
 	if opts.Ensure.File == "" {
 		return nil, MustProvideFileError
 	}
 
-	cfg, err := resource.LoadConfig(opts.Ensure.File)
+	cfg, err := workflow.LoadConfig(opts.Ensure.File)
 	if err != nil {
 		return nil, err
 	}

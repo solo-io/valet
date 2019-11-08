@@ -1,10 +1,11 @@
-package resource
+package workflow
 
 import (
 	"context"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal/ensure/client"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"strings"
 )
 
@@ -15,7 +16,7 @@ type DnsEntry struct {
 	Service    ServiceRef `yaml:"service"`
 }
 
-func (d *DnsEntry) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
+func (d *DnsEntry) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
 	if err := input.Values.RenderFields(d); err != nil {
 		return err
 	}
@@ -33,7 +34,7 @@ func (d *DnsEntry) Ensure(ctx context.Context, input InputParams, command cmd.Fa
 	return nil
 }
 
-func (d *DnsEntry) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
+func (d *DnsEntry) Teardown(ctx context.Context, input render.InputParams, command cmd.Factory) error {
 	cmd.Stderr().Println("Teardown not implemented")
 	return nil
 }
@@ -44,14 +45,14 @@ type ServiceRef struct {
 	Port      string `yaml:"port" valet:"default=http"`
 }
 
-func (s *ServiceRef) getAddress(ctx context.Context, input InputParams, command cmd.Factory) (string, error) {
+func (s *ServiceRef) getAddress(ctx context.Context, input render.InputParams, command cmd.Factory) (string, error) {
 	if err := input.Values.RenderFields(s); err != nil {
 		return "", err
 	}
 	return client.GetIngressHost(s.Name, s.Namespace, s.Port)
 }
 
-func (s *ServiceRef) getIp(ctx context.Context, input InputParams, command cmd.Factory) (string, error) {
+func (s *ServiceRef) getIp(ctx context.Context, input render.InputParams, command cmd.Factory) (string, error) {
 	url, err := s.getAddress(ctx, input, command)
 	if err != nil {
 		return "", err

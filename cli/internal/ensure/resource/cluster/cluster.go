@@ -1,14 +1,16 @@
-package resource
+package cluster
 
 import (
 	"context"
+	"github.com/solo-io/valet/cli/internal/ensure/resource"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
 type ClusterResource interface {
-	Resource
+	resource.Resource
 	SetContext(ctx context.Context, command cmd.Factory) error
 }
 
@@ -33,7 +35,7 @@ func (c *Cluster) SetContext(ctx context.Context, command cmd.Factory) error {
 	return NoClusterDefinedError
 }
 
-func (c *Cluster) Ensure(ctx context.Context, inputs InputParams, command cmd.Factory) error {
+func (c *Cluster) Ensure(ctx context.Context, inputs render.InputParams, command cmd.Factory) error {
 	if c.Minikube != nil {
 		return c.Minikube.Ensure(ctx, inputs, command)
 	}
@@ -43,7 +45,7 @@ func (c *Cluster) Ensure(ctx context.Context, inputs InputParams, command cmd.Fa
 	return nil
 }
 
-func (c *Cluster) Teardown(ctx context.Context, inputs InputParams, command cmd.Factory) error {
+func (c *Cluster) Teardown(ctx context.Context, inputs render.InputParams, command cmd.Factory) error {
 	if c.Minikube != nil {
 		return c.Minikube.Teardown(ctx, inputs, command)
 	}

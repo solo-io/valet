@@ -4,7 +4,8 @@ import (
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/valet/cli/cmd/common"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"github.com/solo-io/valet/cli/internal/ensure/resource"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 )
@@ -34,8 +35,8 @@ func teardown(opts *options.Options) error {
 	return TeardownCfg(opts, cfg)
 }
 
-func TeardownCfg(opts *options.Options, cfg *resource.Config) error {
+func TeardownCfg(opts *options.Options, cfg *workflow.Config) error {
 	command := cmd.CommandFactory{}
-	input := resource.InputParams{}
+	input := render.InputParams{}
 	return cfg.Teardown(opts.Top.Ctx, input, &command)
 }

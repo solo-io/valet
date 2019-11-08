@@ -1,25 +1,38 @@
-package resource
+package application
 
 import (
 	"context"
+	"fmt"
+	"github.com/solo-io/go-utils/errors"
+	"github.com/solo-io/go-utils/installutils/helmchart"
+	"github.com/solo-io/go-utils/installutils/kuberesource"
+	"github.com/solo-io/valet/cli/internal/ensure/resource"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
+var (
+	_ resource.Resource = new(HelmChart)
+	_ Renderable = new(HelmChart)
+)
+
 type HelmChart struct {
-	RepoUrl   string            `yaml:"repoUrl"`
-	ChartName string            `yaml:"chartName"`
-	RepoName  string            `yaml:"repoName"`
-	Version   string            `yaml:"version" valet:"key=Version"`
-	Namespace string            `yaml:"namespace" valet:"key=Namespace"`
-	Set       []string          `yaml:"set"`
-	SetEnv    map[string]string `yaml:"setEnv"`
+	RepoUrl     string            `yaml:"repoUrl"`
+	ChartName   string            `yaml:"chartName"`
+	RepoName    string            `yaml:"repoName"`
+	Version     string            `yaml:"version" valet:"key=Version"`
+	Namespace   string            `yaml:"namespace" valet:"key=Namespace"`
+	Set         []string          `yaml:"set"`
+	SetEnv      map[string]string `yaml:"setEnv"`
+	ValuesFiles []string          `yaml:"valuesFiles"`
 }
 
-func (h *HelmChart) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
+func (h *HelmChart) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
 	cmd.Stdout().Println("Preparing to install %s version %s", h.ChartName, h.Version)
 	if err := input.Values.RenderFields(h); err != nil {
 		return err
@@ -58,7 +71,7 @@ func (h *HelmChart) renderManifest(ctx context.Context, command cmd.Factory) (st
 	return helmCmd.Target(chartDir).Cmd().Output(ctx)
 }
 
-func (h *HelmChart) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
+func (h *HelmChart) Teardown(ctx context.Context, input render.InputParams, command cmd.Factory) error {
 	cmd.Stdout().Println("Preparing to uninstall %s version %s", h.ChartName, h.Version)
 	if err := input.Values.RenderFields(h); err != nil {
 		return err
@@ -120,4 +133,75 @@ func (h *HelmChart) getLocalDirectory() (string, error) {
 		return "", err
 	}
 	return filepath.Join(home, ".helm", "untar", h.RepoName, h.ChartName, h.Version), nil
+}
+
+func (h *HelmChart) Render(ctx context.Context, input render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
+	if err := input.Values.RenderFields(h); err != nil {
+		return nil, err
+	}
+	url := h.getChartUrl()
+	values, err := h.computeValues(ctx)
+	if err != nil {
+		return nil, err
+	}
+	manifests, err := helmchart.RenderManifests(ctx,
+		url,
+		values,
+		h.ChartName,
+		h.Namespace,
+		"")
+	if err != nil {
+		return nil, err
+	}
+	return manifests.ResourceList()
+}
+
+func (h *HelmChart) getChartUrl() string {
+	filename := fmt.Sprintf("%s-%s.tgz", h.ChartName, h.Version)
+	if strings.HasSuffix(h.RepoUrl, "/") {
+		return fmt.Sprintf("%s%s/%s", h.RepoUrl, "charts", filename)
+	}
+	return fmt.Sprintf("%s/%s/%s", h.RepoUrl, "charts", filename)
+}
+
+func (h *HelmChart) getParams() (map[string]string, error) {
+	params := make(map[string]string)
+	for _, set := range h.Set {
+		parts := strings.Split(set, "=")
+		if len(parts) != 2 {
+			return nil, errors.Errorf("Invalid format (must be A=B): %s", set)
+		}
+		params[parts[0]] = parts[1]
+	}
+	for param, envVar := range h.SetEnv {
+		val := os.Getenv(envVar)
+		if val == "" {
+			return nil, errors.Errorf("Environment variable %s not set", envVar)
+		}
+		params[param] = val
+	}
+	return params, nil
+}
+
+func (h *HelmChart) computeValues(ctx context.Context) (string, error) {
+	params, err := h.getParams()
+	if err != nil {
+		return "", err
+	}
+	values, err := render.ConvertParamsToNestedMap(params)
+	if err != nil {
+		return "", err
+	}
+	for _, valuesFile := range h.ValuesFiles {
+		valuesYaml, err := render.LoadFile(valuesFile)
+		if err != nil {
+			return "", err
+		}
+		v, err := render.ConvertYamlStringToNestedMap(valuesYaml)
+		if err != nil {
+			return "", err
+		}
+		values = render.CoalesceValuesMap(ctx, values, v)
+	}
+	return render.ConvertNestedMapToYaml(values)
 }

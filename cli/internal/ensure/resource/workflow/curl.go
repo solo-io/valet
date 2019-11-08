@@ -1,10 +1,11 @@
-package resource
+package workflow
 
 import (
 	"bytes"
 	"context"
 	"fmt"
 	"github.com/avast/retry-go"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"io"
 	"net/http"
 	"strings"
@@ -33,18 +34,18 @@ type Curl struct {
 	Service      ServiceRef        `yaml:"service"`
 }
 
-func (c *Curl) Ensure(ctx context.Context, input InputParams, command cmd.Factory) error {
+func (c *Curl) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
 	if err := input.Values.RenderFields(c); err != nil {
 		return err
 	}
 	return c.doCurl(ctx, input, command)
 }
 
-func (c *Curl) Teardown(ctx context.Context, input InputParams, command cmd.Factory) error {
+func (c *Curl) Teardown(ctx context.Context, input render.InputParams, command cmd.Factory) error {
 	return nil
 }
 
-func (c *Curl) doCurl(ctx context.Context, input InputParams, command cmd.Factory) error {
+func (c *Curl) doCurl(ctx context.Context, input render.InputParams, command cmd.Factory) error {
 	ip, err := c.Service.getAddress(ctx, input, command)
 	if err != nil {
 		return err

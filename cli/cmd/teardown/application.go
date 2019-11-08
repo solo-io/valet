@@ -4,7 +4,8 @@ import (
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/valet/cli/cmd/common"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"github.com/solo-io/valet/cli/internal/ensure/resource"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 )
@@ -23,14 +24,14 @@ func Application(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *co
 }
 
 func TeardownApplication(opts *options.Options) error {
-	input := resource.InputParams{
+	input := render.InputParams{
 		Values: opts.Ensure.Values,
 		Flags:  opts.Ensure.Flags,
 	}
 	if opts.Ensure.File == "" {
 		return common.MustProvideFileError
 	}
-	ref := resource.ApplicationRef{
+	ref := application.Ref{
 		Path: opts.Ensure.File,
 	}
 	command := cmd.CommandFactory{}

@@ -11,6 +11,11 @@ steps:
         path: '/go/pkg'
     id: 'untar-mod-cache'
     waitFor: ['-']
+  - name: 'gcr.io/$PROJECT_ID/go-mod-ginkgo:0.1.5'
+    volumes: *vol
+    args: ['-r', '-failFast', '.']
+    waitFor: ['untar-mod-cache']
+    id: 'test'
 
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'

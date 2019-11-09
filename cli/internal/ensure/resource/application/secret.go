@@ -2,7 +2,6 @@ package application
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 
@@ -10,7 +9,8 @@ import (
 	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	v1 "k8s.io/api/core/v1"
-	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/yaml"
 
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
@@ -38,6 +38,7 @@ var (
 type Secret struct {
 	Name      string                 `yaml:"name"`
 	Namespace string                 `yaml:"namespace" valet:"key=Namespace"`
+	Type      string                 `yaml:"type" valet:"default=Opaque"`
 	Entries   map[string]SecretValue `yaml:"entries"`
 }
 
@@ -59,42 +60,18 @@ func (s *Secret) Ensure(ctx context.Context, input render.InputParams, command c
 		return err
 	}
 	cmd.Stdout().Println("Ensuring secret %s.%s with %d entries", s.Namespace, s.Name, len(s.Entries))
-	toRun := command.Kubectl().Create(secret).With(generic).WithName(s.Name).Namespace(s.Namespace)
-	var toCleanup []string
-	for name, v := range s.Entries {
-		if v.File != "" {
-			fromFile := fmt.Sprintf("--from-file=%s=%s", name, os.ExpandEnv(v.File))
-			toRun = toRun.With(fromFile)
-		} else if v.EnvVar != "" {
-			template := "--from-literal=%s=%s"
-			fromLiteral := fmt.Sprintf(template, name, os.Getenv(v.EnvVar))
-			fromLiteralRedacted := fmt.Sprintf(template, name, cmd.Redacted)
-			toRun = toRun.With(fromLiteral).Redact(fromLiteral, fromLiteralRedacted)
-		} else if v.GcloudKmsEncryptedFile != nil {
-			if !strings.HasSuffix(v.GcloudKmsEncryptedFile.CiphertextFile, encryptedSuffix) {
-				return InvalidCiphertextFilenameError
-			}
-			unencrypted := strings.TrimSuffix(v.GcloudKmsEncryptedFile.CiphertextFile, encryptedSuffix)
-			err := command.Gcloud().DecryptFile(
-				v.GcloudKmsEncryptedFile.CiphertextFile,
-				unencrypted,
-				v.GcloudKmsEncryptedFile.GcloudProject,
-				v.GcloudKmsEncryptedFile.Keyring,
-				v.GcloudKmsEncryptedFile.Key).Cmd().Run(ctx)
-			if err != nil {
-				return UnableToDecryptFileError(err)
-			}
-			toCleanup = append(toCleanup, unencrypted)
-			fromFile := fmt.Sprintf("--from-file=%s=%s", name, unencrypted)
-			toRun = toRun.With(fromFile)
-		}
-	}
-	if err := toRun.DryRunAndApply(ctx, command); err != nil {
+	resources, err := s.Render(ctx, input, command)
+	if err != nil {
 		return err
 	}
-	for _, fileToCleanup := range toCleanup {
-		if err := os.Remove(fileToCleanup); err != nil {
-			return UnableToCleanupPlaintextFileError(err)
+	for _, resource := range resources {
+		toRun := command.Kubectl().Namespace(s.Namespace)
+		byt, err := yaml.Marshal(resource)
+		if err != nil {
+			return err
+		}
+		if err := toRun.ApplyStdIn(string(byt)).Cmd().Run(ctx); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -110,12 +87,12 @@ func (s *Secret) Teardown(ctx context.Context, input render.InputParams, command
 
 func (s *Secret) Render(ctx context.Context, input render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
 	secret := v1.Secret{
-		TypeMeta: v12.TypeMeta{
+		TypeMeta: metav1.TypeMeta{
 			Kind:       "Secret",
 			APIVersion: "v1",
 		},
-		Type: v1.SecretTypeOpaque,
-		ObjectMeta: v12.ObjectMeta{
+		Type: v1.SecretType(s.Type),
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      s.Name,
 			Namespace: s.Namespace,
 		},

@@ -6,6 +6,7 @@ import (
 	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
+	v1 "k8s.io/api/core/v1"
 )
 
 var _ = Describe("Values", func() {
@@ -126,6 +127,7 @@ var _ = Describe("Values", func() {
 			secret      = application.Secret{
 				Namespace: "foo1",
 				Name:      "foo2",
+				Type:      string(v1.SecretTypeOpaque),
 				Entries: map[string]application.SecretValue{
 					"foo3": {
 						File: "foo4",

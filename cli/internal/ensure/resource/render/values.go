@@ -90,7 +90,7 @@ func (v Values) GetValue(key string) (string, error) {
 		return LoadTemplate(template, v)
 	} else if strings.HasPrefix(val, EnvPrefix) {
 		env := strings.TrimPrefix(val, EnvPrefix)
-		return os.Getenv(env), nil
+		return os.ExpandEnv(env), nil
 	} else if strings.HasPrefix(val, CmdPrefix) {
 		cmdString := strings.TrimPrefix(val, CmdPrefix)
 		splitCmd := strings.Split(cmdString, " ")

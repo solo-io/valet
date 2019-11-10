@@ -8,19 +8,13 @@ import (
 )
 
 var (
-	_ resource.Resource = new(workflow.Config)
-
 	_ resource.Resource = new(cluster.Cluster)
 	_ resource.Resource = new(cluster.GKE)
 	_ resource.Resource = new(cluster.Minikube)
 
 	_ resource.Resource = new(application.Application)
 	_ resource.Resource = new(application.Resource)
-	_ resource.Resource = new(application.HelmChart)
-	_ resource.Resource = new(application.Manifest)
 	_ resource.Resource = new(application.Secret)
-	_ resource.Resource = new(application.Namespace)
-	_ resource.Resource = new(application.Template)
 	_ resource.Resource = new(application.Patch)
 
 	_ resource.Resource = new(workflow.Workflow)

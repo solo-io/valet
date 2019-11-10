@@ -5,43 +5,26 @@ import (
 
 	"github.com/solo-io/go-utils/installutils/kuberesource"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 )
 
 var (
-	_ resource.Resource = new(Template)
 	_ Renderable        = new(Template)
 )
 
 type Template struct {
-	RegistryName string        `yaml:"registry" valet="default=default"`
+	RegistryName string        `yaml:"registry" valet:"default=default"`
 	Path         string        `yaml:"path"`
 	Values       render.Values `yaml:"values"`
 }
 
-func (t *Template) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
-	input = input.MergeValues(t.Values)
-	cmd.Stdout().Println("Ensuring template %s %s", t.Path, input.Values.ToString())
-	rendered, err := t.Load(input)
-	if err != nil {
-		return err
-	}
-	return command.Kubectl().ApplyStdIn(rendered).Cmd().Run(ctx)
-}
-
-func (t *Template) Teardown(ctx context.Context, input render.InputParams, command cmd.Factory) error {
-	input = input.MergeValues(t.Values)
-	cmd.Stdout().Println("Tearing down template %s %s", t.Path, input.Values.ToString())
-	rendered, err := t.Load(input)
-	if err != nil {
-		return err
-	}
-	return command.Kubectl().DeleteStdIn(rendered).Cmd().Run(ctx)
-}
-
 func (t *Template) Load(input render.InputParams) (string, error) {
-	tmpl, err := input.LoadFile(t.Path)
+	input = input.MergeValues(t.Values)
+	if err := input.Values.RenderFields(t); err != nil {
+		return "", err
+	}
+	cmd.Stdout().Println("Loading template %s:%s", t.RegistryName, t.Path)
+	tmpl, err := input.LoadFile(t.RegistryName, t.Path)
 	if err != nil {
 		return "", err
 	}

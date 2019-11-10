@@ -9,11 +9,12 @@ import (
 )
 
 type Patch struct {
-	Path      string `yaml:"path"`
-	PatchType string `yaml:"patchType"`
-	Name      string `yaml:"name" valet:"template"`
-	Namespace string `yaml:"namespace" valet:"template"`
-	KubeType  string `yaml:"kubeType"`
+	RegistryName string `yaml:"registry" valet:"default=default"`
+	Path         string `yaml:"path"`
+	PatchType    string `yaml:"patchType"`
+	Name         string `yaml:"name" valet:"template"`
+	Namespace    string `yaml:"namespace" valet:"template"`
+	KubeType     string `yaml:"kubeType"`
 
 	Values render.Values `yaml:"values"`
 }
@@ -24,7 +25,7 @@ func (p *Patch) Ensure(ctx context.Context, input render.InputParams, command cm
 		return err
 	}
 	cmd.Stdout().Println("Patching %s.%s (%s) from file %s (%s) %s", p.Namespace, p.Name, p.KubeType, p.Path, p.PatchType, input.Values.ToString())
-	patchTemplate, err := render.LoadFile(p.Path)
+	patchTemplate, err := input.LoadFile(p.RegistryName, p.Path)
 	if err != nil {
 		return err
 	}

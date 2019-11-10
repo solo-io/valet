@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/solo-io/go-utils/installutils/kuberesource"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
@@ -14,11 +15,10 @@ var (
 
 type Manifest struct {
 	RegistryName string `yaml:"registry" valet:"default=default"`
-	Path         string `yaml:"path"`
+	Path         string `yaml:"path" valet:"key=Path"`
 }
 
 func (m *Manifest) Render(ctx context.Context, input render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
-	cmd.Stdout().Println("Rendering manifest %s", m.Path)
 	contents, err := m.load(input)
 	if err != nil {
 		return nil, err
@@ -30,6 +30,11 @@ func (m *Manifest) load(input render.InputParams) (string, error) {
 	if err := input.Values.RenderFields(m); err != nil {
 		return "", err
 	}
+	manifest := m.Path
+	if m.RegistryName != "" && m.RegistryName != render.DefaultRegistry {
+		manifest = fmt.Sprintf("%s:%s", m.RegistryName, manifest)
+	}
+	cmd.Stdout().Println("Loading manifest %s", manifest)
 	contents, err := input.LoadFile(m.RegistryName, m.Path)
 	if err != nil {
 		return "", err

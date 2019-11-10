@@ -14,7 +14,7 @@ const (
 )
 
 var (
-	_ Renderable        = new(Namespace)
+	_ Renderable = new(Namespace)
 )
 
 type Namespace struct {
@@ -27,6 +27,7 @@ func (n *Namespace) Render(ctx context.Context, inputs render.InputParams, comma
 	if err := inputs.Values.RenderFields(n); err != nil {
 		return nil, err
 	}
+	cmd.Stdout().Println("Rendering namespace %s", n.Name)
 	namespace := corev1.Namespace{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Namespace",

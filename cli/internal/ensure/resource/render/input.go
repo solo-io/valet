@@ -69,3 +69,10 @@ func (i *InputParams) GetRegistry(name string) (Registry, error) {
 	}
 	return nil, UnknownRegistryError(name)
 }
+
+func (i *InputParams) SetRegistry(name string, registry Registry) {
+	if i.Registries == nil {
+		i.Registries = make(map[string]Registry)
+	}
+	i.Registries[name] = registry
+}

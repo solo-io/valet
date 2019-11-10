@@ -1,15 +1,8 @@
 package render
 
 import (
-	"bytes"
-	"net/http"
-	"net/url"
-	"os"
 	"strings"
 	"text/template"
-
-	"github.com/solo-io/go-utils/osutils"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
 func LoadTemplate(tmpl string, values Values) (string, error) {
@@ -18,7 +11,7 @@ func LoadTemplate(tmpl string, values Values) (string, error) {
 		return "", err
 	}
 	out := strings.Builder{}
-	vals, err := renderValues(values)
+	vals, err := values.Render()
 	if err != nil {
 		return "", err
 	}

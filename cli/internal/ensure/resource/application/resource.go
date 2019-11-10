@@ -31,26 +31,29 @@ type Resource struct {
 }
 
 func (a *Resource) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
-	input = input.MergeValues(a.Values)
-	var manifest *Manifest = nil
-	if a.Path != "" {
-		manifest = &Manifest{
-			Path: a.Path,
-		}
-	}
-	return resource.EnsureFirst(ctx, input, command, a.HelmChart, a.Secret, manifest, a.Template, a.Patch, a.Namespace, a.Application, a.Manifest)
+	//input = input.MergeValues(a.Values)
+	//var manifest *Manifest = nil
+	//if a.Path != "" {
+	//	manifest = &Manifest{
+	//		Path: a.Path,
+	//	}
+	//}
+	//return resource.EnsureFirst(ctx, input, command, a.HelmChart, a.Secret, manifest, a.Template, a.Patch, a.Namespace, a.Application, a.Manifest)
+	panic("revisit")
 }
 
 func (a *Resource) Teardown(ctx context.Context, input render.InputParams, command cmd.Factory) error {
-	input = input.MergeValues(a.Values)
-	var manifest *Manifest = nil
-	if a.Path != "" {
-		manifest = &Manifest{
-			Path: a.Path,
-		}
-	}
-	return resource.TeardownFirst(ctx, input, command, a.HelmChart, a.Secret, manifest, a.Template, a.Patch, a.Namespace, a.Application, a.Manifest)
+	//input = input.MergeValues(a.Values)
+	//var manifest *Manifest = nil
+	//if a.Path != "" {
+	//	manifest = &Manifest{
+	//		Path: a.Path,
+	//	}
+	//}
+	//return resource.TeardownFirst(ctx, input, command, a.HelmChart, a.Secret, manifest, a.Template, a.Patch, a.Namespace, a.Application, a.Manifest)
+	panic("revisit")
 }
+
 
 func (a *Resource) Render(ctx context.Context, input render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
 	input = input.MergeValues(a.Values)

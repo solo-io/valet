@@ -32,26 +32,17 @@ type Command struct {
 }
 
 func (c *Command) Run(ctx context.Context) error {
-	runner := c.CommandRunner
-	if runner == nil {
-		runner = &commandRunner{}
-	}
+	runner := c.DefaultCommandRunner()
 	return runner.Run(ctx, c)
 }
 
 func (c *Command) Output(ctx context.Context) (string, error) {
-	runner := c.CommandRunner
-	if runner == nil {
-		runner = &commandRunner{}
-	}
+	runner := c.DefaultCommandRunner()
 	return runner.Output(ctx, c)
 }
 
 func (c *Command) Stream(ctx context.Context) (*CommandStreamHandler, error) {
-	runner := c.CommandRunner
-	if runner == nil {
-		runner = &commandRunner{}
-	}
+	runner := c.DefaultCommandRunner()
 	return runner.Stream(ctx, c)
 }
 
@@ -62,6 +53,14 @@ type CommandRunner interface {
 }
 
 type commandRunner struct {
+}
+
+func (c *Command) DefaultCommandRunner() CommandRunner {
+	runner := c.CommandRunner
+	if runner == nil {
+		runner = &commandRunner{}
+	}
+	return runner
 }
 
 func (r *commandRunner) Run(ctx context.Context, c *Command) error {

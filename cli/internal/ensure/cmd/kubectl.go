@@ -40,6 +40,10 @@ func (k *Kubectl) Namespace(ns string) *Kubectl {
 	return k.With("-n", ns)
 }
 
+func (k *Kubectl) Context(context string) *Kubectl {
+	return k.With("--context", context)
+}
+
 func (k *Kubectl) DryRun() *Kubectl {
 	return k.With("--dry-run")
 }

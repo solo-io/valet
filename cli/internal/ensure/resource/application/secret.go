@@ -124,7 +124,7 @@ func (s *Secret) Render(ctx context.Context, input render.InputParams, command c
 	var toCleanup []string
 	for k, v := range s.Entries {
 		if v.File != "" {
-			contents, err := render.LoadBytes(v.File)
+			contents, err := input.File(v.File)
 			if err != nil {
 				return nil, err
 			}

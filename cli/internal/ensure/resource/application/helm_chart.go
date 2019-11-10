@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/avast/retry-go"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/go-utils/installutils/helmchart"
 	"github.com/solo-io/go-utils/installutils/kuberesource"
@@ -22,42 +21,16 @@ var (
 )
 
 type HelmChart struct {
-	RepoUrl     string            `yaml:"repoUrl"`
-	ChartName   string            `yaml:"chartName"`
-	RepoName    string            `yaml:"repoName"`
-	Version     string            `yaml:"version" valet:"key=Version"`
-	Namespace   string            `yaml:"namespace" valet:"key=Namespace"`
-	Set         []string          `yaml:"set"`
-	SetEnv      map[string]string `yaml:"setEnv"`
-	ValuesFiles []string          `yaml:"valuesFiles"`
-	Files       render.Values     `yaml:"files"`
-}
-
-func (h *HelmChart) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
-	cmd.Stdout().Println("Preparing to install %s version %s", h.ChartName, h.Version)
-	if err := input.Values.RenderFields(h); err != nil {
-		return err
-	}
-	manifest, err := h.renderManifest(ctx, input, command)
-	if err != nil {
-		return err
-	}
-	kubectl := command.Kubectl().ApplyStdIn(manifest)
-	if h.Namespace != "" {
-		kubectl = kubectl.Namespace(h.Namespace)
-	}
-	cmd.Stdout().Println("Applying manifest")
-	err = retry.Do(func() error {
-		out, err := kubectl.SwallowErrorLog(true).Cmd().Output(ctx)
-		if err != nil {
-			return errors.Wrapf(err, out)
-		}
-		return nil
-	}, retry.Attempts(3))
-	if err != nil {
-		return err
-	}
-	return internal.WaitUntilPodsRunning(h.Namespace)
+	RegistryName string            `yaml:"registryName" valet:"default=default"`
+	RepoUrl      string            `yaml:"repoUrl"`
+	ChartName    string            `yaml:"chartName"`
+	RepoName     string            `yaml:"repoName"`
+	Version      string            `yaml:"version" valet:"key=Version"`
+	Namespace    string            `yaml:"namespace" valet:"key=Namespace"`
+	Set          []string          `yaml:"set"`
+	SetEnv       map[string]string `yaml:"setEnv"`
+	ValuesFiles  []string          `yaml:"valuesFiles"`
+	Files        render.Values     `yaml:"files"`
 }
 
 func (h *HelmChart) renderManifest(ctx context.Context, input render.InputParams, command cmd.Factory) (string, error) {
@@ -164,7 +137,7 @@ func (h *HelmChart) Render(ctx context.Context, input render.InputParams, comman
 		return nil, err
 	}
 	url := h.getChartUrl()
-	values, err := h.computeValues(ctx)
+	values, err := h.computeValues(ctx, input)
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +161,7 @@ func (h *HelmChart) getChartUrl() string {
 	return fmt.Sprintf("%s/%s/%s", h.RepoUrl, "charts", filename)
 }
 
-func (h *HelmChart) getParams() (map[string]string, error) {
+func (h *HelmChart) getParams(input render.InputParams) (map[string]string, error) {
 	params := make(map[string]string)
 	for _, set := range h.Set {
 		parts := strings.Split(set, "=")
@@ -205,7 +178,7 @@ func (h *HelmChart) getParams() (map[string]string, error) {
 		params[param] = val
 	}
 	for param, file := range h.Files {
-		contents, err := render.LoadFile(file)
+		contents, err := input.LoadFile(h.RegistryName, file)
 		if err != nil {
 			return nil, err
 		}
@@ -214,8 +187,8 @@ func (h *HelmChart) getParams() (map[string]string, error) {
 	return params, nil
 }
 
-func (h *HelmChart) computeValues(ctx context.Context) (string, error) {
-	params, err := h.getParams()
+func (h *HelmChart) computeValues(ctx context.Context, input render.InputParams) (string, error) {
+	params, err := h.getParams(input)
 	if err != nil {
 		return "", err
 	}
@@ -224,7 +197,7 @@ func (h *HelmChart) computeValues(ctx context.Context) (string, error) {
 		return "", err
 	}
 	for _, valuesFile := range h.ValuesFiles {
-		valuesYaml, err := render.LoadFile(valuesFile)
+		valuesYaml, err := input.LoadFile(h.RegistryName, valuesFile)
 		if err != nil {
 			return "", err
 		}

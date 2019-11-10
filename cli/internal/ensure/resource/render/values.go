@@ -7,6 +7,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"text/template"
 
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/go-utils/stringutils"
@@ -41,6 +42,32 @@ var (
 )
 
 type Values map[string]string
+
+func (v Values) Load(tmpl string) (string, error) {
+	parsed, err := template.New("").Parse(tmpl)
+	if err != nil {
+		return "", err
+	}
+	out := strings.Builder{}
+	vals, err := v.Render()
+	if err != nil {
+		return "", err
+	}
+	err = parsed.Execute(&out, vals)
+	return out.String(), err
+}
+
+func (v Values) Render() (map[string]interface{}, error) {
+	vals := make(map[string]interface{})
+	for k := range v {
+		v, err := v.GetValue(k)
+		if err != nil {
+			return nil, err
+		}
+		vals[k] = v
+	}
+	return vals, nil
+}
 
 func (v Values) ContainsKey(key string) bool {
 	if v == nil {

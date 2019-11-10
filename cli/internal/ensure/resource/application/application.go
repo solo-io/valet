@@ -8,7 +8,6 @@ import (
 	"github.com/solo-io/go-utils/installutils/kuberesource"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -97,20 +96,4 @@ func (a *Application) Render(ctx context.Context, input render.InputParams, comm
 		}
 	}
 	return allResources, nil
-}
-
-func LoadApplication(path string) (*Application, error) {
-	var a Application
-
-	b, err := render.LoadBytes(path)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := yaml.UnmarshalStrict(b, &a); err != nil {
-		cmd.Stderr().Println("Failed to unmarshal file: %s", err.Error())
-		return nil, err
-	}
-
-	return &a, nil
 }

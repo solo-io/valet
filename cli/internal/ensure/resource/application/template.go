@@ -15,8 +15,9 @@ var (
 )
 
 type Template struct {
-	Path   string        `yaml:"path"`
-	Values render.Values `yaml:"values"`
+	RegistryName string        `yaml:"registry" valet="default=default"`
+	Path         string        `yaml:"path"`
+	Values       render.Values `yaml:"values"`
 }
 
 func (t *Template) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
@@ -40,7 +41,7 @@ func (t *Template) Teardown(ctx context.Context, input render.InputParams, comma
 }
 
 func (t *Template) Load(input render.InputParams) (string, error) {
-	tmpl, err := render.LoadFile(t.Path)
+	tmpl, err := input.LoadFile(t.Path)
 	if err != nil {
 		return "", err
 	}
@@ -48,10 +49,9 @@ func (t *Template) Load(input render.InputParams) (string, error) {
 }
 
 func (t *Template) Render(ctx context.Context, input render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
-	input = input.MergeValues(t.Values)
-	contents, err := render.LoadFile(t.Path)
+	loaded, err := t.Load(input)
 	if err != nil {
 		return nil, err
 	}
-	return render.YamlToResources([]byte(contents))
+	return render.YamlToResources([]byte(loaded))
 }

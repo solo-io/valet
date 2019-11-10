@@ -23,3 +23,4 @@ func RenderFirst(ctx context.Context, input render.InputParams, command cmd.Fact
 	}
 	return nil, nil
 }
+

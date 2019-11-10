@@ -1,9 +1,18 @@
 package render
 
 type InputParams struct {
-	Values Values
-	Flags  Flags
-	Step   bool
+	Values     Values
+	Flags      Flags
+	Step       bool
+	Registries map[string]Registry
+}
+
+func (i *InputParams) LoadFile(registryName, path string) (string, error) {
+	registry, err := i.GetRegistry(registryName)
+	if err != nil {
+		return "", err
+	}
+	return registry.LoadFile(path)
 }
 
 func (i *InputParams) DeepCopy() InputParams {
@@ -14,9 +23,10 @@ func (i *InputParams) DeepCopy() InputParams {
 		values[k] = v
 	}
 	return InputParams{
-		Flags:  flags,
-		Values: values,
-		Step:   i.Step,
+		Flags:      flags,
+		Values:     values,
+		Step:       i.Step,
+		Registries: i.Registries,
 	}
 }
 
@@ -45,4 +55,17 @@ func (i *InputParams) MergeFlags(flags Flags) InputParams {
 		}
 	}
 	return output
+}
+
+func (i *InputParams) GetRegistry(name string) (Registry, error) {
+	if i.Registries == nil {
+		i.Registries = make(map[string]Registry)
+	}
+	if reg, ok := i.Registries[name]; ok {
+		return reg, nil
+	}
+	if name == DefaultRegistry {
+		return &LocalRegistry{}, nil
+	}
+	return nil, UnknownRegistryError(name)
 }

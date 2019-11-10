@@ -6,7 +6,6 @@ import (
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"gopkg.in/yaml.v2"
 )
 
 type Workflow struct {
@@ -70,20 +69,4 @@ func (w *Workflow) Teardown(ctx context.Context, input render.InputParams, comma
 		}
 	}
 	return nil
-}
-
-func LoadWorkflow(path string) (*Workflow, error) {
-	var w Workflow
-
-	b, err := render.LoadBytes(path)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := yaml.UnmarshalStrict(b, &w); err != nil {
-		cmd.Stderr().Println("Failed to unmarshal file '%s': %s", path, err.Error())
-		return nil, err
-	}
-
-	return &w, nil
 }

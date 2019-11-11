@@ -66,7 +66,7 @@ func (s *Secret) Ensure(ctx context.Context, input render.InputParams, command c
 	}
 	for _, resource := range resources {
 		toRun := command.Kubectl().Namespace(s.Namespace)
-		byt, err := yaml.Marshal(resource)
+		byt, err := yaml.Marshal(resource.Object)
 		if err != nil {
 			return err
 		}

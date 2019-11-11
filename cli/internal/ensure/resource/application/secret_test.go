@@ -85,6 +85,17 @@ var _ = Describe("Secret", func() {
 			expectSecret(resources, secretEnvVarEntry)
 		})
 
+		It("returns err for missing env var secret value", func() {
+			err := os.Setenv(secretEnvVar, "")
+			Expect(err).To(BeNil())
+			value := application.SecretValue{
+				EnvVar: secretEnvVar,
+			}
+			secret := getSecret(secretEnvVarEntry, value)
+			_, err = secret.Render(ctx, emptyInput, &defaultCommand)
+			Expect(err).NotTo(BeNil())
+		})
+
 		It("handles file secret values with default registry", func() {
 			value := application.SecretValue{
 				File: secretFilePath,
@@ -93,6 +104,15 @@ var _ = Describe("Secret", func() {
 			resources, err := secret.Render(ctx, emptyInput, &defaultCommand)
 			Expect(err).To(BeNil())
 			expectSecret(resources, secretFileEntry)
+		})
+
+		It("returns error on bad path for secret value file", func() {
+			value := application.SecretValue{
+				File: "path/to/my/fake/secret.txt",
+			}
+			secret := getSecret(secretFileEntry, value)
+			_, err := secret.Render(ctx, emptyInput, &defaultCommand)
+			Expect(err).NotTo(BeNil())
 		})
 
 		It("handles file secret values with test registry", func() {
@@ -121,6 +141,17 @@ var _ = Describe("Secret", func() {
 			resources, err := secret.Render(ctx, emptyInput, &defaultCommand)
 			Expect(err).To(BeNil())
 			expectSecret(resources, secretGcloudFileEntry)
+		})
+
+		It("returns error for bad gcloud encrypted path", func() {
+			value := application.SecretValue{
+				GcloudKmsEncryptedFile: &application.GcloudKmsEncryptedFile{
+					CiphertextFile: "path/to/my/fake/secret.txt.enc",
+				},
+			}
+			secret := getSecret(secretGcloudFileEntry, value)
+			_, err := secret.Render(ctx, emptyInput, &defaultCommand)
+			Expect(err).NotTo(BeNil())
 		})
 
 		It("handles gcloud secret values with test registry", func() {

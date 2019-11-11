@@ -28,7 +28,11 @@ func (t *Template) Load(input render.InputParams) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return render.LoadTemplate(tmpl, input.Values)
+	loaded, err := render.LoadTemplate(tmpl, input.Values)
+	if err != nil {
+		cmd.Stderr().Println("Error loading template: %s", err.Error())
+	}
+	return loaded, err
 }
 
 func (t *Template) Render(ctx context.Context, input render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {

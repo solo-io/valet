@@ -6,7 +6,7 @@ import (
 )
 
 func LoadTemplate(tmpl string, values Values) (string, error) {
-	parsed, err := template.New("").Parse(tmpl)
+	parsed, err := template.New("").Option("missingkey=error").Parse(tmpl)
 	if err != nil {
 		return "", err
 	}

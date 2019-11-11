@@ -39,6 +39,14 @@ var _ = Describe("Manifest", func() {
 			Expect(len(resources)).To(Equal(2))
 		})
 
+		It("should return an error for a fake path", func() {
+			manifest := &application.Manifest{
+				Path: "path/to/my/fake/manifest.yaml",
+			}
+			_, err := manifest.Render(ctx, emptyInput, &defaultCommand)
+			Expect(err).NotTo(BeNil())
+		})
+
 		It("should load a manifest exactly from URL provided with the Path value", func() {
 			manifest := &application.Manifest{}
 			input := render.InputParams{

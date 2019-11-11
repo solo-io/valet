@@ -29,6 +29,7 @@ func Ensure(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 	}
 
 	cliutils.ApplyOptions(ensureCmd, optionsFunc)
+	ensureCmd.PersistentFlags().StringVarP(&opts.Ensure.Registry, "registry", "r", "", "registry name")
 	ensureCmd.PersistentFlags().BoolVarP(&opts.Ensure.Step, "step", "s", false, "wait for user input between steps or resources")
 	ensureCmd.PersistentFlags().StringVarP(&opts.Ensure.File, "file", "f", "", "path to file containing config to ensure")
 	ensureCmd.PersistentFlags().BoolVarP(&opts.Ensure.ValetArtifacts, "valet-artifacts", "", false, "use valet artifacts (in google storage)")

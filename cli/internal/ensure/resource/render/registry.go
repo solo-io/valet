@@ -26,7 +26,7 @@ type Registry interface {
 }
 
 type LocalRegistry struct {
-	WorkingDirectory string
+	WorkingDirectory string `yaml:"dir"`
 }
 
 func (l *LocalRegistry) resolvePath(path string) string {

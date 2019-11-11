@@ -1,10 +1,10 @@
 package render
 
 type InputParams struct {
-	Values     Values
-	Flags      Flags
-	Step       bool
-	Registries map[string]Registry
+	Values           Values
+	Flags            Flags
+	Step             bool
+	Registries       map[string]Registry
 }
 
 func (i *InputParams) LoadFile(registryName, path string) (string, error) {
@@ -22,11 +22,15 @@ func (i *InputParams) DeepCopy() InputParams {
 	for k, v := range i.Values {
 		values[k] = v
 	}
+	registries := make(map[string]Registry)
+	for k, v := range i.Registries {
+		registries[k] = v
+	}
 	return InputParams{
 		Flags:      flags,
 		Values:     values,
 		Step:       i.Step,
-		Registries: i.Registries,
+		Registries: registries,
 	}
 }
 

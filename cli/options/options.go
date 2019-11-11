@@ -24,10 +24,11 @@ type Ensure struct {
 	// return error if ensure returned error
 	TeardownOnFinish bool
 
-	Values map[string]string
-	Flags  []string
-	Step   bool
-	DryRun bool
+	Values   map[string]string
+	Flags    []string
+	Step     bool
+	DryRun   bool
+	Registry string
 }
 
 type Build struct {

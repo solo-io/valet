@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/go-utils/installutils/kuberesource"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
@@ -77,9 +76,6 @@ func (a *Application) Render(ctx context.Context, input render.InputParams, comm
 	}
 	var allResources kuberesource.UnstructuredResources
 	for i, appResource := range a.Resources {
-		if appResource.Patch != nil {
-			return nil, errors.Errorf("Applications with patches currently can't be rendered as dry-run")
-		}
 		renderedResource, err := appResource.Render(ctx, input, command)
 		if err != nil {
 			return nil, err

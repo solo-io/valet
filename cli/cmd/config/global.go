@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -31,6 +32,11 @@ func Config(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 
 type ValetGlobalConfig struct {
 	Env map[string]string `yaml:"env"`
+	Registries map[string]ValetRegistry `yaml:"registries"`
+}
+
+type ValetRegistry struct {
+	LocalRegistry *render.LocalRegistry `yaml:"local"`
 }
 
 func GetValetConfigDir() (string, error) {

@@ -1,7 +1,8 @@
-package application
+package workflow
 
 import (
 	"context"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
 
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
@@ -51,7 +52,7 @@ func (p *Patch) Teardown(ctx context.Context, input render.InputParams, command 
 }
 
 func (p *Patch) Load(input render.InputParams) (string, error) {
-	t := Template{
+	t := application.Template{
 		Path:   p.Path,
 		Values: input.Values,
 	}

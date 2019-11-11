@@ -1,0 +1,9 @@
+# This example only works if it is loaded with a ref that correctly sets up the "test" parent directory as the registry,
+# ref:
+#   registry: test
+#   path: apps/example-registry-app.yaml
+
+name: example-app
+resources:
+  - manifest:
+      path: files/manifests/petclinic.yaml

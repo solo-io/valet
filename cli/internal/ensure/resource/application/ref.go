@@ -100,5 +100,11 @@ func (a *Ref) Render(ctx context.Context, input render.InputParams, command cmd.
 	if err != nil {
 		return nil, err
 	}
+	input = input.MergeValues(a.Values)
+	appRegistry, err := input.GetRegistry(a.RegistryName)
+	if err != nil {
+		return nil, err
+	}
+	input.SetRegistry(render.DefaultRegistry, appRegistry)
 	return app.Render(ctx, input, command)
 }

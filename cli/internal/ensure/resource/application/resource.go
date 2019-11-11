@@ -2,9 +2,10 @@ package application
 
 import (
 	"context"
+	"fmt"
 	"github.com/avast/retry-go"
+	"github.com/mitchellh/hashstructure"
 	"github.com/solo-io/go-utils/installutils/helmchart"
-
 	"github.com/solo-io/go-utils/installutils/kuberesource"
 	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
@@ -23,6 +24,7 @@ type Resource struct {
 	Secret      *Secret    `yaml:"secret"`
 	Template    *Template  `yaml:"template"`
 	Manifest    *Manifest  `yaml:"manifest"`
+	// TODO need to handle applications as a separate thing, so that resources are one at a time
 	Application *Ref       `yaml:"application"`
 
 	Values render.Values `yaml:"values"`
@@ -34,6 +36,7 @@ func (a *Resource) Ensure(ctx context.Context, input render.InputParams, command
 	if err != nil {
 		return err
 	}
+	cmd.Stdout().Println("Applying resources")
 	return retry.Do(func() error {
 		return command.Kubectl().ApplyStdIn(manifest).Cmd().Run(ctx)
 	}, retry.Attempts(3))
@@ -44,6 +47,7 @@ func (a *Resource) Teardown(ctx context.Context, input render.InputParams, comma
 	if err != nil {
 		return err
 	}
+	cmd.Stdout().Println("Deleting resources")
 	return retry.Do(func() error {
 		return command.Kubectl().DeleteStdIn(manifest).IgnoreNotFound().Cmd().Run(ctx)
 	}, retry.Attempts(3))
@@ -53,6 +57,18 @@ func (a *Resource) renderString(ctx context.Context, input render.InputParams, c
 	rendered, err := a.Render(ctx, input, command)
 	if err != nil {
 		return "", err
+	}
+	hash, err := hashstructure.Hash(rendered, nil)
+	if err != nil {
+		return "", err
+	}
+	for _, r := range rendered {
+		if r.GetLabels() == nil {
+			r.SetLabels(make(map[string]string))
+		}
+		labels := r.GetLabels()
+		labels["valet"] = fmt.Sprintf("%d", hash)
+		r.SetLabels(labels)
 	}
 	manifests, err := helmchart.ManifestsFromResources(rendered)
 	if err != nil {

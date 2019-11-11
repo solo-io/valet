@@ -27,9 +27,6 @@ type Step struct {
 
 func (s *Step) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
 	input = input.MergeValues(s.Values)
-	if s.Delete != nil {
-		return s.Delete.Teardown(ctx, input, command)
-	}
 	return resource.EnsureFirst(ctx, input, command, s.Curl, s.Condition, s.DnsEntry, s.Install, s.Uninstall, s.WorkflowRef, s.Patch)
 }
 

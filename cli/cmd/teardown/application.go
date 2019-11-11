@@ -3,6 +3,7 @@ package teardown
 import (
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/valet/cli/cmd/common"
+	"github.com/solo-io/valet/cli/cmd/config"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
@@ -26,13 +27,18 @@ func Application(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *co
 }
 
 func TeardownApplication(opts *options.Options) error {
-	if err := common.LoadEnv(opts.Top.Ctx); err != nil {
+	globalConfig, err := config.LoadGlobalConfig(opts.Top.Ctx)
+	if err != nil {
+		return err
+	}
+	if err := common.LoadEnv(globalConfig); err != nil {
 		return err
 	}
 	input := render.InputParams{
-		Values: opts.Ensure.Values,
-		Flags:  opts.Ensure.Flags,
-		Step:   opts.Ensure.Step,
+		Values:     opts.Ensure.Values,
+		Flags:      opts.Ensure.Flags,
+		Step:       opts.Ensure.Step,
+		Registries: common.GetRegistries(globalConfig),
 	}
 	if opts.Ensure.File == "" {
 		return common.MustProvideFileError

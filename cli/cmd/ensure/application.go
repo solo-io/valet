@@ -57,7 +57,8 @@ func ensureApplication(opts *options.Options) error {
 		return common.MustProvideFileError
 	}
 	ref := application.Ref{
-		Path: opts.Ensure.File,
+		RegistryName: opts.Ensure.Registry,
+		Path:         opts.Ensure.File,
 	}
 	command := cmd.CommandFactory{}
 	if opts.Ensure.DryRun {
@@ -75,6 +76,6 @@ func renderManifest(ctx context.Context, input render.InputParams, command cmd.F
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%s\n", manifests.CombinedString() + "\n")
+	fmt.Printf("%s\n", manifests.CombinedString()+"\n")
 	return nil
 }

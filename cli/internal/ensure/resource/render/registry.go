@@ -2,6 +2,7 @@ package render
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/go-utils/osutils"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
@@ -9,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -57,13 +59,21 @@ func (l *LocalRegistry) loadBytes(path string) ([]byte, error) {
 	}
 
 	osClient := osutils.NewOsClient()
-	expandedPath := os.ExpandEnv(path)
+	expandedPath := expandEnv(path)
 	contents, err := osClient.ReadFile(expandedPath)
 	if err != nil {
 		cmd.Stderr().Println("Failed to read file '%s': %s", expandedPath, err.Error())
 		return nil, err
 	}
 	return contents, nil
+}
+
+func expandEnv(path string) string {
+	if strings.HasPrefix(path, "~") {
+		path = strings.TrimPrefix(path, "~")
+		path = fmt.Sprintf("$HOME%s", path)
+	}
+	return os.ExpandEnv(path)
 }
 
 func LoadBytesFromUrl(path string) ([]byte, error) {

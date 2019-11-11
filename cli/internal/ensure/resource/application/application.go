@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"github.com/solo-io/valet/cli/internal"
 
 	"github.com/solo-io/go-utils/installutils/kuberesource"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
@@ -62,7 +63,7 @@ func (a *Application) Ensure(ctx context.Context, input render.InputParams, comm
 			return err
 		}
 	}
-	return nil
+	return internal.WaitUntilPodsRunning(a.Namespace)
 }
 
 func (a *Application) getLabel(step int) string {

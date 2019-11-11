@@ -83,6 +83,7 @@ func (h *HelmChart) Render(ctx context.Context, input render.InputParams, comman
 	if err != nil {
 		return nil, err
 	}
+	cmd.Stdout().Println("Successfully computed helm chart values")
 	manifests, err := helmchart.RenderManifests(ctx,
 		downloadPath,
 		values,
@@ -92,6 +93,7 @@ func (h *HelmChart) Render(ctx context.Context, input render.InputParams, comman
 	if err != nil {
 		return nil, err
 	}
+	cmd.Stdout().Println("Successfully rendered helm chart")
 	return manifests.ResourceList()
 }
 

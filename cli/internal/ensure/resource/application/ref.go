@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"fmt"
 	"gopkg.in/yaml.v2"
 
 	"github.com/solo-io/go-utils/installutils/kuberesource"
@@ -74,7 +75,17 @@ func (a *Ref) Ensure(ctx context.Context, input render.InputParams, command cmd.
 	if err != nil {
 		return err
 	}
-	cmd.Stdout().Println("Ensuring application %s values=%s flags=%s", a.Path, input.Values.ToString(), input.Flags.ToString())
+	input = input.MergeValues(a.Values)
+	appRegistry, err := input.GetRegistry(a.RegistryName)
+	if err != nil {
+		return err
+	}
+	input.SetRegistry(render.DefaultRegistry, appRegistry)
+	appString := a.Path
+	if a.RegistryName != render.DefaultRegistry {
+		appString = fmt.Sprintf("%s:%s", a.RegistryName, appString)
+	}
+	cmd.Stdout().Println("Ensuring application %s values=%s flags=%s", appString, input.Values.ToString(), input.Flags.ToString())
 	err = app.Ensure(ctx, input, command)
 	if err == nil {
 		cmd.Stdout().Println("Done ensuring application %s", a.Path)
@@ -87,6 +98,12 @@ func (a *Ref) Teardown(ctx context.Context, input render.InputParams, command cm
 	if err != nil {
 		return err
 	}
+	input = input.MergeValues(a.Values)
+	appRegistry, err := input.GetRegistry(a.RegistryName)
+	if err != nil {
+		return err
+	}
+	input.SetRegistry(render.DefaultRegistry, appRegistry)
 	cmd.Stdout().Println("Tearing down application %s values=%s flags=%s", a.Path, input.Values.ToString(), input.Flags.ToString())
 	err = app.Teardown(ctx, input, command)
 	if err == nil {

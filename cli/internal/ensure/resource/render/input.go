@@ -12,6 +12,7 @@ type InputParams struct {
 	Registries    map[string]Registry
 	CommandRunner cmd.Runner
 	IngressClient client.IngressClient
+	DnsClient     client.AwsDnsClient
 }
 
 func (i *InputParams) LoadFile(registryName, path string) (string, error) {
@@ -99,6 +100,13 @@ func (i *InputParams) GetIngressClient() client.IngressClient {
 		return &client.KubeIngressClient{}
 	}
 	return i.IngressClient
+}
+
+func (i *InputParams) GetDnsClient() (client.AwsDnsClient, error) {
+	if i.DnsClient == nil {
+		return client.NewAwsDnsClient()
+	}
+	return i.DnsClient, nil
 }
 
 func (i *InputParams) RenderFields(input interface{}) error {

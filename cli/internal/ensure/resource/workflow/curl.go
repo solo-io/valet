@@ -17,7 +17,6 @@ import (
 const (
 	DefaultCurlDelay    = "1s"
 	DefaultCurlAttempts = 10
-	DefaultCurlProtocol = "http"
 )
 
 var (
@@ -32,7 +31,6 @@ var (
 type Curl struct {
 	Path         string            `yaml:"path"`
 	Host         string            `yaml:"host"`
-	Protocol     string            `yaml:"protocol" valet:"default=http"`
 	Headers      map[string]string `yaml:"headers"`
 	StatusCode   int               `yaml:"statusCode"`
 	ResponseBody string            `yaml:"responseBody"`
@@ -91,7 +89,7 @@ func (c *Curl) doCurl(ctx context.Context, input render.InputParams) error {
 }
 
 func (c *Curl) GetUrl(ip string) string {
-	return fmt.Sprintf("%s://%s%s", c.Protocol, ip, c.Path)
+	return fmt.Sprintf("%s://%s%s", c.Service.Port, ip, c.Path)
 }
 
 func (c *Curl) GetHttpRequest(ip string) (*http.Request, error) {

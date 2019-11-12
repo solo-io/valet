@@ -13,7 +13,6 @@ import (
 
 var _ = Describe("curl", func() {
 	const (
-		protocol          = "http"
 		host              = "test-host"
 		path              = "/test-path"
 		statusCode        = 123
@@ -57,7 +56,6 @@ var _ = Describe("curl", func() {
 
 	Context("fully provided curl", func() {
 		curl := &workflow.Curl{
-			Protocol:     protocol,
 			Host:         host,
 			Path:         path,
 			StatusCode:   statusCode,
@@ -116,14 +114,16 @@ var _ = Describe("curl", func() {
 	})
 
 	Context("curl default rendering", func() {
-		curl := &workflow.Curl{}
+		curl := workflow.Curl{}
 
 		It("works", func() {
-			err := input.RenderFields(curl)
+			err := input.RenderFields(&curl)
+			Expect(err).To(BeNil())
+			err = input.RenderFields(&curl.Service)
 			Expect(err).To(BeNil())
 			Expect(curl.Attempts).To(Equal(workflow.DefaultCurlAttempts))
 			Expect(curl.Delay).To(Equal(workflow.DefaultCurlDelay))
-			Expect(curl.Protocol).To(Equal(workflow.DefaultCurlProtocol))
+			Expect(curl.Service.Port).To(Equal(workflow.DefaultServicePort))
 		})
 	})
 

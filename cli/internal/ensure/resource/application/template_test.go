@@ -4,7 +4,6 @@ import (
 	"context"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 )
@@ -25,7 +24,6 @@ var _ = Describe("template", func() {
 	var (
 		ctx            = context.TODO()
 		emptyInput     = render.InputParams{}
-		defaultCommand = cmd.CommandFactory{}
 		testRegistry   = render.LocalRegistry{
 			WorkingDirectory: registryPath,
 		}
@@ -42,7 +40,7 @@ var _ = Describe("template", func() {
 			template := &application.Template{
 				Path: templatePath,
 			}
-			_, err := template.Render(ctx, emptyInput, &defaultCommand)
+			_, err := template.Render(ctx, emptyInput)
 			Expect(err).NotTo(BeNil())
 		})
 
@@ -50,7 +48,7 @@ var _ = Describe("template", func() {
 			template := &application.Template{
 				Path: "path/to/my/fake/template.yaml",
 			}
-			_, err := template.Render(ctx, emptyInput, &defaultCommand)
+			_, err := template.Render(ctx, emptyInput)
 			Expect(err).NotTo(BeNil())
 		})
 
@@ -58,7 +56,7 @@ var _ = Describe("template", func() {
 			template := &application.Template{
 				Path: templatePath,
 			}
-			resources, err := template.Render(ctx, input, &defaultCommand)
+			resources, err := template.Render(ctx, input)
 			Expect(err).To(BeNil())
 			Expect(len(resources)).To(Equal(1))
 			actual := resources[0]
@@ -72,7 +70,7 @@ var _ = Describe("template", func() {
 				RegistryName: registryName,
 			}
 			input.SetRegistry(registryName, &testRegistry)
-			resources, err := template.Render(ctx, input, &defaultCommand)
+			resources, err := template.Render(ctx, input)
 			Expect(err).To(BeNil())
 			Expect(len(resources)).To(Equal(1))
 			actual := resources[0]

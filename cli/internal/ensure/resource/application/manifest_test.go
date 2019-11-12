@@ -4,7 +4,6 @@ import (
 	"context"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 )
@@ -13,17 +12,16 @@ var _ = Describe("Manifest", func() {
 
 	const (
 		manifestPath = "test/files/manifests/petclinic.yaml"
-		manifestUrl = "https://raw.githubusercontent.com/sololabs/demos/b523571c66057a5591bce22ad896729f1fee662b/petclinic_demo/petclinic.yaml"
+		manifestUrl  = "https://raw.githubusercontent.com/sololabs/demos/b523571c66057a5591bce22ad896729f1fee662b/petclinic_demo/petclinic.yaml"
 
-		registryName = "test-registry"
-		registryPath = "test"
+		registryName         = "test-registry"
+		registryPath         = "test"
 		manifestRegistryPath = "files/manifests/petclinic.yaml"
 	)
 
 	var (
-		ctx = context.TODO()
-		emptyInput = render.InputParams{}
-		defaultCommand = cmd.CommandFactory{}
+		ctx          = context.TODO()
+		emptyInput   = render.InputParams{}
 		testRegistry = render.LocalRegistry{
 			WorkingDirectory: registryPath,
 		}
@@ -34,7 +32,7 @@ var _ = Describe("Manifest", func() {
 			manifest := &application.Manifest{
 				Path: manifestUrl,
 			}
-			resources, err := manifest.Render(ctx, emptyInput, &defaultCommand)
+			resources, err := manifest.Render(ctx, emptyInput)
 			Expect(err).To(BeNil())
 			Expect(len(resources)).To(Equal(2))
 		})
@@ -43,7 +41,7 @@ var _ = Describe("Manifest", func() {
 			manifest := &application.Manifest{
 				Path: "path/to/my/fake/manifest.yaml",
 			}
-			_, err := manifest.Render(ctx, emptyInput, &defaultCommand)
+			_, err := manifest.Render(ctx, emptyInput)
 			Expect(err).NotTo(BeNil())
 		})
 
@@ -54,7 +52,7 @@ var _ = Describe("Manifest", func() {
 					render.PathKey: manifestUrl,
 				},
 			}
-			resources, err := manifest.Render(ctx, input, &defaultCommand)
+			resources, err := manifest.Render(ctx, input)
 			Expect(err).To(BeNil())
 			Expect(len(resources)).To(Equal(2))
 		})
@@ -63,7 +61,7 @@ var _ = Describe("Manifest", func() {
 			manifest := &application.Manifest{
 				Path: manifestPath,
 			}
-			resources, err := manifest.Render(ctx, emptyInput, &defaultCommand)
+			resources, err := manifest.Render(ctx, emptyInput)
 			Expect(err).To(BeNil())
 			Expect(len(resources)).To(Equal(6))
 		})
@@ -75,7 +73,7 @@ var _ = Describe("Manifest", func() {
 					render.PathKey: manifestPath,
 				},
 			}
-			resources, err := manifest.Render(ctx, input, &defaultCommand)
+			resources, err := manifest.Render(ctx, input)
 			Expect(err).To(BeNil())
 			Expect(len(resources)).To(Equal(6))
 		})
@@ -83,11 +81,11 @@ var _ = Describe("Manifest", func() {
 		It("should load a manifest from a different registry", func() {
 			manifest := &application.Manifest{
 				RegistryName: registryName,
-				Path: manifestRegistryPath,
+				Path:         manifestRegistryPath,
 			}
 			input := render.InputParams{}
 			input.SetRegistry(registryName, &testRegistry)
-			resources, err := manifest.Render(ctx, input, &defaultCommand)
+			resources, err := manifest.Render(ctx, input)
 			Expect(err).To(BeNil())
 			Expect(len(resources)).To(Equal(6))
 		})
@@ -96,11 +94,11 @@ var _ = Describe("Manifest", func() {
 			// URLs should always behave the same, regardless of registry
 			manifest := &application.Manifest{
 				RegistryName: registryName,
-				Path: manifestUrl,
+				Path:         manifestUrl,
 			}
 			input := render.InputParams{}
 			input.SetRegistry(registryName, &testRegistry)
-			resources, err := manifest.Render(ctx, input, &defaultCommand)
+			resources, err := manifest.Render(ctx, input)
 			Expect(err).To(BeNil())
 			Expect(len(resources)).To(Equal(2))
 		})

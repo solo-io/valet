@@ -29,42 +29,42 @@ func (w *Workflow) checkRequiredValues(input render.InputParams) error {
 	return nil
 }
 
-func (w *Workflow) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
+func (w *Workflow) Ensure(ctx context.Context, input render.InputParams) error {
 	input = input.MergeValues(w.Values)
 	if err := w.checkRequiredValues(input); err != nil {
 		return err
 	}
-	if err := EnsureSteps(ctx, input, command, w.Steps); err != nil {
+	if err := EnsureSteps(ctx, input, w.Steps); err != nil {
 		return err
 	}
 	cmd.Stdout().Println("Workflow successful, cleaning up")
-	if err := EnsureSteps(ctx, input, command, w.CleanupSteps); err != nil {
+	if err := EnsureSteps(ctx, input, w.CleanupSteps); err != nil {
 		return err
 	}
 	return nil
 }
 
-func EnsureSteps(ctx context.Context, input render.InputParams, command cmd.Factory, steps []Step) error {
+func EnsureSteps(ctx context.Context, input render.InputParams, steps []Step) error {
 	for _, step := range steps {
 		if input.Step {
 			if err := cmd.PromptPressAnyKeyToContinue(); err != nil {
 				return err
 			}
 		}
-		if err := step.Ensure(ctx, input, command); err != nil {
+		if err := step.Ensure(ctx, input); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (w *Workflow) Teardown(ctx context.Context, input render.InputParams, command cmd.Factory) error {
+func (w *Workflow) Teardown(ctx context.Context, input render.InputParams) error {
 	input = input.MergeValues(w.Values)
 	if err := w.checkRequiredValues(input); err != nil {
 		return err
 	}
 	for _, step := range w.Steps {
-		if err := step.Teardown(ctx, input, command); err != nil {
+		if err := step.Teardown(ctx, input); err != nil {
 			return err
 		}
 	}

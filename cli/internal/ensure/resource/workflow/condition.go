@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	DefaultTimeout = "120s"
+	DefaultConditionTimeout = "120s"
+	DefaultConditionInterval = "5s"
 )
 
 var (
@@ -25,10 +26,11 @@ type Condition struct {
 	Jsonpath  string `yaml:"jsonpath"`
 	Value     string `yaml:"value"`
 	Timeout   string `yaml:"timeout" valet:"template,default=120s"`
+	Interval  string `yaml:"interval" valet:"template,default=5s"`
 }
 
-func (c *Condition) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
-	if err := input.Values.RenderFields(c); err != nil {
+func (c *Condition) Ensure(ctx context.Context, input render.InputParams) error {
+	if err := input.RenderFields(c); err != nil {
 		return err
 	}
 	cmd.Stdout().Println("Waiting on condition: %s.%s path %s matches %s (timeout: %s)", c.Namespace, c.Name, c.Jsonpath, c.Value, c.Timeout)
@@ -36,17 +38,18 @@ func (c *Condition) Ensure(ctx context.Context, input render.InputParams, comman
 	if err != nil {
 		return err
 	}
+	interval, err := time.ParseDuration(c.Interval)
+	if err != nil {
+		return err
+	}
 	timeout := time.After(timeoutDuration)
-	tick := time.Tick(5 * time.Second)
+	tick := time.Tick(interval)
 	for {
 		select {
 		case <-timeout:
 			return ConditionNotMetError
 		case <-tick:
-			out, err := command.Kubectl().
-				With("get", c.Type, c.Name).
-				Namespace(c.Namespace).
-				OutJsonpath(c.Jsonpath).Cmd().Output(ctx)
+			out, err := input.Runner().Output(ctx, c.GetConditionCmd())
 			if err != nil {
 				return err
 			}
@@ -58,7 +61,14 @@ func (c *Condition) Ensure(ctx context.Context, input render.InputParams, comman
 	}
 }
 
-func (*Condition) Teardown(ctx context.Context, input render.InputParams, command cmd.Factory) error {
+func (*Condition) Teardown(ctx context.Context, input render.InputParams) error {
 	cmd.Stdout().Println("Skipping teardown for condition")
 	return nil
+}
+
+func (c *Condition) GetConditionCmd() *cmd.Command {
+	return cmd.New().Kubectl().
+		With("get", c.Type, c.Name).
+		Namespace(c.Namespace).
+		OutJsonpath(c.Jsonpath).Cmd()
 }

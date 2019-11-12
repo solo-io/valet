@@ -4,7 +4,6 @@ import (
 	"context"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 )
@@ -18,7 +17,6 @@ var _ = Describe("Namespace", func() {
 	var (
 		ctx = context.TODO()
 		emptyInput = render.InputParams{}
-		defaultCommand = cmd.CommandFactory{}
 		labels = map[string]string {
 			"foo": "bar",
 		}
@@ -34,7 +32,7 @@ var _ = Describe("Namespace", func() {
 				Labels: labels,
 				Annotations: annotations,
 			}
-			resources, err := ns.Render(ctx, emptyInput, &defaultCommand)
+			resources, err := ns.Render(ctx, emptyInput)
 			Expect(err).To(BeNil())
 			Expect(len(resources)).To(Equal(1))
 			actual := resources[0]
@@ -50,7 +48,7 @@ var _ = Describe("Namespace", func() {
 					render.NamespaceKey: namespace,
 				},
 			}
-			resources, err := ns.Render(ctx, input, &defaultCommand)
+			resources, err := ns.Render(ctx, input)
 			Expect(err).To(BeNil())
 			Expect(len(resources)).To(Equal(1))
 			actual := resources[0]

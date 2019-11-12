@@ -17,15 +17,15 @@ type DnsEntry struct {
 	Service    ServiceRef `yaml:"service"`
 }
 
-func (d *DnsEntry) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
-	if err := input.Values.RenderFields(d); err != nil {
+func (d *DnsEntry) Ensure(ctx context.Context, input render.InputParams) error {
+	if err := input.RenderFields(d); err != nil {
 		return err
 	}
 	awsClient, err := client.NewAwsDnsClient()
 	if err != nil {
 		return err
 	}
-	ip, err := d.Service.getIp(ctx, input, command)
+	ip, err := d.Service.getIp(ctx, input)
 	if err != nil {
 		return err
 	}
@@ -35,26 +35,26 @@ func (d *DnsEntry) Ensure(ctx context.Context, input render.InputParams, command
 	return nil
 }
 
-func (d *DnsEntry) Teardown(ctx context.Context, input render.InputParams, command cmd.Factory) error {
+func (d *DnsEntry) Teardown(ctx context.Context, input render.InputParams) error {
 	cmd.Stderr().Println("Teardown not implemented")
 	return nil
 }
 
 type ServiceRef struct {
 	Name      string `yaml:"name"`
-	Namespace string `yaml:"namespace"`
+	Namespace string `yaml:"namespace" valet:"key=Namespace"`
 	Port      string `yaml:"port" valet:"default=http"`
 }
 
-func (s *ServiceRef) getAddress(ctx context.Context, input render.InputParams, command cmd.Factory) (string, error) {
-	if err := input.Values.RenderFields(s); err != nil {
+func (s *ServiceRef) getAddress(ctx context.Context, input render.InputParams) (string, error) {
+	if err := input.RenderFields(s); err != nil {
 		return "", err
 	}
-	return client.GetIngressHost(s.Name, s.Namespace, s.Port)
+	return input.IngressClient.GetIngressHost(s.Name, s.Namespace, s.Port)
 }
 
-func (s *ServiceRef) getIp(ctx context.Context, input render.InputParams, command cmd.Factory) (string, error) {
-	url, err := s.getAddress(ctx, input, command)
+func (s *ServiceRef) getIp(ctx context.Context, input render.InputParams) (string, error) {
+	url, err := s.getAddress(ctx, input)
 	if err != nil {
 		return "", err
 	}

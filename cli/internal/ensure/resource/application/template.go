@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	_ Renderable        = new(Template)
+	_ Renderable = new(Template)
 )
 
 type Template struct {
@@ -20,7 +20,7 @@ type Template struct {
 
 func (t *Template) Load(input render.InputParams) (string, error) {
 	input = input.MergeValues(t.Values)
-	if err := input.Values.RenderFields(t); err != nil {
+	if err := input.RenderFields(t); err != nil {
 		return "", err
 	}
 	cmd.Stdout().Println("Loading template %s:%s", t.RegistryName, t.Path)
@@ -28,14 +28,14 @@ func (t *Template) Load(input render.InputParams) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	loaded, err := render.LoadTemplate(tmpl, input.Values)
+	loaded, err := render.LoadTemplate(tmpl, input.Values, input.Runner())
 	if err != nil {
 		cmd.Stderr().Println("Error loading template: %s", err.Error())
 	}
 	return loaded, err
 }
 
-func (t *Template) Render(ctx context.Context, input render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
+func (t *Template) Render(ctx context.Context, input render.InputParams) (kuberesource.UnstructuredResources, error) {
 	loaded, err := t.Load(input)
 	if err != nil {
 		return nil, err

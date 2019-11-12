@@ -3,6 +3,7 @@ package ensure
 import (
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/valet/cli/cmd/common"
+	"github.com/solo-io/valet/cli/cmd/config"
 	"github.com/solo-io/valet/cli/cmd/teardown"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
@@ -29,7 +30,7 @@ func Ensure(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 	}
 
 	cliutils.ApplyOptions(ensureCmd, optionsFunc)
-	ensureCmd.PersistentFlags().StringVarP(&opts.Ensure.Registry, "registry", "r", "", "registry name")
+	ensureCmd.PersistentFlags().StringVarP(&opts.Ensure.Registry, "registry", "r", "default", "registry name")
 	ensureCmd.PersistentFlags().BoolVarP(&opts.Ensure.Step, "step", "s", false, "wait for user input between steps or resources")
 	ensureCmd.PersistentFlags().StringVarP(&opts.Ensure.File, "file", "f", "", "path to file containing config to ensure")
 	ensureCmd.PersistentFlags().BoolVarP(&opts.Ensure.ValetArtifacts, "valet-artifacts", "", false, "use valet artifacts (in google storage)")
@@ -44,10 +45,18 @@ func Ensure(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 }
 
 func ensure(opts *options.Options) error {
+	globalConfig, err := config.LoadGlobalConfig(opts.Top.Ctx)
+	if err != nil {
+		return err
+	}
+	if err := common.LoadEnv(globalConfig); err != nil {
+		return err
+	}
 	input := render.InputParams{
-		Values: opts.Ensure.Values,
-		Flags:  opts.Ensure.Flags,
-		Step:   opts.Ensure.Step,
+		Values:     opts.Ensure.Values,
+		Flags:      opts.Ensure.Flags,
+		Step:       opts.Ensure.Step,
+		Registries: common.GetRegistries(globalConfig),
 	}
 	cfg, err := common.LoadConfig(opts)
 	if err != nil {

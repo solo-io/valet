@@ -21,7 +21,13 @@ const (
 	LocalClusterName = "minikube"
 )
 
-func GetIngressHost(name, namespace, proxyPort string) (string, error) {
+type IngressClient interface {
+	GetIngressHost(name, namespace, proxyPort string) (string, error)
+}
+
+type KubeIngressClient struct {}
+
+func (k *KubeIngressClient) GetIngressHost(name, namespace, proxyPort string) (string, error) {
 	restCfg, err := kubeutils.GetConfig("", "")
 	if err != nil {
 		return "", errors.Wrapf(err, "getting kube rest config")

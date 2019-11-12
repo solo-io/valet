@@ -1,4 +1,4 @@
-package application_test
+package workflow_test
 
 import (
 	"github.com/solo-io/go-utils/testutils"
@@ -10,7 +10,7 @@ import (
 
 var T *testing.T
 
-func TestResources(t *testing.T) {
+func TestWorkflow(t *testing.T) {
 	RegisterFailHandler(Fail)
 	testutils.RegisterPreFailHandler(
 		func() {
@@ -18,5 +18,5 @@ func TestResources(t *testing.T) {
 		})
 	testutils.RegisterCommonFailHandlers()
 	T = t
-	RunSpecs(t, "Resource Suite")
+	RunSpecs(t, "Workflow Suite")
 }

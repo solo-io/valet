@@ -24,39 +24,57 @@ type Resource struct {
 	Secret      *Secret    `yaml:"secret"`
 	Template    *Template  `yaml:"template"`
 	Manifest    *Manifest  `yaml:"manifest"`
-	// TODO need to handle applications as a separate thing, so that resources are one at a time
 	Application *Ref       `yaml:"application"`
 
 	Values render.Values `yaml:"values"`
 	Flags  render.Flags  `yaml:"flags"`
 }
 
-func (a *Resource) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
-	manifest, err := a.renderString(ctx, input, command)
-	if err != nil {
-		return err
+func (a *Resource) Ensure(ctx context.Context, input render.InputParams) error {
+	if a.Application != nil {
+		return a.Application.Ensure(ctx, input.MergeValues(a.Values))
 	}
 	cmd.Stdout().Println("Applying resources")
-	return retry.Do(func() error {
-		return command.Kubectl().ApplyStdIn(manifest).Cmd().Run(ctx)
-	}, retry.Attempts(3))
+	applyFunc := func(manifest string) error {
+		if manifest == "" {
+			return nil
+		}
+		return input.Runner().Run(ctx, cmd.New().Kubectl().ApplyStdIn(manifest).Cmd())
+	}
+	return a.renderAndRun(ctx, input, applyFunc)
 }
 
-func (a *Resource) Teardown(ctx context.Context, input render.InputParams, command cmd.Factory) error {
-	manifest, err := a.renderString(ctx, input, command)
+func (a *Resource) Teardown(ctx context.Context, input render.InputParams) error {
+	if a.Application != nil {
+		return a.Application.Teardown(ctx, input.MergeValues(a.Values))
+	}
+	cmd.Stdout().Println("Deleting resources")
+	teardownFunc := func(manifest string) error {
+		if manifest == "" {
+			return nil
+		}
+		return input.Runner().Run(ctx, cmd.New().Kubectl().DeleteStdIn(manifest).IgnoreNotFound().Cmd())
+	}
+	return a.renderAndRun(ctx, input, teardownFunc)
+}
+
+func (a *Resource) renderAndRun(ctx context.Context, input render.InputParams, run func(manifest string) error) error {
+	manifest, err := a.renderString(ctx, input)
 	if err != nil {
 		return err
 	}
-	cmd.Stdout().Println("Deleting resources")
 	return retry.Do(func() error {
-		return command.Kubectl().DeleteStdIn(manifest).IgnoreNotFound().Cmd().Run(ctx)
+		return run(manifest)
 	}, retry.Attempts(3))
 }
 
-func (a *Resource) renderString(ctx context.Context, input render.InputParams, command cmd.Factory) (string, error) {
-	rendered, err := a.Render(ctx, input, command)
+func (a *Resource) renderString(ctx context.Context, input render.InputParams) (string, error) {
+	rendered, err := a.Render(ctx, input)
 	if err != nil {
 		return "", err
+	}
+	if len(rendered) == 0 {
+		return "", nil
 	}
 	hash, err := hashstructure.Hash(rendered, nil)
 	if err != nil {
@@ -77,7 +95,7 @@ func (a *Resource) renderString(ctx context.Context, input render.InputParams, c
 	return manifests.CombinedString(), nil
 }
 
-func (a *Resource) Render(ctx context.Context, input render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
+func (a *Resource) Render(ctx context.Context, input render.InputParams) (kuberesource.UnstructuredResources, error) {
 	input = input.MergeValues(a.Values)
-	return RenderFirst(ctx, input, command, a.Namespace, a.HelmChart, a.Secret, a.Manifest, a.Application)
+	return RenderFirst(ctx, input, a.Namespace, a.HelmChart, a.Secret, a.Manifest, a.Template, a.Application)
 }

@@ -20,9 +20,9 @@ type Patch struct {
 	Values render.Values `yaml:"values"`
 }
 
-func (p *Patch) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
+func (p *Patch) Ensure(ctx context.Context, input render.InputParams) error {
 	input = input.MergeValues(p.Values)
-	if err := input.Values.RenderFields(p); err != nil {
+	if err := input.RenderFields(p); err != nil {
 		return err
 	}
 	cmd.Stdout().Println("Patching %s.%s (%s) from file %s (%s) %s", p.Namespace, p.Name, p.KubeType, p.Path, p.PatchType, input.Values.ToString())
@@ -30,21 +30,22 @@ func (p *Patch) Ensure(ctx context.Context, input render.InputParams, command cm
 	if err != nil {
 		return err
 	}
-	patchString, err := render.LoadTemplate(patchTemplate, input.Values)
+	patchString, err := render.LoadTemplate(patchTemplate, input.Values, input.Runner())
 	if err != nil {
 		return err
 	}
-	kubectl := command.Kubectl().
+	kubectl := cmd.New().Kubectl().
 		With("patch", p.KubeType, p.Name).
 		Namespace(p.Namespace).
 		With("--type", p.PatchType).
-		With("--patch", patchString)
-	return kubectl.Cmd().Run(ctx)
+		With("--patch", patchString).
+		Cmd()
+	return input.Runner().Run(ctx, kubectl)
 }
 
-func (p *Patch) Teardown(ctx context.Context, input render.InputParams, command cmd.Factory) error {
+func (p *Patch) Teardown(ctx context.Context, input render.InputParams) error {
 	input = input.MergeValues(p.Values)
-	if err := input.Values.RenderFields(p); err != nil {
+	if err := input.RenderFields(p); err != nil {
 		return err
 	}
 	cmd.Stdout().Println("Skipping teardown for patch")

@@ -1,10 +1,17 @@
 package render
 
+import (
+	"github.com/solo-io/valet/cli/internal/ensure/client"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
+)
+
 type InputParams struct {
-	Values           Values
-	Flags            Flags
-	Step             bool
-	Registries       map[string]Registry
+	Values        Values
+	Flags         Flags
+	Step          bool
+	Registries    map[string]Registry
+	CommandRunner cmd.Runner
+	IngressClient client.IngressClient
 }
 
 func (i *InputParams) LoadFile(registryName, path string) (string, error) {
@@ -18,19 +25,18 @@ func (i *InputParams) LoadFile(registryName, path string) (string, error) {
 func (i *InputParams) DeepCopy() InputParams {
 	var flags []string
 	flags = append(flags, i.Flags...)
-	values := make(map[string]string)
-	for k, v := range i.Values {
-		values[k] = v
-	}
+	values := i.Values.DeepCopy()
 	registries := make(map[string]Registry)
 	for k, v := range i.Registries {
 		registries[k] = v
 	}
 	return InputParams{
-		Flags:      flags,
-		Values:     values,
-		Step:       i.Step,
-		Registries: registries,
+		Flags:         flags,
+		Values:        values,
+		Step:          i.Step,
+		Registries:    registries,
+		CommandRunner: i.CommandRunner,
+		IngressClient: i.IngressClient,
 	}
 }
 
@@ -79,4 +85,22 @@ func (i *InputParams) SetRegistry(name string, registry Registry) {
 		i.Registries = make(map[string]Registry)
 	}
 	i.Registries[name] = registry
+}
+
+func (i *InputParams) Runner() cmd.Runner {
+	if i.CommandRunner == nil {
+		return cmd.DefaultCommandRunner()
+	}
+	return i.CommandRunner
+}
+
+func (i *InputParams) GetIngressClient() client.IngressClient {
+	if i.IngressClient == nil {
+		return &client.KubeIngressClient{}
+	}
+	return i.IngressClient
+}
+
+func (i *InputParams) RenderFields(input interface{}) error {
+	return i.Values.RenderFields(input, i.Runner())
 }

@@ -17,8 +17,6 @@ import (
 )
 
 const (
-	secret          = "secret"
-	generic         = "generic"
 	encryptedSuffix = ".enc"
 )
 
@@ -56,8 +54,8 @@ type GcloudKmsEncryptedFile struct {
 	Key            string `yaml:"key"`
 }
 
-func (s *Secret) Render(ctx context.Context, input render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
-	if err := input.Values.RenderFields(s); err != nil {
+func (s *Secret) Render(ctx context.Context, input render.InputParams) (kuberesource.UnstructuredResources, error) {
+	if err := input.RenderFields(s); err != nil {
 		return nil, err
 	}
 	cmd.Stdout().Println("Rendering secret %s.%s with type %s and %d entries", s.Namespace, s.Name, s.Type, len(s.Entries))
@@ -107,12 +105,13 @@ func (s *Secret) Render(ctx context.Context, input render.InputParams, command c
 				return nil, err
 			}
 			defer cleanupFile(unencrypted.Name())
-			err = command.Gcloud().DecryptFile(
+			command := cmd.New().Gcloud().DecryptFile(
 				encrypted.Name(),
 				unencrypted.Name(),
 				v.GcloudKmsEncryptedFile.GcloudProject,
 				v.GcloudKmsEncryptedFile.Keyring,
-				v.GcloudKmsEncryptedFile.Key).Cmd().Run(ctx)
+				v.GcloudKmsEncryptedFile.Key).Cmd()
+			err = input.Runner().Run(ctx, command)
 			if err != nil {
 				return nil, UnableToDecryptFileError(err)
 			}

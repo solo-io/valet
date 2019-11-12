@@ -4,7 +4,6 @@ import (
 	"context"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 )
@@ -21,7 +20,6 @@ var _ = Describe("Refs", func() {
 
 	var (
 		ctx = context.TODO()
-		defaultCommand = cmd.CommandFactory{}
 		testRegistry = render.LocalRegistry{
 			WorkingDirectory: registryPath,
 		}
@@ -36,7 +34,7 @@ var _ = Describe("Refs", func() {
 			}
 			input := render.InputParams{}
 			input.SetRegistry(registryName, &testRegistry)
-			resources, err := ref.Render(ctx, input, &defaultCommand)
+			resources, err := ref.Render(ctx, input)
 			Expect(err).To(BeNil())
 			Expect(len(resources)).To(Equal(6))
 		})
@@ -46,7 +44,7 @@ var _ = Describe("Refs", func() {
 				Path: appPath,
 			}
 			input := render.InputParams{}
-			resources, err := ref.Render(ctx, input, &defaultCommand)
+			resources, err := ref.Render(ctx, input)
 			Expect(err).To(BeNil())
 			Expect(len(resources)).To(Equal(6))
 		})

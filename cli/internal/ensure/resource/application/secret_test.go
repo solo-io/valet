@@ -5,7 +5,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/go-utils/installutils/kuberesource"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	v1 "k8s.io/api/core/v1"
@@ -40,7 +39,6 @@ var _ = Describe("Secret", func() {
 	var (
 		ctx = context.TODO()
 		emptyInput = render.InputParams{}
-		defaultCommand = cmd.CommandFactory{}
 		testRegistry = render.LocalRegistry{
 			WorkingDirectory: registryPath,
 		}
@@ -80,7 +78,7 @@ var _ = Describe("Secret", func() {
 				EnvVar: secretEnvVar,
 			}
 			secret := getSecret(secretEnvVarEntry, value)
-			resources, err := secret.Render(ctx, emptyInput, &defaultCommand)
+			resources, err := secret.Render(ctx, emptyInput)
 			Expect(err).To(BeNil())
 			expectSecret(resources, secretEnvVarEntry)
 		})
@@ -92,7 +90,7 @@ var _ = Describe("Secret", func() {
 				EnvVar: secretEnvVar,
 			}
 			secret := getSecret(secretEnvVarEntry, value)
-			_, err = secret.Render(ctx, emptyInput, &defaultCommand)
+			_, err = secret.Render(ctx, emptyInput)
 			Expect(err).NotTo(BeNil())
 		})
 
@@ -101,7 +99,7 @@ var _ = Describe("Secret", func() {
 				File: secretFilePath,
 			}
 			secret := getSecret(secretFileEntry, value)
-			resources, err := secret.Render(ctx, emptyInput, &defaultCommand)
+			resources, err := secret.Render(ctx, emptyInput)
 			Expect(err).To(BeNil())
 			expectSecret(resources, secretFileEntry)
 		})
@@ -111,7 +109,7 @@ var _ = Describe("Secret", func() {
 				File: "path/to/my/fake/secret.txt",
 			}
 			secret := getSecret(secretFileEntry, value)
-			_, err := secret.Render(ctx, emptyInput, &defaultCommand)
+			_, err := secret.Render(ctx, emptyInput)
 			Expect(err).NotTo(BeNil())
 		})
 
@@ -123,7 +121,7 @@ var _ = Describe("Secret", func() {
 			secret.RegistryName = registryName
 			input := render.InputParams{}
 			input.SetRegistry(registryName, &testRegistry)
-			resources, err := secret.Render(ctx, input, &defaultCommand)
+			resources, err := secret.Render(ctx, input)
 			Expect(err).To(BeNil())
 			expectSecret(resources, secretFileEntry)
 		})
@@ -138,7 +136,7 @@ var _ = Describe("Secret", func() {
 				},
 			}
 			secret := getSecret(secretGcloudFileEntry, value)
-			resources, err := secret.Render(ctx, emptyInput, &defaultCommand)
+			resources, err := secret.Render(ctx, emptyInput)
 			Expect(err).To(BeNil())
 			expectSecret(resources, secretGcloudFileEntry)
 		})
@@ -150,7 +148,7 @@ var _ = Describe("Secret", func() {
 				},
 			}
 			secret := getSecret(secretGcloudFileEntry, value)
-			_, err := secret.Render(ctx, emptyInput, &defaultCommand)
+			_, err := secret.Render(ctx, emptyInput)
 			Expect(err).NotTo(BeNil())
 		})
 
@@ -167,7 +165,7 @@ var _ = Describe("Secret", func() {
 			secret.RegistryName = registryName
 			input := render.InputParams{}
 			input.SetRegistry(registryName, &testRegistry)
-			resources, err := secret.Render(ctx, input, &defaultCommand)
+			resources, err := secret.Render(ctx, input)
 			Expect(err).To(BeNil())
 			expectSecret(resources, secretGcloudFileEntry)
 		})
@@ -180,7 +178,7 @@ var _ = Describe("Secret", func() {
 			}
 			secret := getSecret(secretEnvVarEntry, value)
 			secret.Type = ""
-			resources, err := secret.Render(ctx, emptyInput, &defaultCommand)
+			resources, err := secret.Render(ctx, emptyInput)
 			Expect(err).To(BeNil())
 			Expect(len(resources)).To(Equal(1))
 			actual := resources[0]
@@ -200,7 +198,7 @@ var _ = Describe("Secret", func() {
 					render.NamespaceKey: namespace,
 				},
 			}
-			resources, err := secret.Render(ctx, input, &defaultCommand)
+			resources, err := secret.Render(ctx, input)
 			Expect(err).To(BeNil())
 			expectSecret(resources, secretEnvVarEntry)
 		})

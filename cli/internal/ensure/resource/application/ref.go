@@ -25,7 +25,7 @@ type Ref struct {
 
 func (a *Ref) Load(ctx context.Context, input render.InputParams) (*Application, error) {
 	input = input.MergeValues(a.Values)
-	if err := input.Values.RenderFields(a); err != nil {
+	if err := input.RenderFields(a); err != nil {
 		return nil, err
 	}
 	app, err := a.loadApplication(input)
@@ -70,7 +70,7 @@ func (a *Ref) loadApplication(input render.InputParams) (*Application, error) {
 	return &app, nil
 }
 
-func (a *Ref) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
+func (a *Ref) Ensure(ctx context.Context, input render.InputParams) error {
 	app, err := a.Load(ctx, input)
 	if err != nil {
 		return err
@@ -86,14 +86,14 @@ func (a *Ref) Ensure(ctx context.Context, input render.InputParams, command cmd.
 		appString = fmt.Sprintf("%s:%s", a.RegistryName, appString)
 	}
 	cmd.Stdout().Println("Ensuring application %s values=%s flags=%s", appString, input.Values.ToString(), input.Flags.ToString())
-	err = app.Ensure(ctx, input, command)
+	err = app.Ensure(ctx, input)
 	if err == nil {
 		cmd.Stdout().Println("Done ensuring application %s", a.Path)
 	}
 	return err
 }
 
-func (a *Ref) Teardown(ctx context.Context, input render.InputParams, command cmd.Factory) error {
+func (a *Ref) Teardown(ctx context.Context, input render.InputParams) error {
 	app, err := a.Load(ctx, input)
 	if err != nil {
 		return err
@@ -105,14 +105,14 @@ func (a *Ref) Teardown(ctx context.Context, input render.InputParams, command cm
 	}
 	input.SetRegistry(render.DefaultRegistry, appRegistry)
 	cmd.Stdout().Println("Tearing down application %s values=%s flags=%s", a.Path, input.Values.ToString(), input.Flags.ToString())
-	err = app.Teardown(ctx, input, command)
+	err = app.Teardown(ctx, input)
 	if err == nil {
 		cmd.Stdout().Println("Done tearing down application %s", a.Path)
 	}
 	return err
 }
 
-func (a *Ref) Render(ctx context.Context, input render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
+func (a *Ref) Render(ctx context.Context, input render.InputParams) (kuberesource.UnstructuredResources, error) {
 	app, err := a.Load(ctx, input)
 	if err != nil {
 		return nil, err
@@ -123,5 +123,5 @@ func (a *Ref) Render(ctx context.Context, input render.InputParams, command cmd.
 		return nil, err
 	}
 	input.SetRegistry(render.DefaultRegistry, appRegistry)
-	return app.Render(ctx, input, command)
+	return app.Render(ctx, input)
 }

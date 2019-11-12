@@ -32,11 +32,11 @@ type HelmChart struct {
 	Files        render.Values     `yaml:"files"`
 }
 
-func (h *HelmChart) addHelmRepo(ctx context.Context, command cmd.Factory) error {
-	return command.Helm().AddRepo(h.RepoName, h.RepoUrl).Cmd().Run(ctx)
+func (h *HelmChart) addHelmRepo(ctx context.Context, input render.InputParams) error {
+	return input.Runner().Run(ctx, cmd.New().Helm().AddRepo(h.RepoName, h.RepoUrl).Cmd())
 }
 
-func (h *HelmChart) fetchChart(ctx context.Context, command cmd.Factory) (string, error) {
+func (h *HelmChart) fetchChart(ctx context.Context, input render.InputParams) (string, error) {
 	downloadDir, err := h.getLocalDirectory()
 	if err != nil {
 		cmd.Stderr().Println("Error determining local directory for extracting chart: %s", err.Error())
@@ -46,13 +46,13 @@ func (h *HelmChart) fetchChart(ctx context.Context, command cmd.Factory) (string
 		cmd.Stderr().Println("Error making directory: %s", err.Error())
 		return "", err
 	}
-	out, err := command.
+	command := cmd.New().
 		Helm().
 		Fetch(h.RepoName, h.ChartName).
 		Version(h.Version).
 		With("-d", downloadDir).
-		Cmd().
-		Output(ctx)
+		Cmd()
+	out, err := input.Runner().Output(ctx, command)
 	if err != nil {
 		cmd.Stderr().Println("Error trying to extract chart: %s", err.Error())
 		cmd.Stderr().Println(out)
@@ -71,11 +71,11 @@ func (h *HelmChart) getLocalDirectory() (string, error) {
 	return filepath.Join(home, ".helm", "cache", "valet", h.RepoName), nil
 }
 
-func (h *HelmChart) Render(ctx context.Context, input render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
-	if err := input.Values.RenderFields(h); err != nil {
+func (h *HelmChart) Render(ctx context.Context, input render.InputParams) (kuberesource.UnstructuredResources, error) {
+	if err := input.RenderFields(h); err != nil {
 		return nil, err
 	}
-	downloadPath, err := h.fetchChart(ctx, command)
+	downloadPath, err := h.fetchChart(ctx, input)
 	if err != nil {
 		return nil, err
 	}

@@ -19,8 +19,8 @@ type Namespace struct {
 	Annotations map[string]string `yaml:"annotations"`
 }
 
-func (n *Namespace) Render(ctx context.Context, inputs render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
-	if err := inputs.Values.RenderFields(n); err != nil {
+func (n *Namespace) Render(ctx context.Context, inputs render.InputParams) (kuberesource.UnstructuredResources, error) {
+	if err := inputs.RenderFields(n); err != nil {
 		return nil, err
 	}
 	cmd.Stdout().Println("Rendering namespace %s", n.Name)

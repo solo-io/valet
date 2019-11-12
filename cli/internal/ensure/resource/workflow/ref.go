@@ -18,7 +18,7 @@ type Ref struct {
 
 func (r *Ref) Load(ctx context.Context, input render.InputParams) (*Workflow, error) {
 	input = input.MergeValues(r.Values)
-	if err := input.Values.RenderFields(r); err != nil {
+	if err := input.RenderFields(r); err != nil {
 		return nil, err
 	}
 	w, err := r.loadWorkflow(input)
@@ -63,26 +63,28 @@ func (r *Ref) loadWorkflow(input render.InputParams) (*Workflow, error) {
 	return &w, nil
 }
 
-func (r *Ref) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
+func (r *Ref) Ensure(ctx context.Context, input render.InputParams) error {
 	workflow, err := r.Load(ctx, input)
 	if err != nil {
 		return err
 	}
+	input = input.MergeValues(r.Values)
 	cmd.Stdout().Println("Ensuring workflow %s %s", r.Path, r.Values.ToString())
-	if err := workflow.Ensure(ctx, input, command); err != nil {
+	if err := workflow.Ensure(ctx, input); err != nil {
 		return err
 	}
 	cmd.Stdout().Println("Done ensuring workflow %s", r.Path)
 	return nil
 }
 
-func (r *Ref) Teardown(ctx context.Context, input render.InputParams, command cmd.Factory) error {
+func (r *Ref) Teardown(ctx context.Context, input render.InputParams) error {
 	workflow, err := r.Load(ctx, input)
 	if err != nil {
 		return err
 	}
+	input = input.MergeValues(r.Values)
 	cmd.Stdout().Println("Tearing down workflow %s %s", r.Path, r.Values.ToString())
-	if err := workflow.Teardown(ctx, input, command); err != nil {
+	if err := workflow.Teardown(ctx, input); err != nil {
 		return err
 	}
 	cmd.Stdout().Println("Done tearing down workflow %s", r.Path)

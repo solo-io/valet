@@ -6,8 +6,6 @@ import (
 	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
-
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
 type Step struct {
@@ -17,20 +15,23 @@ type Step struct {
 	Install     *application.Ref      `yaml:"install"`
 	Uninstall   *application.Ref      `yaml:"uninstall"`
 	WorkflowRef *Ref                  `yaml:"workflow"`
-	Apply       *application.Manifest `yaml:"apply"`
-	Delete      *application.Manifest `yaml:"delete"`
-	Patch       *Patch                 `yaml:"patch"`
+	Apply       *application.Resource `yaml:"apply"`
+	Delete      *application.Resource `yaml:"delete"`
+	Patch       *Patch                `yaml:"patch"`
 
 	Values render.Values `yaml:"values"`
 	Flags  render.Flags  `yaml:"flags"`
 }
 
-func (s *Step) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
+func (s *Step) Ensure(ctx context.Context, input render.InputParams) error {
 	input = input.MergeValues(s.Values)
-	return resource.EnsureFirst(ctx, input, command, s.Curl, s.Condition, s.DnsEntry, s.Install, s.Uninstall, s.WorkflowRef, s.Patch)
+	if s.Uninstall != nil || s.Delete != nil {
+		return resource.TeardownFirst(ctx, input, s.Uninstall, s.Delete)
+	}
+	return resource.EnsureFirst(ctx, input, s.Curl, s.Condition, s.DnsEntry, s.Install, s.WorkflowRef, s.Apply, s.Patch)
 }
 
-func (s *Step) Teardown(ctx context.Context, input render.InputParams, command cmd.Factory) error {
+func (s *Step) Teardown(ctx context.Context, input render.InputParams) error {
 	input = input.MergeValues(s.Values)
-	return resource.TeardownFirst(ctx, input, command, s.Curl, s.Condition, s.DnsEntry, s.Install, s.Uninstall, s.WorkflowRef, s.Patch)
+	return resource.TeardownFirst(ctx, input, s.Curl, s.Condition, s.DnsEntry, s.Install, s.WorkflowRef, s.Apply, s.Patch)
 }

@@ -12,7 +12,7 @@ import (
 
 type ClusterResource interface {
 	resource.Resource
-	SetContext(ctx context.Context, command cmd.Factory) error
+	SetContext(ctx context.Context, runner cmd.Runner) error
 }
 
 var (
@@ -27,42 +27,42 @@ type Cluster struct {
 	EKS      *EKS      `yaml:"eks"`
 }
 
-func (c *Cluster) SetContext(ctx context.Context, command cmd.Factory) error {
+func (c *Cluster) SetContext(ctx context.Context, runner cmd.Runner) error {
 	if c.Minikube != nil {
-		return c.Minikube.SetContext(ctx, command)
+		return c.Minikube.SetContext(ctx, runner)
 	}
 	if c.GKE != nil {
-		return c.GKE.SetContext(ctx, command)
+		return c.GKE.SetContext(ctx, runner)
 	}
 	if c.EKS != nil {
-		return c.EKS.SetContext(ctx, command)
+		return c.EKS.SetContext(ctx, runner)
 	}
 
 	return NoClusterDefinedError
 }
 
-func (c *Cluster) Ensure(ctx context.Context, inputs render.InputParams, command cmd.Factory) error {
+func (c *Cluster) Ensure(ctx context.Context, inputs render.InputParams) error {
 	if c.Minikube != nil {
-		return c.Minikube.Ensure(ctx, inputs, command)
+		return c.Minikube.Ensure(ctx, inputs)
 	}
 	if c.GKE != nil {
-		return c.GKE.Ensure(ctx, inputs, command)
+		return c.GKE.Ensure(ctx, inputs)
 	}
 	if c.EKS != nil {
-		return c.EKS.Ensure(ctx, inputs, command)
+		return c.EKS.Ensure(ctx, inputs)
 	}
 	return nil
 }
 
-func (c *Cluster) Teardown(ctx context.Context, inputs render.InputParams, command cmd.Factory) error {
+func (c *Cluster) Teardown(ctx context.Context, inputs render.InputParams) error {
 	if c.Minikube != nil {
-		return c.Minikube.Teardown(ctx, inputs, command)
+		return c.Minikube.Teardown(ctx, inputs)
 	}
 	if c.GKE != nil {
-		return c.GKE.Teardown(ctx, inputs, command)
+		return c.GKE.Teardown(ctx, inputs)
 	}
 	if c.EKS != nil {
-		return c.EKS.Teardown(ctx, inputs, command)
+		return c.EKS.Teardown(ctx, inputs)
 	}
 	return nil
 }

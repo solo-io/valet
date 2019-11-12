@@ -17,11 +17,11 @@ type Config struct {
 	Values       render.Values    `yaml:"values"`
 }
 
-func (c *Config) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
+func (c *Config) Ensure(ctx context.Context, input render.InputParams) error {
 	input = input.MergeValues(c.Values)
 	input = input.MergeFlags(c.Flags)
 	if c.Cluster != nil {
-		if err := c.Cluster.Ensure(ctx, input, command); err != nil {
+		if err := c.Cluster.Ensure(ctx, input); err != nil {
 			return err
 		}
 	}
@@ -29,20 +29,20 @@ func (c *Config) Ensure(ctx context.Context, input render.InputParams, command c
 		Steps:        c.Steps,
 		CleanupSteps: c.CleanupSteps,
 	}
-	return workflow.Ensure(ctx, input, command)
+	return workflow.Ensure(ctx, input)
 }
 
-func (c *Config) Teardown(ctx context.Context, input render.InputParams, command cmd.Factory) error {
+func (c *Config) Teardown(ctx context.Context, input render.InputParams) error {
 	input = input.MergeValues(c.Values)
 	input = input.MergeFlags(c.Flags)
 	if c.Cluster != nil {
-		return c.Cluster.Teardown(ctx, input, command)
+		return c.Cluster.Teardown(ctx, input)
 	}
 	workflow := Workflow{
 		Steps:        c.Steps,
 		CleanupSteps: c.CleanupSteps,
 	}
-	return workflow.Teardown(ctx, input, command)
+	return workflow.Teardown(ctx, input)
 }
 
 func LoadConfig(registry, path string, input render.InputParams) (*Config, error) {

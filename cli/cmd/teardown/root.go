@@ -3,6 +3,7 @@ package teardown
 import (
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/valet/cli/cmd/common"
+	"github.com/solo-io/valet/cli/cmd/config"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
@@ -20,7 +21,7 @@ func Teardown(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra
 	}
 
 	cliutils.ApplyOptions(cmd, optionsFunc)
-	cmd.PersistentFlags().StringVarP(&opts.Ensure.Registry, "registry", "r", "", "registry name")
+	cmd.PersistentFlags().StringVarP(&opts.Ensure.Registry, "registry", "r", "default", "registry name")
 	cmd.PersistentFlags().StringVarP(&opts.Ensure.File, "file", "f", "", "path to file containing config to ensure")
 	cmd.PersistentFlags().StringVarP(&opts.Ensure.GkeClusterName, "gke-cluster-name", "", "", "GKE cluster name to use")
 
@@ -37,7 +38,19 @@ func teardown(opts *options.Options) error {
 }
 
 func TeardownCfg(opts *options.Options, cfg *workflow.Config) error {
+	globalConfig, err := config.LoadGlobalConfig(opts.Top.Ctx)
+	if err != nil {
+		return err
+	}
+	if err := common.LoadEnv(globalConfig); err != nil {
+		return err
+	}
+	input := render.InputParams{
+		Values:     opts.Ensure.Values,
+		Flags:      opts.Ensure.Flags,
+		Step:       opts.Ensure.Step,
+		Registries: common.GetRegistries(globalConfig),
+	}
 	command := cmd.CommandFactory{}
-	input := render.InputParams{}
 	return cfg.Teardown(opts.Top.Ctx, input, &command)
 }

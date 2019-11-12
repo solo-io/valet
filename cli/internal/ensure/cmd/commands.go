@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"io"
+	"net/http"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/solo-io/go-utils/errors"
 )
@@ -28,39 +31,19 @@ type Command struct {
 	PrintCommands   bool
 	Redactions      map[string]string
 	SwallowErrorLog bool
-	CommandRunner   CommandRunner
 }
 
-func (c *Command) Run(ctx context.Context) error {
-	runner := c.DefaultCommandRunner()
-	return runner.Run(ctx, c)
-}
-
-func (c *Command) Output(ctx context.Context) (string, error) {
-	runner := c.DefaultCommandRunner()
-	return runner.Output(ctx, c)
-}
-
-func (c *Command) Stream(ctx context.Context) (*CommandStreamHandler, error) {
-	runner := c.DefaultCommandRunner()
-	return runner.Stream(ctx, c)
-}
-
-type CommandRunner interface {
+type Runner interface {
 	Run(ctx context.Context, c *Command) error
 	Output(ctx context.Context, c *Command) (string, error)
 	Stream(ctx context.Context, c *Command) (*CommandStreamHandler, error)
+	Request(ctx context.Context, req *http.Request) (string, int, error)
 }
 
-type commandRunner struct {
-}
+type commandRunner struct {}
 
-func (c *Command) DefaultCommandRunner() CommandRunner {
-	runner := c.CommandRunner
-	if runner == nil {
-		runner = &commandRunner{}
-	}
-	return runner
+func DefaultCommandRunner() Runner {
+	return &commandRunner{}
 }
 
 func (r *commandRunner) Run(ctx context.Context, c *Command) error {
@@ -114,6 +97,23 @@ func (r *commandRunner) Stream(ctx context.Context, c *Command) (*CommandStreamH
 	}, nil
 }
 
+func (c *commandRunner) Request(ctx context.Context, req *http.Request) (string, int, error) {
+	httpClient := &http.Client{
+		Timeout: time.Second * 1,
+	}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return "", 0, err
+	}
+	p := new(bytes.Buffer)
+	_, err = io.Copy(p, resp.Body)
+	defer resp.Body.Close()
+	if err != nil {
+		return "", 0, err
+	}
+	return p.String(), resp.StatusCode, nil
+}
+
 func (c *Command) logCommand(ctx context.Context) {
 	var parts []string
 	parts = append(parts, c.Name)
@@ -155,3 +155,4 @@ func (c *Command) Redact(unredacted, redacted string) *Command {
 	c.Redactions[unredacted] = redacted
 	return c
 }
+

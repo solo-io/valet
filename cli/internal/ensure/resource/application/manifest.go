@@ -18,7 +18,7 @@ type Manifest struct {
 	Path         string `yaml:"path" valet:"key=Path"`
 }
 
-func (m *Manifest) Render(ctx context.Context, input render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
+func (m *Manifest) Render(ctx context.Context, input render.InputParams) (kuberesource.UnstructuredResources, error) {
 	contents, err := m.load(input)
 	if err != nil {
 		return nil, err
@@ -27,7 +27,7 @@ func (m *Manifest) Render(ctx context.Context, input render.InputParams, command
 }
 
 func (m *Manifest) load(input render.InputParams) (string, error) {
-	if err := input.Values.RenderFields(m); err != nil {
+	if err := input.RenderFields(m); err != nil {
 		return "", err
 	}
 	manifest := m.Path

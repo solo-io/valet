@@ -92,12 +92,12 @@ func (k *Kubectl) CurrentContext() *Kubectl {
 	return k.With("config", "current-context")
 }
 
-func (k *Kubectl) DryRunAndApply(ctx context.Context, command Factory) error {
-	out, err := k.DryRun().OutYaml().Cmd().Output(ctx)
+func (k *Kubectl) DryRunAndApply(ctx context.Context, runner Runner) error {
+	out, err := runner.Output(ctx, k.DryRun().OutYaml().Cmd())
 	if err != nil {
 		return err
 	}
-	return command.Kubectl().ApplyStdIn(out).Cmd().Run(ctx)
+	return runner.Run(ctx, New().Kubectl().ApplyStdIn(out).Cmd())
 }
 
 func (k *Kubectl) JsonPatch(jsonPatch string) *Kubectl {
@@ -116,8 +116,8 @@ func (k *Kubectl) OutJsonpath(jsonpath string) *Kubectl {
 	return k.With(fmt.Sprintf("-o=jsonpath=%s", jsonpath))
 }
 
-func (k *Kubectl) GetServiceIP(ctx context.Context, namespace, name string) (string, error) {
+func (k *Kubectl) GetServiceIP(ctx context.Context, namespace, name string, runner Runner) (string, error) {
 	cmd := k.With("get", "svc", name).Namespace(namespace)
 	cmd = cmd.OutJsonpath("{ .status.loadBalancer.ingress[0].ip }")
-	return cmd.Cmd().Output(ctx)
+	return runner.Output(ctx, cmd.Cmd())
 }

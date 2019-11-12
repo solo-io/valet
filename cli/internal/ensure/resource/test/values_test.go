@@ -3,6 +3,7 @@ package resource_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
@@ -30,6 +31,7 @@ var _ = Describe("Values", func() {
 			render.DomainKey:     domain,
 			render.HostedZoneKey: hostedZone,
 		}
+		runner = cmd.DefaultCommandRunner()
 	)
 
 	Context("merge values", func() {
@@ -69,7 +71,7 @@ var _ = Describe("Values", func() {
 
 		It("should do nothing when condition fully provided", func() {
 			c := condition
-			err := emptyValues.RenderFields(&c)
+			err := emptyValues.RenderFields(&c, runner)
 			Expect(err).To(BeNil())
 			Expect(c).To(Equal(condition))
 		})
@@ -79,7 +81,7 @@ var _ = Describe("Values", func() {
 				Timeout: "{{ .Timeout }}",
 				Name:    "{{ .RandomValue }}",
 			}
-			err := values.RenderFields(&c)
+			err := values.RenderFields(&c, runner)
 			Expect(err).To(BeNil())
 			Expect(c.Timeout).To(Equal(timeout))
 			Expect(c.Name).To(Equal(randomValue))
@@ -87,7 +89,7 @@ var _ = Describe("Values", func() {
 
 		It("should render default timeout for conditions", func() {
 			c := emptyCondition
-			err := emptyValues.RenderFields(&c)
+			err := emptyValues.RenderFields(&c, runner)
 			Expect(err).To(BeNil())
 			Expect(c.Timeout).To(Equal(workflow.DefaultTimeout))
 		})
@@ -97,24 +99,25 @@ var _ = Describe("Values", func() {
 		var (
 			emptyHelmChart = application.HelmChart{}
 			helmChart      = application.HelmChart{
-				Namespace: "foo1",
-				Version:   "foo2",
-				ChartName: "foo3",
-				RepoUrl:   "foo4",
-				RepoName:  "foo5",
+				RegistryName: "default",
+				Namespace:    "foo1",
+				Version:      "foo2",
+				ChartName:    "foo3",
+				RepoUrl:      "foo4",
+				RepoName:     "foo5",
 			}
 		)
 
 		It("should do nothing when helm chart fully provided", func() {
 			h := helmChart
-			err := emptyValues.RenderFields(&h)
+			err := emptyValues.RenderFields(&h, runner)
 			Expect(err).To(BeNil())
 			Expect(h).To(Equal(helmChart))
 		})
 
 		It("should use values for helm charts", func() {
 			h := emptyHelmChart
-			err := values.RenderFields(&h)
+			err := values.RenderFields(&h, runner)
 			Expect(err).To(BeNil())
 			Expect(h.Version).To(Equal(version))
 			Expect(h.Namespace).To(Equal(namespace))
@@ -125,9 +128,10 @@ var _ = Describe("Values", func() {
 		var (
 			emptySecret = application.Secret{}
 			secret      = application.Secret{
-				Namespace: "foo1",
-				Name:      "foo2",
-				Type:      string(v1.SecretTypeOpaque),
+				RegistryName: "default",
+				Namespace:    "foo1",
+				Name:         "foo2",
+				Type:         string(v1.SecretTypeOpaque),
 				Entries: map[string]application.SecretValue{
 					"foo3": {
 						File: "foo4",
@@ -149,14 +153,14 @@ var _ = Describe("Values", func() {
 
 		It("should do nothing when secret fully provided", func() {
 			s := secret
-			err := emptyValues.RenderFields(&s)
+			err := emptyValues.RenderFields(&s, runner)
 			Expect(err).To(BeNil())
 			Expect(s).To(Equal(secret))
 		})
 
 		It("should use values for namespace", func() {
 			s := emptySecret
-			err := values.RenderFields(&s)
+			err := values.RenderFields(&s, runner)
 			Expect(err).To(BeNil())
 			Expect(s.Namespace).To(Equal(namespace))
 		})
@@ -177,14 +181,14 @@ var _ = Describe("Values", func() {
 
 		It("should do nothing when dns entry fully provided", func() {
 			d := dnsEntry
-			err := emptyValues.RenderFields(&d)
+			err := emptyValues.RenderFields(&d, runner)
 			Expect(err).To(BeNil())
 			Expect(d).To(Equal(dnsEntry))
 		})
 
 		It("should use values for namespace", func() {
 			d := emptyDnsEntry
-			err := values.RenderFields(&d)
+			err := values.RenderFields(&d, runner)
 			Expect(err).To(BeNil())
 			Expect(d.Domain).To(Equal(domain))
 			Expect(d.HostedZone).To(Equal(hostedZone))
@@ -194,7 +198,8 @@ var _ = Describe("Values", func() {
 	Context("app ref", func() {
 		var (
 			appRef = application.Ref{
-				Flags: []string{"foo1"},
+				RegistryName: "default",
+				Flags:        []string{"foo1"},
 				Values: render.Values{
 					"foo2": "foo3",
 				},
@@ -207,16 +212,31 @@ var _ = Describe("Values", func() {
 
 		It("should do nothing when app ref fully provided", func() {
 			a := appRef
-			err := emptyValues.RenderFields(&a)
+			err := emptyValues.RenderFields(&a, runner)
 			Expect(err).To(BeNil())
 			Expect(a).To(Equal(appRef))
 		})
 
 		It("should use values for namespace", func() {
 			a := templatedAppRef
-			err := values.RenderFields(&a)
+			err := values.RenderFields(&a, runner)
 			Expect(err).To(BeNil())
 			Expect(a.Path).To(Equal(randomValue))
 		})
+	})
+
+	It("works for values referencing other values", func() {
+		vals := render.Values{
+			"Namespace":          "gloo-system",
+			"UpstreamName":       "template:{{ .Namespace }}-apiserver-ui-8080",
+			"UpstreamNamespace":  "key:Namespace",
+			"VirtualServiceName": "glooui",
+			"Domain":             "glooui.testing.valet.corp.solo.io",
+		}
+		Expect(vals.GetValue("Namespace", runner)).To(Equal("gloo-system"))
+		Expect(vals.GetValue("UpstreamName", runner)).To(Equal("gloo-system-apiserver-ui-8080"))
+		Expect(vals.GetValue("UpstreamNamespace", runner)).To(Equal("gloo-system"))
+		Expect(vals.GetValue("VirtualServiceName", runner)).To(Equal("glooui"))
+		Expect(vals.GetValue("Domain", runner)).To(Equal("glooui.testing.valet.corp.solo.io"))
 	})
 })

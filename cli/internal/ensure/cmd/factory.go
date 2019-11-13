@@ -1,12 +1,11 @@
 package cmd
 
 const (
-	GlooctlCmd = "glooctl"
 	KubectlCmd = "kubectl"
 	HelmCmd = "helm"
 	GcloudCmd = "gcloud"
 	MinikubeCmd = "minikube"
-	EksCtlCmd = "eks"
+	EksCtlCmd = "eksctl"
 )
 
 type Factory interface {

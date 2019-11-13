@@ -44,9 +44,9 @@ steps:
 
 ## Steps
 
-Valet supports workflows that include **installing and uninstalling applications**, setting up **dns entries**, 
-waiting for a **condition** to be met on a Kubernetes resource, waiting for a **curl** request to return an 
-expected status, or running another **workflow**. 
+Valet supports workflows that include **installing and uninstalling applications**, applying a **patch** to a resource,
+setting up **dns entries**, waiting for a **condition** to be met on a Kubernetes resource, waiting for a 
+**curl** request to return an expected status, or running another **workflow**. 
 
 ### Installing applications
 

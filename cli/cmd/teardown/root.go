@@ -4,7 +4,6 @@ import (
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/valet/cli/cmd/common"
 	"github.com/solo-io/valet/cli/cmd/config"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
 	"github.com/solo-io/valet/cli/options"
@@ -51,6 +50,5 @@ func TeardownCfg(opts *options.Options, cfg *workflow.Config) error {
 		Step:       opts.Ensure.Step,
 		Registries: common.GetRegistries(globalConfig),
 	}
-	command := cmd.CommandFactory{}
-	return cfg.Teardown(opts.Top.Ctx, input, &command)
+	return cfg.Teardown(opts.Top.Ctx, input)
 }

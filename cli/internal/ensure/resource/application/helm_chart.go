@@ -33,7 +33,12 @@ type HelmChart struct {
 }
 
 func (h *HelmChart) addHelmRepo(ctx context.Context, input render.InputParams) error {
-	return input.Runner().Run(ctx, cmd.New().Helm().AddRepo(h.RepoName, h.RepoUrl).Cmd())
+	cmd.Stdout().Println("Adding helm repo %s %s", h.RepoName, h.RepoUrl)
+	if err := input.Runner().Run(ctx, cmd.New().Helm().AddRepo(h.RepoName, h.RepoUrl).Cmd()); err != nil {
+		return err
+	}
+	cmd.Stdout().Println("Running helm repo update")
+	return input.Runner().Run(ctx, cmd.New().Helm().With("repo", "update").Cmd())
 }
 
 func (h *HelmChart) fetchChart(ctx context.Context, input render.InputParams) (string, error) {
@@ -73,6 +78,9 @@ func (h *HelmChart) getLocalDirectory() (string, error) {
 
 func (h *HelmChart) Render(ctx context.Context, input render.InputParams) (kuberesource.UnstructuredResources, error) {
 	if err := input.RenderFields(h); err != nil {
+		return nil, err
+	}
+	if err := h.addHelmRepo(ctx, input); err != nil {
 		return nil, err
 	}
 	downloadPath, err := h.fetchChart(ctx, input)

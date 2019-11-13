@@ -62,6 +62,5 @@ func ensure(opts *options.Options) error {
 	if err != nil {
 		return err
 	}
-	command := cmd.CommandFactory{}
-	return cfg.Ensure(opts.Top.Ctx, input, &command)
+	return cfg.Ensure(opts.Top.Ctx, input)
 }

@@ -2,11 +2,16 @@ package workflow
 
 import (
 	"context"
-	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
-
+	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
+)
+
+var (
+	UnableToLoadPatchError = func(err error) error {
+		return errors.Wrapf(err, "unable to load patch")
+	}
 )
 
 type Patch struct {
@@ -28,7 +33,7 @@ func (p *Patch) Ensure(ctx context.Context, input render.InputParams) error {
 	cmd.Stdout().Println("Patching %s.%s (%s) from file %s (%s) %s", p.Namespace, p.Name, p.KubeType, p.Path, p.PatchType, input.Values.ToString())
 	patchTemplate, err := input.LoadFile(p.RegistryName, p.Path)
 	if err != nil {
-		return err
+		return UnableToLoadPatchError(err)
 	}
 	patchString, err := render.LoadTemplate(patchTemplate, input.Values, input.Runner())
 	if err != nil {
@@ -50,12 +55,4 @@ func (p *Patch) Teardown(ctx context.Context, input render.InputParams) error {
 	}
 	cmd.Stdout().Println("Skipping teardown for patch")
 	return nil
-}
-
-func (p *Patch) Load(input render.InputParams) (string, error) {
-	t := application.Template{
-		Path:   p.Path,
-		Values: input.Values,
-	}
-	return t.Load(input)
 }

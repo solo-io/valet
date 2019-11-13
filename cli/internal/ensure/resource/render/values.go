@@ -21,6 +21,7 @@ const (
 	DomainKey     = "Domain"
 	HostedZoneKey = "HostedZone"
 	PathKey       = "Path"
+	NameKey       = "Name"
 
 	EnvPrefix      = "env:"
 	TemplatePrefix = "template:"

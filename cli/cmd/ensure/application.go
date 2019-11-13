@@ -10,7 +10,6 @@ import (
 	"github.com/solo-io/go-utils/installutils/helmchart"
 	"github.com/solo-io/valet/cli/cmd/common"
 	"github.com/solo-io/valet/cli/cmd/teardown"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/options"
@@ -60,15 +59,14 @@ func ensureApplication(opts *options.Options) error {
 		RegistryName: opts.Ensure.Registry,
 		Path:         opts.Ensure.File,
 	}
-	command := cmd.CommandFactory{}
 	if opts.Ensure.DryRun {
-		return renderManifest(opts.Top.Ctx, input, &command, ref)
+		return renderManifest(opts.Top.Ctx, input, ref)
 	}
-	return ref.Ensure(opts.Top.Ctx, input, &command)
+	return ref.Ensure(opts.Top.Ctx, input)
 }
 
-func renderManifest(ctx context.Context, input render.InputParams, command cmd.Factory, ref application.Ref) error {
-	resources, err := ref.Render(ctx, input, command)
+func renderManifest(ctx context.Context, input render.InputParams, ref application.Ref) error {
+	resources, err := ref.Render(ctx, input)
 	if err != nil {
 		return err
 	}

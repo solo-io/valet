@@ -5,7 +5,7 @@ build:
     version: github.com/solo-io/valet/cli/version.Version
     binaries:
       - name: valet
-        os: [linux, darwin]
+        os: [linux]
         entrypoint: main.go
 
 docker:

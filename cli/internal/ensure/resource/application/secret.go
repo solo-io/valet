@@ -57,6 +57,7 @@ type GcloudKmsEncryptedFile struct {
 func (s *Secret) Render(ctx context.Context, input render.InputParams) (kuberesource.UnstructuredResources, error) {
 	if err := input.RenderFields(s); err != nil {
 		return nil, err
+
 	}
 	cmd.Stdout().Println("Rendering secret %s.%s with type %s and %d entries", s.Namespace, s.Name, s.Type, len(s.Entries))
 	secret := v1.Secret{

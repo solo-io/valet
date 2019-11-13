@@ -66,6 +66,7 @@ var _ = Describe("Values", func() {
 				Name:      "foo4",
 				Value:     "foo5",
 				Jsonpath:  "foo6",
+				Interval:  "foo7",
 			}
 		)
 
@@ -91,7 +92,7 @@ var _ = Describe("Values", func() {
 			c := emptyCondition
 			err := emptyValues.RenderFields(&c, runner)
 			Expect(err).To(BeNil())
-			Expect(c.Timeout).To(Equal(workflow.DefaultTimeout))
+			Expect(c.Timeout).To(Equal(workflow.DefaultConditionTimeout))
 		})
 	})
 

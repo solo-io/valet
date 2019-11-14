@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/solo-io/valet/cli/cmd/config"
+
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/go-utils/installutils/helmchart"
 	"github.com/solo-io/valet/cli/cmd/common"
 	"github.com/solo-io/valet/cli/cmd/teardown"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/options"
@@ -39,43 +40,41 @@ func Application(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *co
 }
 
 func ensureApplication(opts *options.Options) error {
-	if err := common.LoadEnv(opts.Top.Ctx); err != nil {
+	globalConfig, err := config.LoadGlobalConfig(opts.Top.Ctx)
+	if err != nil {
+		return err
+	}
+	if err := common.LoadEnv(globalConfig); err != nil {
 		return err
 	}
 	input := render.InputParams{
-		Values: opts.Ensure.Values,
-		Flags:  opts.Ensure.Flags,
-		Step:   opts.Ensure.Step,
+		Values:     opts.Ensure.Values,
+		Flags:      opts.Ensure.Flags,
+		Step:       opts.Ensure.Step,
+		Registries: common.GetRegistries(globalConfig),
 	}
 	if opts.Ensure.File == "" {
 		return common.MustProvideFileError
 	}
 	ref := application.Ref{
-		Path: opts.Ensure.File,
+		RegistryName: opts.Ensure.Registry,
+		Path:         opts.Ensure.File,
 	}
-	command := cmd.CommandFactory{}
 	if opts.Ensure.DryRun {
-		manifest, err := renderManifest(opts.Top.Ctx, input, &command, ref)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("%s\n", manifest)
-		return nil
+		return renderManifest(opts.Top.Ctx, input, ref)
 	}
-	return ref.Ensure(opts.Top.Ctx, input, &command)
+	return ref.Ensure(opts.Top.Ctx, input)
 }
 
-func renderManifest(ctx context.Context, input render.InputParams, command cmd.Factory, ref application.Ref) (string, error) {
-	resources, err := ref.Render(ctx, input, command)
+func renderManifest(ctx context.Context, input render.InputParams, ref application.Ref) error {
+	resources, err := ref.Render(ctx, input)
 	if err != nil {
-		return "", err
-	}
-	if err != nil {
-		return "", err
+		return err
 	}
 	manifests, err := helmchart.ManifestsFromResources(resources)
 	if err != nil {
-		return "", err
+		return err
 	}
-	return manifests.CombinedString() + "\n", nil
+	fmt.Printf("%s\n", manifests.CombinedString()+"\n")
+	return nil
 }

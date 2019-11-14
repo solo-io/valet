@@ -7,13 +7,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/avast/retry-go"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/go-utils/installutils/helmchart"
 	"github.com/solo-io/go-utils/installutils/kuberesource"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
-	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
@@ -22,154 +20,101 @@ var (
 )
 
 type HelmChart struct {
-	RepoUrl     string            `yaml:"repoUrl"`
-	ChartName   string            `yaml:"chartName"`
-	RepoName    string            `yaml:"repoName"`
-	Version     string            `yaml:"version" valet:"key=Version"`
-	Namespace   string            `yaml:"namespace" valet:"key=Namespace"`
-	Set         []string          `yaml:"set"`
-	SetEnv      map[string]string `yaml:"setEnv"`
-	ValuesFiles []string          `yaml:"valuesFiles"`
-	Files       render.Values     `yaml:"files"`
+	RegistryName string            `yaml:"registryName" valet:"default=default"`
+	RepoUrl      string            `yaml:"repoUrl"`
+	ChartName    string            `yaml:"chartName"`
+	RepoName     string            `yaml:"repoName"`
+	Version      string            `yaml:"version" valet:"key=Version"`
+	Namespace    string            `yaml:"namespace" valet:"key=Namespace"`
+	Set          []string          `yaml:"set"`
+	SetEnv       map[string]string `yaml:"setEnv"`
+	ValuesFiles  []string          `yaml:"valuesFiles"`
+	Files        render.Values     `yaml:"files"`
 }
 
-func (h *HelmChart) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
-	cmd.Stdout().Println("Preparing to install %s version %s", h.ChartName, h.Version)
-	if err := input.Values.RenderFields(h); err != nil {
+func (h *HelmChart) addHelmRepo(ctx context.Context, input render.InputParams) error {
+	cmd.Stdout().Println("Adding helm repo %s %s", h.RepoName, h.RepoUrl)
+	if err := input.Runner().Run(ctx, cmd.New().Helm().AddRepo(h.RepoName, h.RepoUrl).Cmd()); err != nil {
 		return err
 	}
-	manifest, err := h.renderManifest(ctx, input, command)
-	if err != nil {
-		return err
-	}
-	kubectl := command.Kubectl().ApplyStdIn(manifest)
-	if h.Namespace != "" {
-		kubectl = kubectl.Namespace(h.Namespace)
-	}
-	cmd.Stdout().Println("Applying manifest")
-	err = retry.Do(func() error {
-		out, err := kubectl.SwallowErrorLog(true).Cmd().Output(ctx)
-		if err != nil {
-			return errors.Wrapf(err, out)
-		}
-		return nil
-	}, retry.Attempts(3))
-	if err != nil {
-		return err
-	}
-	return internal.WaitUntilPodsRunning(h.Namespace)
+	cmd.Stdout().Println("Running helm repo update")
+	return input.Runner().Run(ctx, cmd.New().Helm().With("repo", "update").Cmd())
 }
 
-func (h *HelmChart) renderManifest(ctx context.Context, input render.InputParams, command cmd.Factory) (string, error) {
-	if err := h.addHelmRepo(ctx, command); err != nil {
-		return "", err
-	}
-	untarDir, err := h.fetchAndUntarChart(ctx, command)
-	chartDir := filepath.Join(untarDir, h.ChartName)
+func (h *HelmChart) fetchChart(ctx context.Context, input render.InputParams) (string, error) {
+	downloadDir, err := h.getLocalDirectory()
 	if err != nil {
 		return "", err
 	}
-	cmd.Stdout().Println("Rendering manifest for application")
-	helmCmd := command.Helm().Template().Namespace(h.Namespace)
-	for _, set := range h.Set {
-		helmCmd = helmCmd.Set(set)
+	downloadPath := h.getDownloadPath(downloadDir)
+	if exists, err := fileExists(downloadPath); err == nil && exists {
+		cmd.Stdout().Println("Chart already downloaded to %s", downloadPath)
+		return downloadPath, nil
 	}
-	for set, envVar := range h.SetEnv {
-		helmCmd = helmCmd.SetEnv(set, envVar)
-	}
-	vals, err := input.Values.RenderValues()
-	if err != nil {
-		return "", err
-	}
-	for key, val := range vals {
-		helmCmd = helmCmd.Set(fmt.Sprintf("%s=%s", key, val))
-	}
-	files, err := h.Files.RenderStringValues()
-	if err != nil {
-		return "", err
-	}
-	for key, file := range files {
-		helmCmd = helmCmd.SetFile(fmt.Sprintf("%s=%s", key, file))
-	}
-	return helmCmd.Target(chartDir).Cmd().Output(ctx)
-}
-
-func (h *HelmChart) Teardown(ctx context.Context, input render.InputParams, command cmd.Factory) error {
-	cmd.Stdout().Println("Preparing to uninstall %s version %s", h.ChartName, h.Version)
-	if err := input.Values.RenderFields(h); err != nil {
-		return err
-	}
-	manifest, err := h.renderManifest(ctx, input, command)
-	if err != nil {
-		return err
-	}
-	cmd.Stdout().Println("Deleting manifest")
-	kubectl := command.Kubectl().DeleteStdIn(manifest).IgnoreNotFound()
-	if h.Namespace != "" {
-		kubectl = kubectl.Namespace(h.Namespace)
-	}
-	if err := kubectl.Cmd().Run(ctx); err != nil {
-		return err
-	}
-	if h.Namespace != "" {
-		if ok, err := internal.NamespaceIsActive(h.Namespace); err != nil {
-			return err
-		} else if ok {
-			return command.Kubectl().Delete(ns).WithName(h.Namespace).Cmd().Run(ctx)
-		}
-	}
-	return nil
-}
-
-func (h *HelmChart) addHelmRepo(ctx context.Context, command cmd.Factory) error {
-	return command.Helm().AddRepo(h.RepoName, h.RepoUrl).Cmd().Run(ctx)
-}
-
-func (h *HelmChart) fetchAndUntarChart(ctx context.Context, command cmd.Factory) (string, error) {
-	untarDir, err := h.getLocalDirectory()
-	if err != nil {
-		cmd.Stderr().Println("Error determining local directory for extracting chart: %s", err.Error())
-		return "", err
-	}
-	if err := os.MkdirAll(untarDir, os.ModePerm); err != nil {
+	if err := os.MkdirAll(downloadDir, os.ModePerm); err != nil {
 		cmd.Stderr().Println("Error making directory: %s", err.Error())
 		return "", err
 	}
-	out, err := command.
+	if err := h.addHelmRepo(ctx, input); err != nil {
+		return "", err
+	}
+	command := cmd.New().
 		Helm().
 		Fetch(h.RepoName, h.ChartName).
 		Version(h.Version).
-		UntarToDir(untarDir).
-		Cmd().
-		Output(ctx)
+		With("-d", downloadDir).
+		Cmd()
+	out, err := input.Runner().Output(ctx, command)
 	if err != nil {
 		cmd.Stderr().Println("Error trying to extract chart: %s", err.Error())
 		cmd.Stderr().Println(out)
 		return "", err
 	}
-	cmd.Stdout().Println("Successfully downloaded and extracted chart")
-	return untarDir, nil
+	cmd.Stdout().Println("Successfully downloaded chart %s", downloadPath)
+	return downloadPath, nil
+}
+
+func fileExists(path string) (bool, error) {
+	file, err := os.Stat(path)
+	if err != nil && !os.IsNotExist(err) {
+		return false, err
+	} else if err != nil {
+		return false, nil
+	}
+	if file.IsDir() {
+		return false, errors.Errorf("Unexpected directory %s", path)
+	}
+	return true, nil
+}
+
+func (h *HelmChart) getDownloadPath(downloadDir string) string {
+	return filepath.Join(downloadDir, fmt.Sprintf("%s-%s.tgz", h.ChartName, h.Version))
 }
 
 func (h *HelmChart) getLocalDirectory() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
+		cmd.Stderr().Println("Error determining local directory for extracting chart: %s", err.Error())
 		return "", err
 	}
-	return filepath.Join(home, ".helm", "untar", h.RepoName, h.ChartName, h.Version), nil
+	return filepath.Join(home, ".helm", "cache", "valet", h.RepoName), nil
 }
 
-func (h *HelmChart) Render(ctx context.Context, input render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
-	if err := input.Values.RenderFields(h); err != nil {
+func (h *HelmChart) Render(ctx context.Context, input render.InputParams) (kuberesource.UnstructuredResources, error) {
+	if err := input.RenderFields(h); err != nil {
 		return nil, err
 	}
-	url := h.getChartUrl()
-	values, err := h.computeValues(ctx)
+	downloadPath, err := h.fetchChart(ctx, input)
 	if err != nil {
 		return nil, err
 	}
+	values, err := h.computeValues(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+	cmd.Stdout().Println("Successfully computed helm chart values")
 	manifests, err := helmchart.RenderManifests(ctx,
-		url,
+		downloadPath,
 		values,
 		h.ChartName,
 		h.Namespace,
@@ -177,18 +122,11 @@ func (h *HelmChart) Render(ctx context.Context, input render.InputParams, comman
 	if err != nil {
 		return nil, err
 	}
+	cmd.Stdout().Println("Successfully rendered helm chart")
 	return manifests.ResourceList()
 }
 
-func (h *HelmChart) getChartUrl() string {
-	filename := fmt.Sprintf("%s-%s.tgz", h.ChartName, h.Version)
-	if strings.HasSuffix(h.RepoUrl, "/") {
-		return fmt.Sprintf("%s%s/%s", h.RepoUrl, "charts", filename)
-	}
-	return fmt.Sprintf("%s/%s/%s", h.RepoUrl, "charts", filename)
-}
-
-func (h *HelmChart) getParams() (map[string]string, error) {
+func (h *HelmChart) getParams(input render.InputParams) (map[string]string, error) {
 	params := make(map[string]string)
 	for _, set := range h.Set {
 		parts := strings.Split(set, "=")
@@ -205,7 +143,7 @@ func (h *HelmChart) getParams() (map[string]string, error) {
 		params[param] = val
 	}
 	for param, file := range h.Files {
-		contents, err := render.LoadFile(file)
+		contents, err := input.LoadFile(h.RegistryName, file)
 		if err != nil {
 			return nil, err
 		}
@@ -214,8 +152,8 @@ func (h *HelmChart) getParams() (map[string]string, error) {
 	return params, nil
 }
 
-func (h *HelmChart) computeValues(ctx context.Context) (string, error) {
-	params, err := h.getParams()
+func (h *HelmChart) computeValues(ctx context.Context, input render.InputParams) (string, error) {
+	params, err := h.getParams(input)
 	if err != nil {
 		return "", err
 	}
@@ -224,7 +162,7 @@ func (h *HelmChart) computeValues(ctx context.Context) (string, error) {
 		return "", err
 	}
 	for _, valuesFile := range h.ValuesFiles {
-		valuesYaml, err := render.LoadFile(valuesFile)
+		valuesYaml, err := input.LoadFile(h.RegistryName, valuesFile)
 		if err != nil {
 			return "", err
 		}

@@ -54,8 +54,8 @@ func (e *EksCtl) GetCluster() *EksCtl {
 	return e.With("get", "cluster")
 }
 
-func (e *EksCtl) DeleteCluster(ctx context.Context, name, region string) error {
-	streamHandler, err := e.With("delete", "cluster").Region(region).WithName(name).Cmd().Stream(ctx)
+func (e *EksCtl) DeleteCluster(ctx context.Context, name, region string, runner Runner) error {
+	streamHandler, err := runner.Stream(ctx, e.With("delete", "cluster").Region(region).WithName(name).Cmd())
 	if err != nil {
 		return err
 	}
@@ -76,8 +76,8 @@ func (e *EksCtl) DeleteCluster(ctx context.Context, name, region string) error {
 	return nil
 }
 
-func (e *EksCtl) CreateCluster(ctx context.Context, name, region string) error {
-	streamHandler, err := e.With("create", "cluster").Region(region).WithName(name).Cmd().Stream(ctx)
+func (e *EksCtl) CreateCluster(ctx context.Context, name, region string, runner Runner) error {
+	streamHandler, err := runner.Stream(ctx, e.With("create", "cluster").Region(region).WithName(name).Cmd())
 	if err != nil {
 		return err
 	}
@@ -98,8 +98,8 @@ func (e *EksCtl) CreateCluster(ctx context.Context, name, region string) error {
 	return nil
 }
 
-func (e *EksCtl) IsRunning(ctx context.Context, name, region string) (bool, error) {
-	output, err := e.GetCluster().Region(region).Name(name).SwallowError().Cmd().Output(ctx)
+func (e *EksCtl) IsRunning(ctx context.Context, name, region string, runner Runner) (bool, error) {
+	output, err := runner.Output(ctx, e.GetCluster().Region(region).Name(name).SwallowError().Cmd())
 	if err != nil {
 		if strings.Contains(output, "ResourceNotFoundException: No cluster found for name") {
 			return false, nil

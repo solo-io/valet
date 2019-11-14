@@ -17,7 +17,7 @@ var (
 )
 
 func WaitUntilPodsRunning(namespace string) error {
-	cmd.Stdout().Println("Waiting for pods")
+	cmd.Stdout().Println("Waiting for pods in namespace %s", namespace)
 	kubeClient, err := kube.KubeClient()
 	if err != nil {
 		return err

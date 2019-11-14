@@ -44,9 +44,9 @@ steps:
 
 ## Steps
 
-Valet supports workflows that include **installing and uninstalling applications**, setting up **dns entries**, 
-waiting for a **condition** to be met on a Kubernetes resource, waiting for a **curl** request to return an 
-expected status, or running another **workflow**. 
+Valet supports workflows that include **installing and uninstalling applications**, applying a **patch** to a resource,
+setting up **dns entries**, waiting for a **condition** to be met on a Kubernetes resource, waiting for a 
+**curl** request to return an expected status, or running another **workflow**. 
 
 ### Installing applications
 
@@ -100,6 +100,50 @@ Note that the environment variables for AWS creds must be set: `AWS_ACCESS_KEY_I
 the domain doesn't end with the hosted zone (minus the trailing "."), the AWS APIs will return an error. 
 
 Valet uses a TTL of 30 seconds and these DNS may need to be manually cleaned up when finished. 
+
+### Patches
+
+Typically it is desirable to deploy the correct resource first in a declarative way, rather than rely on deploying 
+an incorrect resource first, then fixing it. However, this isn't always realistic, and valet provides a mechanism to 
+expose `kubectl patch` using patch steps in a workflow. 
+
+Consider this patch, which adds a volume to a proxy container with istio certs:
+
+```yaml
+spec:
+  template:
+    spec:
+      containers:
+        - name: gateway-proxy-v2
+          volumeMounts:
+            - mountPath: /etc/certs/
+              name: istio-certs
+              readOnly: true
+      volumes:
+        - name: istio-certs
+          secret:
+            defaultMode: 420
+            optional: true
+            secretName: istio.default
+```
+
+To add this patch as a resource in an application, use:
+
+```yaml
+name: patch-example
+steps:
+  - patch:
+      path: path/to/patch.yaml
+      kubeType: deployment
+      name: gateway-proxy-v2
+      namespace: gloo-system
+      patchType: strategic
+```
+
+Note that the semantics of patching can be complex, and `strategic` is not always a desirable patch type. The goal here
+was to expose the Kubernetes semantics, for more background check out [these docs](https://kubernetes.io/docs/tasks/run-application/update-api-object-kubectl-patch/).
+
+A patch can omit the `name` and `namespace` field if `Name` and `Namespace` are provided as values instead. 
 
 ### Conditions
 

@@ -47,6 +47,6 @@ func (m *Minikube) KubeVersion(kubeVersion string) *Minikube {
 	return m.With(fmt.Sprintf("--kubernetes-version=%s", kubeVersion))
 }
 
-func (m *Minikube) IP(ctx context.Context) (string, error) {
-	return m.With("ip").Cmd().Output(ctx)
+func (m *Minikube) IP(ctx context.Context, runner Runner) (string, error) {
+	return runner.Output(ctx, m.With("ip").Cmd())
 }

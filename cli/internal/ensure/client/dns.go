@@ -10,6 +10,8 @@ import (
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
+//go:generate mockgen -destination ./mocks/aws_dns_client_mock.go github.com/solo-io/valet/cli/internal/ensure/client AwsDnsClient
+
 var (
 	_ AwsDnsClient = new(awsDnsClient)
 

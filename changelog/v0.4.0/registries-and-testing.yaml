@@ -1,0 +1,19 @@
+changelog:
+  - type: NON_USER_FACING
+    description: Added tests for all application resources and workflow steps.
+  - type: BREAKING_CHANGE
+    description: >
+      Instead of "path", use the "manifest" struct when defining an application resource from a particular local or remote file.
+      This makes it easier to seamlessly support resources from other registries in the future.
+    issueLink: https://github.com/solo-io/valet/issues/107
+  - type: BREAKING_CHANGE
+    description: >
+      Patches are no longer considered application resources, instead they can be defined as a workflow step. The structure of the
+      patch resource stays the same.
+    issueLink: https://github.com/solo-io/valet/issues/107
+  - type: NEW_FEATURE
+    description: >
+      A registry name flag was added to valet, and registries can be added to global config. When referencing another file in an
+      application or workflow, a registry name can be provided. If that registry is known to the local valet command line, then
+      the file can be loaded. Registries can be saved to the local valet command by adding to "$HOME/.valet/global.yaml".
+    issueLink: https://github.com/solo-io/valet/issues/107

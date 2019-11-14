@@ -9,11 +9,11 @@ import (
 )
 
 type Resource interface {
-	Ensure(ctx context.Context, inputs render.InputParams, command cmd.Factory) error
-	Teardown(ctx context.Context, inputs render.InputParams, command cmd.Factory) error
+	Ensure(ctx context.Context, inputs render.InputParams) error
+	Teardown(ctx context.Context, inputs render.InputParams) error
 }
 
-func EnsureAll(ctx context.Context, input render.InputParams, command cmd.Factory, resources ...Resource) error {
+func EnsureAll(ctx context.Context, input render.InputParams, resources ...Resource) error {
 	for _, resource := range resources {
 		t := reflect.ValueOf(resource)
 		if t.IsNil() {
@@ -24,44 +24,44 @@ func EnsureAll(ctx context.Context, input render.InputParams, command cmd.Factor
 				return err
 			}
 		}
-		if err := resource.Ensure(ctx, input, command); err != nil {
+		if err := resource.Ensure(ctx, input); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func EnsureFirst(ctx context.Context, input render.InputParams, command cmd.Factory, resources ...Resource) error {
+func EnsureFirst(ctx context.Context, input render.InputParams, resources ...Resource) error {
 	for _, resource := range resources {
 		t := reflect.ValueOf(resource)
 		if t.IsNil() {
 			continue
 		}
-		return resource.Ensure(ctx, input, command)
+		return resource.Ensure(ctx, input)
 	}
 	return nil
 }
 
-func TeardownAll(ctx context.Context, input render.InputParams, command cmd.Factory, resources ...Resource) error {
+func TeardownAll(ctx context.Context, input render.InputParams, resources ...Resource) error {
 	for _, resource := range resources {
 		t := reflect.ValueOf(resource)
 		if t.IsNil() {
 			continue
 		}
-		if err := resource.Teardown(ctx, input, command); err != nil {
+		if err := resource.Teardown(ctx, input); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func TeardownFirst(ctx context.Context, input render.InputParams, command cmd.Factory, resources ...Resource) error {
+func TeardownFirst(ctx context.Context, input render.InputParams, resources ...Resource) error {
 	for _, resource := range resources {
 		t := reflect.ValueOf(resource)
 		if t.IsNil() {
 			continue
 		}
-		return resource.Teardown(ctx, input, command)
+		return resource.Teardown(ctx, input)
 	}
 	return nil
 }

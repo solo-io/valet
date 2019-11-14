@@ -1,10 +1,8 @@
 package common
 
 import (
-	"context"
 	"os"
 
-	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
 
@@ -18,37 +16,13 @@ var (
 	MustProvideFileError = errors.Errorf("Must provide file option or subcommand")
 )
 
-func LoadApplication(opts *options.Options, input render.InputParams) (*application.Application, error) {
-	if opts.Ensure.File == "" {
-		return nil, MustProvideFileError
-	}
-
-	ref := application.Ref{
-		Path: opts.Ensure.File,
-	}
-
-	app, err := ref.Load(opts.Top.Ctx, input)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := LoadEnv(opts.Top.Ctx); err != nil {
-		return nil, err
-	}
-	return app, nil
-}
-
 func LoadConfig(opts *options.Options) (*workflow.Config, error) {
 	if opts.Ensure.File == "" {
 		return nil, MustProvideFileError
 	}
 
-	cfg, err := workflow.LoadConfig(opts.Ensure.File)
+	cfg, err := workflow.LoadConfig(opts.Ensure.Registry, opts.Ensure.File, render.InputParams{})
 	if err != nil {
-		return nil, err
-	}
-
-	if err := LoadEnv(opts.Top.Ctx); err != nil {
 		return nil, err
 	}
 
@@ -63,13 +37,7 @@ func LoadConfig(opts *options.Options) (*workflow.Config, error) {
 	return cfg, nil
 }
 
-func LoadEnv(ctx context.Context) error {
-	globalConfig, err := config.LoadGlobalConfig(ctx)
-	if err != nil {
-		cmd.Stderr().Println("Failed to load global config: %s", err.Error())
-		return err
-	}
-
+func LoadEnv(globalConfig *config.ValetGlobalConfig) error {
 	for k, v := range globalConfig.Env {
 		val := os.Getenv(k)
 		if val == "" {
@@ -81,4 +49,12 @@ func LoadEnv(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+func GetRegistries(globalConfig *config.ValetGlobalConfig) map[string]render.Registry {
+	registries := make(map[string]render.Registry)
+	for k, v := range globalConfig.Registries {
+		registries[k] = v.LocalRegistry
+	}
+	return registries
 }

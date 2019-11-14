@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/solo-io/go-utils/errors"
+	"github.com/solo-io/valet/cli/internal"
+
 	"github.com/solo-io/go-utils/installutils/kuberesource"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -35,53 +34,50 @@ func (a *Application) checkRequiredValues(input render.InputParams) error {
 	return nil
 }
 
-func (a *Application) Teardown(ctx context.Context, input render.InputParams, command cmd.Factory) error {
+func (a *Application) Teardown(ctx context.Context, input render.InputParams) error {
 	input = input.MergeValues(a.Values)
 	if err := a.checkRequiredValues(input); err != nil {
 		return err
 	}
-	if err := input.Values.RenderFields(a); err != nil {
+	if err := input.RenderFields(a); err != nil {
 		return err
 	}
 	for i := len(a.Resources) - 1; i >= 0; i-- {
-		if err := a.Resources[i].Teardown(ctx, input, command); err != nil {
+		if err := a.Resources[i].Teardown(ctx, input); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (a *Application) Ensure(ctx context.Context, input render.InputParams, command cmd.Factory) error {
+func (a *Application) Ensure(ctx context.Context, input render.InputParams) error {
 	input = input.MergeValues(a.Values)
 	if err := a.checkRequiredValues(input); err != nil {
 		return err
 	}
-	if err := input.Values.RenderFields(a); err != nil {
+	if err := input.RenderFields(a); err != nil {
 		return err
 	}
 	for _, r := range a.Resources {
-		if err := r.Ensure(ctx, input, command); err != nil {
+		if err := r.Ensure(ctx, input); err != nil {
 			return err
 		}
 	}
-	return nil
+	return internal.WaitUntilPodsRunning(a.Namespace)
 }
 
 func (a *Application) getLabel(step int) string {
 	return fmt.Sprintf("valet.%s.%d", a.Name, step)
 }
 
-func (a *Application) Render(ctx context.Context, input render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
+func (a *Application) Render(ctx context.Context, input render.InputParams) (kuberesource.UnstructuredResources, error) {
 	input = input.MergeValues(a.Values)
 	if err := a.checkRequiredValues(input); err != nil {
 		return nil, err
 	}
 	var allResources kuberesource.UnstructuredResources
 	for i, appResource := range a.Resources {
-		if appResource.Patch != nil {
-			return nil, errors.Errorf("Applications with patches currently can't be rendered as dry-run")
-		}
-		renderedResource, err := appResource.Render(ctx, input, command)
+		renderedResource, err := appResource.Render(ctx, input)
 		if err != nil {
 			return nil, err
 		}
@@ -97,20 +93,4 @@ func (a *Application) Render(ctx context.Context, input render.InputParams, comm
 		}
 	}
 	return allResources, nil
-}
-
-func LoadApplication(path string) (*Application, error) {
-	var a Application
-
-	b, err := render.LoadBytes(path)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := yaml.UnmarshalStrict(b, &a); err != nil {
-		cmd.Stderr().Println("Failed to unmarshal file: %s", err.Error())
-		return nil, err
-	}
-
-	return &a, nil
 }

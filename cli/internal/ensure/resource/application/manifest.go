@@ -2,37 +2,42 @@ package application
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/solo-io/go-utils/installutils/kuberesource"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 )
 
 var (
-	_ resource.Resource = new(Manifest)
-	_ Renderable        = new(Manifest)
+	_ Renderable = new(Manifest)
 )
 
 type Manifest struct {
-	Path string `yaml:"path"`
+	RegistryName string `yaml:"registry" valet:"default=default"`
+	Path         string `yaml:"path" valet:"key=Path"`
 }
 
-func (m *Manifest) Ensure(ctx context.Context, _ render.InputParams, command cmd.Factory) error {
-	cmd.Stdout().Println("Ensuring manifest %s", m.Path)
-	return command.Kubectl().Apply().File(m.Path).Cmd().Run(ctx)
-}
-
-func (m *Manifest) Teardown(ctx context.Context, _ render.InputParams, command cmd.Factory) error {
-	cmd.Stdout().Println("Tearing down manifest %s", m.Path)
-	return command.Kubectl().DeleteFile(m.Path).IgnoreNotFound().Cmd().Run(ctx)
-}
-
-func (m *Manifest) Render(ctx context.Context, _ render.InputParams, command cmd.Factory) (kuberesource.UnstructuredResources, error) {
-	cmd.Stdout().Println("Rendering manifest %s", m.Path)
-	contents, err := render.LoadFile(m.Path)
+func (m *Manifest) Render(ctx context.Context, input render.InputParams) (kuberesource.UnstructuredResources, error) {
+	contents, err := m.load(input)
 	if err != nil {
 		return nil, err
 	}
 	return render.YamlToResources([]byte(contents))
+}
+
+func (m *Manifest) load(input render.InputParams) (string, error) {
+	if err := input.RenderFields(m); err != nil {
+		return "", err
+	}
+	manifest := m.Path
+	if m.RegistryName != "" && m.RegistryName != render.DefaultRegistry {
+		manifest = fmt.Sprintf("%s:%s", m.RegistryName, manifest)
+	}
+	cmd.Stdout().Println("Loading manifest %s", manifest)
+	contents, err := input.LoadFile(m.RegistryName, m.Path)
+	if err != nil {
+		return "", err
+	}
+	return contents, nil
 }

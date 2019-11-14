@@ -6,7 +6,9 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
+	"text/template"
 
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/go-utils/stringutils"
@@ -18,6 +20,8 @@ const (
 	NamespaceKey  = "Namespace"
 	DomainKey     = "Domain"
 	HostedZoneKey = "HostedZone"
+	PathKey       = "Path"
+	NameKey       = "Name"
 
 	EnvPrefix      = "env:"
 	TemplatePrefix = "template:"
@@ -42,6 +46,40 @@ var (
 
 type Values map[string]string
 
+func (v Values) DeepCopy() Values {
+	values := make(map[string]string)
+	for k, val := range v {
+		values[k] = val
+	}
+	return values
+}
+
+func (v Values) Load(tmpl string, runner cmd_runner.Runner) (string, error) {
+	parsed, err := template.New("").Parse(tmpl)
+	if err != nil {
+		return "", err
+	}
+	out := strings.Builder{}
+	vals, err := v.Render(runner)
+	if err != nil {
+		return "", err
+	}
+	err = parsed.Execute(&out, vals)
+	return out.String(), err
+}
+
+func (v Values) Render(runner cmd_runner.Runner) (map[string]interface{}, error) {
+	vals := make(map[string]interface{})
+	for k := range v {
+		v, err := v.GetValue(k, runner)
+		if err != nil {
+			return nil, err
+		}
+		vals[k] = v
+	}
+	return vals, nil
+}
+
 func (v Values) ContainsKey(key string) bool {
 	if v == nil {
 		return false
@@ -50,17 +88,19 @@ func (v Values) ContainsKey(key string) bool {
 	return ok
 }
 
-func (v Values) GetValue(key string) (string, error) {
+func (v Values) GetValue(key string, runner cmd_runner.Runner) (string, error) {
 	val, ok := v[key]
 	if !ok {
 		return "", ValueNotFoundError(key)
 	}
 	if strings.HasPrefix(val, KeyPrefix) {
 		key := strings.TrimPrefix(val, KeyPrefix)
-		return v.GetValue(key)
+		return v.GetValue(key, runner)
 	} else if strings.HasPrefix(val, TemplatePrefix) {
-		template := strings.TrimPrefix(val, TemplatePrefix)
-		return LoadTemplate(template, v)
+		tmpl := strings.TrimPrefix(val, TemplatePrefix)
+		otherVals := v.DeepCopy()
+		delete(otherVals, key)
+		return LoadTemplate(tmpl, otherVals, runner)
 	} else if strings.HasPrefix(val, EnvPrefix) {
 		env := strings.TrimPrefix(val, EnvPrefix)
 		return os.ExpandEnv(env), nil
@@ -74,13 +114,13 @@ func (v Values) GetValue(key string) (string, error) {
 			cmd := &cmd_runner.Command{
 				Name: splitCmd[0],
 			}
-			return cmd.Output(context.TODO())
+			return runner.Output(context.TODO(), cmd)
 		default:
 			cmd := &cmd_runner.Command{
 				Name: splitCmd[0],
 				Args: splitCmd[1:],
 			}
-			return cmd.Output(context.TODO())
+			return runner.Output(context.TODO(), cmd)
 		}
 	} else if strings.HasPrefix(val, FilePrefix) {
 		fileString := strings.TrimPrefix(val, FilePrefix)
@@ -102,17 +142,17 @@ func (v Values) ToString() string {
 	return fmt.Sprintf("{%s}", strings.Join(entries, ", "))
 }
 
-func (v Values) RenderFields(input interface{}) error {
+func (v Values) RenderFields(input interface{}, runner cmd_runner.Runner) error {
 	structVal := reflect.ValueOf(input).Elem()
 	structType := reflect.TypeOf(input).Elem()
 	for i := 0; i < structType.NumField(); i++ {
 		fieldType := structType.Field(i)
+		valetTags := strings.Split(fieldType.Tag.Get(ValetField), ",")
 		fieldValue := structVal.Field(i)
 		if fieldValue.Kind() == reflect.String {
 			rendered := fieldValue.String()
-			valetTags := strings.Split(fieldType.Tag.Get(ValetField), ",")
 			if stringutils.ContainsString(TemplateTag, valetTags) {
-				loaded, err := LoadTemplate(rendered, v)
+				loaded, err := LoadTemplate(rendered, v, runner)
 				if err != nil {
 					return err
 				}
@@ -121,7 +161,7 @@ func (v Values) RenderFields(input interface{}) error {
 			if rendered == "" {
 				key := getTagValue(valetTags, KeyTag)
 				if key != "" && v.ContainsKey(key) {
-					val, err := v.GetValue(key)
+					val, err := v.GetValue(key, runner)
 					if err != nil {
 						return err
 					}
@@ -132,15 +172,27 @@ func (v Values) RenderFields(input interface{}) error {
 				rendered = getTagValue(valetTags, DefaultTag)
 			}
 			fieldValue.SetString(rendered)
+		} else if fieldValue.Kind() == reflect.Int {
+			if fieldValue.Int() == 0 {
+				rendered := getTagValue(valetTags, DefaultTag)
+				if rendered == "" {
+					continue
+				}
+				val, err := strconv.Atoi(rendered)
+				if err != nil {
+					return err
+				}
+				fieldValue.SetInt(int64(val))
+			}
 		}
 	}
 	return nil
 }
 
-func (v Values) RenderValues() (map[string]interface{}, error) {
+func (v Values) RenderValues(runner cmd_runner.Runner) (map[string]interface{}, error) {
 	vals := make(map[string]interface{})
 	for k := range v {
-		v, err := v.GetValue(k)
+		v, err := v.GetValue(k, runner)
 		if err != nil {
 			return nil, err
 		}
@@ -149,10 +201,10 @@ func (v Values) RenderValues() (map[string]interface{}, error) {
 	return vals, nil
 }
 
-func (v Values) RenderStringValues() (map[string]string, error) {
+func (v Values) RenderStringValues(runner cmd_runner.Runner) (map[string]string, error) {
 	vals := make(map[string]string)
 	for k := range v {
-		v, err := v.GetValue(k)
+		v, err := v.GetValue(k, runner)
 		if err != nil {
 			return nil, err
 		}

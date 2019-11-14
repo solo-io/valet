@@ -18,7 +18,7 @@ type GKE struct {
 	Options  *client.CreateOptions `yaml:"options"`
 }
 
-func (g *GKE) Ensure(ctx context.Context, _ render.InputParams, command cmd.Factory) error {
+func (g *GKE) Ensure(ctx context.Context, input render.InputParams) error {
 	cmd.Stdout().Println("Ensuring GKE cluster %s (project: %s, location: %s)", g.Name, g.Project, g.Location)
 	gkeClient, err := client.NewGkeClient(ctx)
 	if err != nil {
@@ -33,14 +33,14 @@ func (g *GKE) Ensure(ctx context.Context, _ render.InputParams, command cmd.Fact
 			return err
 		}
 	}
-	return g.SetContext(ctx, command)
+	return g.SetContext(ctx, input.Runner())
 }
 
-func (g *GKE) SetContext(ctx context.Context, command cmd.Factory) error {
-	return command.Gcloud().GetCredentials().Project(g.Project).Zone(g.Location).WithName(g.Name).Cmd().Run(ctx)
+func (g *GKE) SetContext(ctx context.Context, runner cmd.Runner) error {
+	return runner.Run(ctx, cmd.New().Gcloud().GetCredentials().Project(g.Project).Zone(g.Location).WithName(g.Name).Cmd())
 }
 
-func (g *GKE) Teardown(ctx context.Context, _ render.InputParams, command cmd.Factory) error {
+func (g *GKE) Teardown(ctx context.Context, input render.InputParams) error {
 	gkeClient, err := client.NewGkeClient(ctx)
 	if err != nil {
 		return err

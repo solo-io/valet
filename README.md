@@ -5,25 +5,26 @@ Valet is a tool for Kubernetes operators and developers, focused on solving thre
 * How do I maintain documentation for workflows related to using my application on Kubernetes?
 * How do I automatically deploy many applications and ensure the state of an entire dev or production Kubernetes cluster?
 
-With Valet, you can write a single config and use valet to run it as an end to end test, produce a documented user guide, 
-or wire up to GitOps to automatically deploy the configuration against a real cluster. 
+With Valet, you can write a single config and use valet to run it as an end to end test, 
+or wire up to GitOps to automatically deploy the configuration against a real cluster. In the future, a markdown 
+generator may be added to autogenerate user-friendly guides for every valet application and workflow. 
 
 ## Installing and Running
 
 The easiest way to use Valet is to run from source:
-`git clone https://github.com/solo-io/valet && cd valet`
-`make build TAGGED_VERSION=$(git describe --tags)`
+* `git clone https://github.com/solo-io/valet && cd valet`
+* `make build TAGGED_VERSION=$(git describe --tags)`
 
 Now move `_output/valet` to somewhere in your bin, or create an alias: `alias valet="$(pwd)/_output/valet"`
 
 To get a jump start with some known configuration, clone the valet-config repo:
-`git clone https://github.com/solo-io/valet-config && cd valet-config`
-`valet ensure -f clusters/demos/petclinic-minikube.yaml`
+* `git clone https://github.com/solo-io/valet-config && cd valet-config`
+* `valet ensure -f clusters/demos/petclinic-minikube.yaml`
 
 ## Applications
 
 Valet provides a simple declarative API for **applications**, which consist of a list of resources such as 
-**manifests**, **helm charts**, **templates**, **patches**, **secrets**, **namespaces**, and other **applications**. 
+**manifests**, **helm charts**, **templates**, **secrets**, **namespaces**, and other **applications**. 
 Given a set of user **values** (key-value pairs that help with rendering), and **flags** (to toggle on optional resources),
 an application can be rendered and ensured on a cluster. 
 
@@ -31,13 +32,15 @@ Once an application is defined, it can be deployed automatically against the cur
 using `valet ensure application -f path/to/application`. Valet is idempotent, so running ensure several times in a 
 row should not affect the health of the application. 
 
+Applications can be rendered without applying by passing the `dry-run` flag. 
+
 Click [here](cli/internal/ensure/resource/application/README.md) for more details on the applications API. 
 
 ## Workflows
 
 Valet also provides an API for **workflows**, which consist of a set of steps such as **installing or uninstalling applications**, 
-**applying or deleting manifests**, validate the health of an application with **curl commands** and **conditions**, 
-set up **dns entries**, or run other **workflows**.
+**applying or deleting manifests**, applying **patches**, validating the health of an application with **curl commands** and **conditions**, 
+setting up **dns entries**, or running other **workflows**.
 
 Like applications, workflows in valet are rendered with a set of user **values** and **flags** that determine how 
 the resources are rendered and which optional resources/steps are used. 

@@ -36,6 +36,5 @@ func setContext(opts *options.Options) error {
 	if cfg.Cluster == nil {
 		return MustSpecifyClusterError
 	}
-	command := cmd.CommandFactory{}
-	return cfg.Cluster.SetContext(opts.Top.Ctx, &command)
+	return cfg.Cluster.SetContext(opts.Top.Ctx, cmd.DefaultCommandRunner())
 }

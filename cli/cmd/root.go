@@ -38,6 +38,7 @@ func ValetCli(version string) *cobra.Command {
 
 	optionsFunc := func(app *cobra.Command) {
 		app.SuggestionsMinimumDistance = 1
+		app.PersistentFlags().StringVarP(&opts.Config.GlobalConfigPath, "global-config-path", "", "", "alternate location for global config (default $HOME/.valet/global.yaml)")
 		app.AddCommand(
 			ensure.Ensure(opts),
 			teardown.Teardown(opts),

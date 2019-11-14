@@ -17,7 +17,7 @@ var (
 )
 
 func LoadInput(opts *options.Options) (*render.InputParams, error) {
-	globalConfig, err := config.LoadGlobalConfig(opts.Top.Ctx)
+	globalConfig, err := config.LoadGlobalConfig(opts)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func LoadEnv(globalConfig *config.ValetGlobalConfig) error {
 func GetRegistries(globalConfig *config.ValetGlobalConfig) map[string]render.Registry {
 	registries := make(map[string]render.Registry)
 	for k, v := range globalConfig.Registries {
-		registries[k] = v.LocalRegistry
+		registries[k] = v.DirectoryRegistry
 	}
 	return registries
 }

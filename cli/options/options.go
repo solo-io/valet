@@ -6,6 +6,7 @@ import (
 
 type Options struct {
 	Ensure Ensure
+	Config Config
 	Build  Build
 	Top    Top
 }
@@ -36,4 +37,10 @@ type Build struct {
 	Version string
 	// if true, then don't push images to docker repo
 	SkipDockerPush bool
+}
+
+type Config struct {
+	GlobalConfigPath string
+	RegistryName string
+	RegistryPath string
 }

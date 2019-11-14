@@ -25,6 +25,7 @@ type Resource struct {
 	Secret      *Secret    `yaml:"secret"`
 	Template    *Template  `yaml:"template"`
 	Manifest    *Manifest  `yaml:"manifest"`
+	Manifests   *Manifests `yaml:"manifests"`
 	Application *Ref       `yaml:"application"`
 
 	Values render.Values `yaml:"values"`
@@ -98,5 +99,5 @@ func (a *Resource) renderString(ctx context.Context, input render.InputParams) (
 
 func (a *Resource) Render(ctx context.Context, input render.InputParams) (kuberesource.UnstructuredResources, error) {
 	input = input.MergeValues(a.Values)
-	return RenderFirst(ctx, input, a.Namespace, a.HelmChart, a.Secret, a.Manifest, a.Template, a.Application)
+	return RenderFirst(ctx, input, a.Namespace, a.HelmChart, a.Secret, a.Manifest, a.Manifests, a.Template, a.Application)
 }

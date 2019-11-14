@@ -19,7 +19,7 @@ func App(version string, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 
 	app := &cobra.Command{
 		Use:     "valet",
-		Short:   "CLI for ensuring the state of clusters, solo products, and demos",
+		Short:   "CLI for ensuring kubernetes clusters, applications, and workflows",
 		Version: version,
 	}
 

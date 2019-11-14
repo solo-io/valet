@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/solo-io/valet/cli/cmd/config"
-
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/go-utils/installutils/helmchart"
@@ -40,30 +38,18 @@ func Application(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *co
 }
 
 func ensureApplication(opts *options.Options) error {
-	globalConfig, err := config.LoadGlobalConfig(opts.Top.Ctx)
+	input, err := common.LoadInput(opts)
 	if err != nil {
 		return err
-	}
-	if err := common.LoadEnv(globalConfig); err != nil {
-		return err
-	}
-	input := render.InputParams{
-		Values:     opts.Ensure.Values,
-		Flags:      opts.Ensure.Flags,
-		Step:       opts.Ensure.Step,
-		Registries: common.GetRegistries(globalConfig),
-	}
-	if opts.Ensure.File == "" {
-		return common.MustProvideFileError
 	}
 	ref := application.Ref{
 		RegistryName: opts.Ensure.Registry,
 		Path:         opts.Ensure.File,
 	}
 	if opts.Ensure.DryRun {
-		return renderManifest(opts.Top.Ctx, input, ref)
+		return renderManifest(opts.Top.Ctx, *input, ref)
 	}
-	return ref.Ensure(opts.Top.Ctx, input)
+	return ref.Ensure(opts.Top.Ctx, *input)
 }
 
 func renderManifest(ctx context.Context, input render.InputParams, ref application.Ref) error {

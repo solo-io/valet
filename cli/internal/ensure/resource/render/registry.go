@@ -30,22 +30,29 @@ type Registry interface {
 	LoadFile(path string) (string, error)
 }
 
-type LocalRegistry struct {
-	WorkingDirectory string `yaml:"dir"`
+type DirectoryRegistry struct {
+	Path string `yaml:"path"`
 }
 
-func (l *LocalRegistry) resolvePath(path string) string {
-	if l.isValidUrl(path) || l.WorkingDirectory == "" {
+func (l *DirectoryRegistry) resolvePath(path string) string {
+	if l.isValidUrl(path) || l.Path == "" {
 		return path
 	}
-	return filepath.Join(l.WorkingDirectory, path)
+	if l.isValidUrl(l.Path) {
+		if strings.HasSuffix(l.Path, "/") {
+			return fmt.Sprintf("%s%s", l.Path, path)
+		} else {
+			return fmt.Sprintf("%s/%s", l.Path, path)
+		}
+	}
+	return filepath.Join(l.Path, path)
 }
 
-func (l *LocalRegistry) LoadFile(path string) (string, error) {
+func (l *DirectoryRegistry) LoadFile(path string) (string, error) {
 	return l.loadFile(l.resolvePath(path))
 }
 
-func (l *LocalRegistry) loadFile(path string) (string, error) {
+func (l *DirectoryRegistry) loadFile(path string) (string, error) {
 	b, err := l.loadBytes(path)
 	if err != nil {
 		return "", err
@@ -53,7 +60,7 @@ func (l *LocalRegistry) loadFile(path string) (string, error) {
 	return string(b), nil
 }
 
-func (l *LocalRegistry) loadBytes(path string) ([]byte, error) {
+func (l *DirectoryRegistry) loadBytes(path string) ([]byte, error) {
 	if l.isValidUrl(path) {
 		contents, err := LoadBytesFromUrl(path)
 		if err == nil {
@@ -96,7 +103,7 @@ func LoadBytesFromUrl(path string) ([]byte, error) {
 }
 
 // isValidUrl tests a string to determine if it is a url or not.
-func (l *LocalRegistry) isValidUrl(toTest string) bool {
+func (l *DirectoryRegistry) isValidUrl(toTest string) bool {
 	_, err := url.ParseRequestURI(toTest)
 	if err != nil {
 		return false

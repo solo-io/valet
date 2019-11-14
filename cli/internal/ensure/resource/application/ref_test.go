@@ -21,7 +21,7 @@ var _ = Describe("Refs", func() {
 
 	var (
 		ctx          = context.TODO()
-		testRegistry = render.LocalRegistry{
+		testRegistry = render.DirectoryRegistry{
 			WorkingDirectory: registryPath,
 		}
 	)

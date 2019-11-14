@@ -29,7 +29,11 @@ func SetContext(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cob
 }
 
 func setContext(opts *options.Options) error {
-	cfg, err := common.LoadConfig(opts)
+	input, err := common.LoadInput(opts)
+	if err != nil {
+		return err
+	}
+	cfg, err := common.LoadConfig(opts, *input)
 	if err != nil {
 		return err
 	}

@@ -37,7 +37,7 @@ type ValetGlobalConfig struct {
 }
 
 type ValetRegistry struct {
-	LocalRegistry *render.LocalRegistry `yaml:"local"`
+	DirectoryRegistry *render.DirectoryRegistry `yaml:"directory"`
 }
 
 func GetValetConfigDir() (string, error) {

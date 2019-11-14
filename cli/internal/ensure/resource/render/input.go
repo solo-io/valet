@@ -76,7 +76,7 @@ func (i *InputParams) GetRegistry(name string) (Registry, error) {
 		return reg, nil
 	}
 	if name == DefaultRegistry {
-		return &LocalRegistry{}, nil
+		return &DirectoryRegistry{}, nil
 	}
 	return nil, UnknownRegistryError(name)
 }

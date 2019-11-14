@@ -3,9 +3,6 @@ package teardown
 import (
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/valet/cli/cmd/common"
-	"github.com/solo-io/valet/cli/cmd/config"
-	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
-	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 )
@@ -15,7 +12,7 @@ func Teardown(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra
 		Use:   "teardown",
 		Short: "tears down cluster based on configuration",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return teardown(opts)
+			return TeardownCfg(opts)
 		},
 	}
 
@@ -28,27 +25,14 @@ func Teardown(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra
 	return cmd
 }
 
-func teardown(opts *options.Options) error {
-	cfg, err := common.LoadConfig(opts)
+func TeardownCfg(opts *options.Options) error {
+	input, err := common.LoadInput(opts)
 	if err != nil {
 		return err
 	}
-	return TeardownCfg(opts, cfg)
-}
-
-func TeardownCfg(opts *options.Options, cfg *workflow.Config) error {
-	globalConfig, err := config.LoadGlobalConfig(opts.Top.Ctx)
+	cfg, err := common.LoadConfig(opts, *input)
 	if err != nil {
 		return err
 	}
-	if err := common.LoadEnv(globalConfig); err != nil {
-		return err
-	}
-	input := render.InputParams{
-		Values:     opts.Ensure.Values,
-		Flags:      opts.Ensure.Flags,
-		Step:       opts.Ensure.Step,
-		Registries: common.GetRegistries(globalConfig),
-	}
-	return cfg.Teardown(opts.Top.Ctx, input)
+	return cfg.Teardown(opts.Top.Ctx, *input)
 }

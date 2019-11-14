@@ -25,7 +25,7 @@ var _ = Describe("template", func() {
 	var (
 		ctx          = context.TODO()
 		emptyInput   = render.InputParams{}
-		testRegistry = render.LocalRegistry{
+		testRegistry = render.DirectoryRegistry{
 			WorkingDirectory: registryPath,
 		}
 		values = render.Values{

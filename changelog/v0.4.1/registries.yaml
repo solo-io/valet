@@ -1,0 +1,9 @@
+changelog:
+  - type: NEW_FEATURE
+    description: >
+      Support registries from a base URL, not just a base local directory. For instance,
+      `https://raw.githubusercontent.com/solo-io/valet-config/master/`.
+    issueLink: https://github.com/solo-io/valet/issues/112
+  - type: NEW_FEATURE
+    description: Support basic registry management from CLI with `valet config registry [add|list|delete]`.
+    issueLink: https://github.com/solo-io/valet/issues/113

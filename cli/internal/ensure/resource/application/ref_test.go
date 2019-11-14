@@ -22,7 +22,7 @@ var _ = Describe("Refs", func() {
 	var (
 		ctx          = context.TODO()
 		testRegistry = render.DirectoryRegistry{
-			WorkingDirectory: registryPath,
+			Path: registryPath,
 		}
 	)
 

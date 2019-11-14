@@ -34,7 +34,7 @@ var _ = Describe("helm chart", func() {
 		ctx          = context.TODO()
 		emptyInput   = render.InputParams{}
 		testRegistry = render.DirectoryRegistry{
-			WorkingDirectory: registryPath,
+			Path: registryPath,
 		}
 		values render.Values
 		input  render.InputParams

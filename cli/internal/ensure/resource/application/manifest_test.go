@@ -24,7 +24,7 @@ var _ = Describe("Manifest", func() {
 		ctx          = context.TODO()
 		emptyInput   = render.InputParams{}
 		testRegistry = render.DirectoryRegistry{
-			WorkingDirectory: registryPath,
+			Path: registryPath,
 		}
 	)
 

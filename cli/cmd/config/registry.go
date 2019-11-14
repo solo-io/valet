@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal"

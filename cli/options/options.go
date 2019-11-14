@@ -41,6 +41,6 @@ type Build struct {
 
 type Config struct {
 	GlobalConfigPath string
-	RegistryName string
-	RegistryPath string
+	RegistryName     string
+	RegistryPath     string
 }

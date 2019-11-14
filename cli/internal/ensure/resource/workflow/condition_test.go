@@ -3,12 +3,13 @@ package workflow_test
 import (
 	"context"
 	"fmt"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd/mocks"
+	mock_cmd "github.com/solo-io/valet/cli/internal/ensure/cmd/mocks"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
 )
@@ -28,7 +29,7 @@ var _ = Describe("condition", func() {
 
 	var (
 		ctrl   *gomock.Controller
-		runner *mocks.MockRunner
+		runner *mock_cmd.MockRunner
 		input  render.InputParams
 
 		ctx         = context.TODO()
@@ -38,7 +39,7 @@ var _ = Describe("condition", func() {
 
 	BeforeEach(func() {
 		ctrl = gomock.NewController(T)
-		runner = mocks.NewMockRunner(ctrl)
+		runner = mock_cmd.NewMockRunner(ctrl)
 		input = render.InputParams{
 			CommandRunner: runner,
 		}
@@ -98,8 +99,8 @@ var _ = Describe("condition", func() {
 		}
 
 		const (
-			nameKey = "Name"
-			timeoutKey = "Timeout"
+			nameKey     = "Name"
+			timeoutKey  = "Timeout"
 			intervalKey = "Interval"
 		)
 

@@ -2,45 +2,47 @@ package workflow_test
 
 import (
 	"context"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/go-utils/errors"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd/mocks"
+	mock_client "github.com/solo-io/valet/cli/internal/ensure/client/mocks"
+	mock_cmd "github.com/solo-io/valet/cli/internal/ensure/cmd/mocks"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
 )
 
 var _ = Describe("dns", func() {
 	const (
-		domain = "test-domain"
+		domain     = "test-domain"
 		hostedZone = "test-hosted-zone"
 
-		serviceName       = "test-service"
-		serviceNamespace  = "test-namespace"
-		servicePort       = "test-port"
-		ip                = "test-ip"
+		serviceName      = "test-service"
+		serviceNamespace = "test-namespace"
+		servicePort      = "test-port"
+		ip               = "test-ip"
 	)
 
 	var (
-		ctrl         *gomock.Controller
-		runner       *mocks.MockRunner
-		ingressClient *mocks.MockIngressClient
-		awsDnsClient *mocks.MockAwsDnsClient
-		input        render.InputParams
+		ctrl          *gomock.Controller
+		runner        *mock_cmd.MockRunner
+		ingressClient *mock_client.MockIngressClient
+		awsDnsClient  *mock_client.MockAwsDnsClient
+		input         render.InputParams
 
-		ctx     = context.TODO()
+		ctx      = context.TODO()
 		emptyErr = errors.Errorf("")
 	)
 
 	BeforeEach(func() {
 		ctrl = gomock.NewController(T)
-		runner = mocks.NewMockRunner(ctrl)
-		awsDnsClient = mocks.NewMockAwsDnsClient(ctrl)
-		ingressClient = mocks.NewMockIngressClient(ctrl)
+		runner = mock_cmd.NewMockRunner(ctrl)
+		awsDnsClient = mock_client.NewMockAwsDnsClient(ctrl)
+		ingressClient = mock_client.NewMockIngressClient(ctrl)
 		input = render.InputParams{
 			CommandRunner: runner,
-			DnsClient: awsDnsClient,
+			DnsClient:     awsDnsClient,
 			IngressClient: ingressClient,
 		}
 	})
@@ -53,9 +55,9 @@ var _ = Describe("dns", func() {
 		dns := workflow.DnsEntry{
 			Domain: domain,
 			Service: workflow.ServiceRef{
-				Port: servicePort,
+				Port:      servicePort,
 				Namespace: serviceNamespace,
-				Name: serviceName,
+				Name:      serviceName,
 			},
 			HostedZone: hostedZone,
 		}
@@ -86,14 +88,14 @@ var _ = Describe("dns", func() {
 		dns := workflow.DnsEntry{
 			Service: workflow.ServiceRef{
 				Namespace: serviceNamespace,
-				Name: serviceName,
+				Name:      serviceName,
 			},
 		}
 
 		BeforeEach(func() {
 			values := render.Values{
 				render.HostedZoneKey: hostedZone,
-				render.DomainKey: domain,
+				render.DomainKey:     domain,
 			}
 			input.Values = values
 		})

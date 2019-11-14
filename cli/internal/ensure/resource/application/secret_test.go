@@ -2,59 +2,59 @@ package application_test
 
 import (
 	"context"
+	"os"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/go-utils/installutils/kuberesource"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	v1 "k8s.io/api/core/v1"
-	"os"
 )
 
 var _ = Describe("Secret", func() {
 
 	const (
-		name = "test-secret"
-		namespace = "test-namespace"
-		secretValue = "secret"
+		name              = "test-secret"
+		namespace         = "test-namespace"
+		secretValue       = "secret"
 		secretValueBase64 = "c2VjcmV0"
-		secretType = "test"
+		secretType        = "test"
 
 		secretEnvVarEntry = "EnvVar"
-		secretEnvVar = "TEST_SECRET_ENV_VAR"
+		secretEnvVar      = "TEST_SECRET_ENV_VAR"
 
 		secretFileEntry = "File"
-		secretFilePath = "test/files/secrets/secret.txt"
+		secretFilePath  = "test/files/secrets/secret.txt"
 
-		secretGcloudFileEntry = "GcloudFile"
-		secretGcloudFilePath = "test/files/secrets/secret.txt.enc"
+		secretGcloudFileEntry        = "GcloudFile"
+		secretGcloudFilePath         = "test/files/secrets/secret.txt.enc"
 		secretGcloudFileRegistryPath = "files/secrets/secret.txt.enc"
 
-
-		registryName = "test-registry"
-		registryPath = "test"
+		registryName       = "test-registry"
+		registryPath       = "test"
 		secretRegistryPath = "files/secrets/secret.txt"
 	)
 
 	var (
-		ctx = context.TODO()
-		emptyInput = render.InputParams{}
+		ctx          = context.TODO()
+		emptyInput   = render.InputParams{}
 		testRegistry = render.LocalRegistry{
 			WorkingDirectory: registryPath,
 		}
 	)
 
 	getUnstructured := func(key string) map[string]interface{} {
-		return map[string]interface{} {
+		return map[string]interface{}{
 			key: secretValueBase64,
 		}
 	}
 
 	getSecret := func(secretEntry string, secretValue application.SecretValue) application.Secret {
 		return application.Secret{
-			Name: name,
+			Name:      name,
 			Namespace: namespace,
-			Type: secretType,
+			Type:      secretType,
 			Entries: map[string]application.SecretValue{
 				secretEntry: secretValue,
 			},
@@ -129,9 +129,9 @@ var _ = Describe("Secret", func() {
 		It("handles gcloud secret values with default registry", func() {
 			value := application.SecretValue{
 				GcloudKmsEncryptedFile: &application.GcloudKmsEncryptedFile{
-					GcloudProject: "solo-public",
-					Key: "build-key",
-					Keyring: "build",
+					GcloudProject:  "solo-public",
+					Key:            "build-key",
+					Keyring:        "build",
 					CiphertextFile: secretGcloudFilePath,
 				},
 			}
@@ -155,9 +155,9 @@ var _ = Describe("Secret", func() {
 		It("handles gcloud secret values with test registry", func() {
 			value := application.SecretValue{
 				GcloudKmsEncryptedFile: &application.GcloudKmsEncryptedFile{
-					GcloudProject: "solo-public",
-					Key: "build-key",
-					Keyring: "build",
+					GcloudProject:  "solo-public",
+					Key:            "build-key",
+					Keyring:        "build",
 					CiphertextFile: secretGcloudFileRegistryPath,
 				},
 			}

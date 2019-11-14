@@ -2,6 +2,7 @@ package application_test
 
 import (
 	"context"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
@@ -15,12 +16,12 @@ var _ = Describe("Namespace", func() {
 	)
 
 	var (
-		ctx = context.TODO()
+		ctx        = context.TODO()
 		emptyInput = render.InputParams{}
-		labels = map[string]string {
+		labels     = map[string]string{
 			"foo": "bar",
 		}
-		annotations = map[string]string {
+		annotations = map[string]string{
 			"baz": "bat",
 		}
 	)
@@ -28,8 +29,8 @@ var _ = Describe("Namespace", func() {
 	Context("render", func() {
 		It("handles all fields", func() {
 			ns := application.Namespace{
-				Name: namespace,
-				Labels: labels,
+				Name:        namespace,
+				Labels:      labels,
 				Annotations: annotations,
 			}
 			resources, err := ns.Render(ctx, emptyInput)

@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	DefaultConditionTimeout = "120s"
+	DefaultConditionTimeout  = "120s"
 	DefaultConditionInterval = "5s"
 )
 
@@ -54,7 +54,7 @@ func (c *Condition) Ensure(ctx context.Context, input render.InputParams) error 
 		case <-tick:
 			if met, err := c.conditionMet(ctx, input); err != nil || met {
 				return err
-			} 
+			}
 		}
 	}
 }

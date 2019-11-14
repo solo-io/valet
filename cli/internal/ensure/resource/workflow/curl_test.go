@@ -2,11 +2,13 @@ package workflow_test
 
 import (
 	"context"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/go-utils/errors"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd/mocks"
+	mock_client "github.com/solo-io/valet/cli/internal/ensure/client/mocks"
+	mock_cmd "github.com/solo-io/valet/cli/internal/ensure/cmd/mocks"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
 )
@@ -29,8 +31,8 @@ var _ = Describe("curl", func() {
 
 	var (
 		ctrl          *gomock.Controller
-		runner        *mocks.MockRunner
-		ingressClient *mocks.MockIngressClient
+		runner        *mock_cmd.MockRunner
+		ingressClient *mock_client.MockIngressClient
 		input         render.InputParams
 
 		ctx     = context.TODO()
@@ -42,8 +44,8 @@ var _ = Describe("curl", func() {
 
 	BeforeEach(func() {
 		ctrl = gomock.NewController(T)
-		runner = mocks.NewMockRunner(ctrl)
-		ingressClient = mocks.NewMockIngressClient(ctrl)
+		runner = mock_cmd.NewMockRunner(ctrl)
+		ingressClient = mock_client.NewMockIngressClient(ctrl)
 		input = render.InputParams{
 			CommandRunner: runner,
 			IngressClient: ingressClient,

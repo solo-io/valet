@@ -3,6 +3,7 @@ package ensure
 import (
 	"context"
 	"fmt"
+
 	"github.com/solo-io/valet/cli/cmd/config"
 
 	"github.com/solo-io/go-utils/cliutils"

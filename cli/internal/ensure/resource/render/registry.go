@@ -3,15 +3,18 @@ package render
 import (
 	"bytes"
 	"fmt"
-	"github.com/solo-io/go-utils/errors"
-	"github.com/solo-io/go-utils/osutils"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/solo-io/go-utils/errors"
+	"github.com/solo-io/go-utils/osutils"
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
+
+//go:generate mockgen -destination ./mocks/registry_mock.go github.com/solo-io/valet/cli/internal/ensure/resource/render Registry
 
 const (
 	DefaultRegistry = "default"

@@ -12,6 +12,8 @@ import (
 	"github.com/solo-io/go-utils/errors"
 )
 
+//go:generate mockgen -destination ./mocks/command_runner_mock.go github.com/solo-io/valet/cli/internal/ensure/cmd Runner
+
 const (
 	Redacted = "REDACTED"
 	Empty    = "EMPTY"
@@ -40,7 +42,7 @@ type Runner interface {
 	Request(ctx context.Context, req *http.Request) (string, int, error)
 }
 
-type commandRunner struct {}
+type commandRunner struct{}
 
 func DefaultCommandRunner() Runner {
 	return &commandRunner{}
@@ -155,4 +157,3 @@ func (c *Command) Redact(unredacted, redacted string) *Command {
 	c.Redactions[unredacted] = redacted
 	return c
 }
-

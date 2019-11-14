@@ -1,9 +1,10 @@
 package render
 
 import (
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"strings"
 	"text/template"
+
+	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
 func LoadTemplate(tmpl string, values Values, runner cmd.Runner) (string, error) {
@@ -19,7 +20,3 @@ func LoadTemplate(tmpl string, values Values, runner cmd.Runner) (string, error)
 	err = parsed.Execute(&out, vals)
 	return out.String(), err
 }
-
-
-
-

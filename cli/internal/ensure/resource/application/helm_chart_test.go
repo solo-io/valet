@@ -2,12 +2,13 @@ package application_test
 
 import (
 	"context"
+	"os"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"os"
 )
 
 var _ = Describe("helm chart", func() {

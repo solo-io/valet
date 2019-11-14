@@ -2,10 +2,11 @@ package config
 
 import (
 	"context"
-	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/go-utils/osutils"
@@ -31,7 +32,7 @@ func Config(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 }
 
 type ValetGlobalConfig struct {
-	Env map[string]string `yaml:"env"`
+	Env        map[string]string        `yaml:"env"`
 	Registries map[string]ValetRegistry `yaml:"registries"`
 }
 

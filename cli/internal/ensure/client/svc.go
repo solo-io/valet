@@ -17,6 +17,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+//go:generate mockgen -destination ./mocks/ingress_client_mock.go github.com/solo-io/valet/cli/internal/ensure/client IngressClient
+
 const (
 	LocalClusterName = "minikube"
 )
@@ -25,7 +27,7 @@ type IngressClient interface {
 	GetIngressHost(name, namespace, proxyPort string) (string, error)
 }
 
-type KubeIngressClient struct {}
+type KubeIngressClient struct{}
 
 func (k *KubeIngressClient) GetIngressHost(name, namespace, proxyPort string) (string, error) {
 	restCfg, err := kubeutils.GetConfig("", "")

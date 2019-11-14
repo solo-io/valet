@@ -2,6 +2,7 @@ package application_test
 
 import (
 	"context"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
@@ -22,9 +23,9 @@ var _ = Describe("template", func() {
 	)
 
 	var (
-		ctx            = context.TODO()
-		emptyInput     = render.InputParams{}
-		testRegistry   = render.LocalRegistry{
+		ctx          = context.TODO()
+		emptyInput   = render.InputParams{}
+		testRegistry = render.LocalRegistry{
 			WorkingDirectory: registryPath,
 		}
 		values = render.Values{
@@ -66,7 +67,7 @@ var _ = Describe("template", func() {
 
 		It("should load a template from a non-default registry", func() {
 			template := &application.Template{
-				Path: templateRegistryPath,
+				Path:         templateRegistryPath,
 				RegistryName: registryName,
 			}
 			input.SetRegistry(registryName, &testRegistry)

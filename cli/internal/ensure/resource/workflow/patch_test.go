@@ -2,32 +2,34 @@ package workflow_test
 
 import (
 	"context"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd/mocks"
+	mock_cmd "github.com/solo-io/valet/cli/internal/ensure/cmd/mocks"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
+	mock_render "github.com/solo-io/valet/cli/internal/ensure/resource/render/mocks"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
 )
 
 var _ = Describe("patch", func() {
 	const (
-		name          = "test-name"
-		namespace     = "test-namespace"
-		path          = "test-path"
-		registryName  = "test-registry"
-		kubeType      = "test-kube-type"
-		patchType     = "test-patch-type"
-		patchContents = "test-patch"
+		name           = "test-name"
+		namespace      = "test-namespace"
+		path           = "test-path"
+		registryName   = "test-registry"
+		kubeType       = "test-kube-type"
+		patchType      = "test-patch-type"
+		patchContents  = "test-patch"
 		otherNamespace = "other-test-namespace"
 	)
 
 	var (
 		ctrl        *gomock.Controller
-		runner      *mocks.MockRunner
-		registry    *mocks.MockRegistry
+		runner      *mock_cmd.MockRunner
+		registry    *mock_render.MockRegistry
 		input       render.InputParams
 		emptyErr    = errors.Errorf("")
 		ctx         = context.TODO()
@@ -36,11 +38,11 @@ var _ = Describe("patch", func() {
 
 	BeforeEach(func() {
 		ctrl = gomock.NewController(T)
-		runner = mocks.NewMockRunner(ctrl)
+		runner = mock_cmd.NewMockRunner(ctrl)
 		input = render.InputParams{
 			CommandRunner: runner,
 		}
-		registry = mocks.NewMockRegistry(ctrl)
+		registry = mock_render.NewMockRegistry(ctrl)
 		input.SetRegistry(registryName, registry)
 	})
 

@@ -2,6 +2,7 @@ package application_test
 
 import (
 	"context"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/application"
@@ -11,7 +12,7 @@ import (
 var _ = Describe("Refs", func() {
 
 	const (
-		appPath = "test/apps/example-default-app.yaml"
+		appPath         = "test/apps/example-default-app.yaml"
 		appRegistryPath = "apps/example-registry-app.yaml"
 
 		registryName = "test-registry"
@@ -19,7 +20,7 @@ var _ = Describe("Refs", func() {
 	)
 
 	var (
-		ctx = context.TODO()
+		ctx          = context.TODO()
 		testRegistry = render.LocalRegistry{
 			WorkingDirectory: registryPath,
 		}
@@ -30,7 +31,7 @@ var _ = Describe("Refs", func() {
 		It("should correctly load an app from a registry", func() {
 			ref := &application.Ref{
 				RegistryName: registryName,
-				Path: appRegistryPath,
+				Path:         appRegistryPath,
 			}
 			input := render.InputParams{}
 			input.SetRegistry(registryName, &testRegistry)

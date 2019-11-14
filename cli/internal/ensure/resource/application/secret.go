@@ -2,10 +2,11 @@ package application
 
 import (
 	"context"
-	"github.com/solo-io/go-utils/osutils"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/solo-io/go-utils/osutils"
 
 	"github.com/solo-io/go-utils/installutils/kuberesource"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"

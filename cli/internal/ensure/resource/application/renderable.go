@@ -22,4 +22,3 @@ func RenderFirst(ctx context.Context, input render.InputParams, resources ...Ren
 	}
 	return nil, nil
 }
-

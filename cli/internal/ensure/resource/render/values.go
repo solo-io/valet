@@ -162,21 +162,18 @@ func (v Values) RenderFields(input interface{}, runner cmd_runner.Runner) error 
 				rendered = defaultValue
 			}
 
-			key := getTagValue(valetTags, KeyTag)
-			if key != "" && v.ContainsKey(key) {
-				val, err := v.GetValue(key, runner)
-				if err != nil {
-					return err
-				}
-				rendered = val
-			}
-
 			if stringutils.ContainsString(TemplateTag, valetTags) {
 				loaded, err := LoadTemplate(rendered, v, runner)
 				if err != nil {
 					return err
 				}
 				rendered = loaded
+			} else if key := getTagValue(valetTags, KeyTag); key != "" && v.ContainsKey(key) {
+				val, err := v.GetValue(key, runner)
+				if err != nil {
+					return err
+				}
+				rendered = val
 			}
 
 			fieldValue.SetString(rendered)

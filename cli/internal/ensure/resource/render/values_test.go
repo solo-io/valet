@@ -77,17 +77,15 @@ var _ = Describe("values", func() {
 			BeforeEach(func() {
 				values[testKey] = testValue
 			})
-			It("Will use the key if no default value exists", func() {
+			It("Will use the key if no default value exists unless template exists", func() {
 				err := values.RenderFields(test, runner)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(test.Two).To(Equal(testValue))
 				Expect(test.Five).To(Equal(testValue))
 			})
 
-			It("Will use the key and override the default value", func() {
+			It("Will use the key and override the default value unless template exists", func() {
 				err := values.RenderFields(test, runner)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(test.One).To(Equal(testValue))
 				Expect(test.Four).To(Equal(testValue))
 			})
 		})

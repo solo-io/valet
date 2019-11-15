@@ -122,7 +122,8 @@ A user can provide two types of inputs when specifying a workflow, cluster confi
 
 **Values** are a map (string -> string) that most commonly contains values that are string constants, as demonstrated above:
 
-**Values** are very powerful, more details about all of the available features can be found [here](../render/README.md)
+**Values** are an integral part of valet, more details about all of the available features can be found 
+[here](../render/README.md)
 
 ## Flags
 

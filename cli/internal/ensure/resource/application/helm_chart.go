@@ -30,6 +30,12 @@ type HelmChart struct {
 	SetEnv       map[string]string `yaml:"setEnv"`
 	ValuesFiles  []string          `yaml:"valuesFiles"`
 	Files        render.Values     `yaml:"files"`
+	/*
+		These values allow you to perform values operations before setting them as helm values
+		setValues:
+			valueOne: template:{{ .TemplateValue }}
+	*/
+	SetValues render.Values `yaml:"setValues"`
 }
 
 func (h *HelmChart) addHelmRepo(ctx context.Context, input render.InputParams) error {
@@ -149,6 +155,18 @@ func (h *HelmChart) getParams(input render.InputParams) (map[string]string, erro
 		}
 		params[param] = contents
 	}
+
+	// Render the values here as separate from other values, but use the values engine.
+	// Create a placeholder values combination so set keys don't get lost.
+	tempValues := input.MergeValues(h.SetValues).Values
+	values, err := tempValues.RenderStringValues(input.Runner())
+	if err != nil {
+		return nil, err
+	}
+	for key := range h.SetValues {
+		params[key] = values[key]
+	}
+
 	return params, nil
 }
 

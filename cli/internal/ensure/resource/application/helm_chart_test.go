@@ -145,6 +145,19 @@ var _ = Describe("helm chart", func() {
 			Expect(len(namespaces)).To(Equal(1))
 		})
 
+		It("works for supplying values set values", func() {
+			helmChart := getHelmChart()
+			helmChart.SetValues = render.Values{
+				"namespace.create": "template:{{ .NamespaceCreate }}",
+			}
+			input.Values["NamespaceCreate"] = "true"
+			resources, err := helmChart.Render(ctx, input)
+			Expect(err).To(BeNil())
+			Expect(len(resources)).To(Equal(23))
+			namespaces := resources.Filter(namespaceFilter)
+			Expect(len(namespaces)).To(Equal(1))
+		})
+
 		It("works for supplying helm values via set env", func() {
 			envVar := "TEST_HELM_VALUE"
 			Expect(os.Setenv(envVar, "true")).To(BeNil())

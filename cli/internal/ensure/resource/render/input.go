@@ -20,6 +20,10 @@ func (i *InputParams) LoadFile(registryName, path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	path, err = LoadTemplate(path, i.Values, i.Runner())
+	if err != nil {
+		return "", err
+	}
 	return registry.LoadFile(path)
 }
 

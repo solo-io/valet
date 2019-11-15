@@ -15,6 +15,11 @@ type EKS struct {
 	Region string `yaml:"region"`
 }
 
+const (
+	RegionKey = "Region"
+)
+
+
 func (e *EKS) Ensure(ctx context.Context, input render.InputParams) error {
 	cmd.Stdout().Println("Ensuring eks cluster %s (region : %s)", e.Name, e.Region)
 	running, err := cmd.New().EksCtl().IsRunning(ctx, e.Name, e.Region, input.Runner())
@@ -24,7 +29,10 @@ func (e *EKS) Ensure(ctx context.Context, input render.InputParams) error {
 	if running {
 		return e.SetContext(ctx, input.Runner())
 	}
-	return cmd.New().EksCtl().CreateCluster(ctx, e.Name, e.Region, input.Runner())
+	if err := cmd.New().EksCtl().CreateCluster(ctx, e.Name, e.Region, input.Runner()); err != nil {
+		return err
+	}
+	return cmd.New().EksCtl().WriteKubeConfig(ctx, e.Name, e.Region, input.Runner())
 }
 
 func (e *EKS) Teardown(ctx context.Context, input render.InputParams) error {
@@ -37,6 +45,11 @@ func (e *EKS) Teardown(ctx context.Context, input render.InputParams) error {
 		return nil
 	}
 	return cmd.New().EksCtl().DeleteCluster(ctx, e.Name, e.Region, input.Runner())
+}
+
+func (g *EKS) SetValues(input render.InputParams) {
+	input.Values[render.ClusterKey] = g.Name
+	input.Values[RegionKey] = g.Region
 }
 
 func (e *EKS) SetContext(ctx context.Context, runner cmd.Runner) error {

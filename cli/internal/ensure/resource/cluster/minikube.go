@@ -19,6 +19,7 @@ var _ ClusterResource = new(Minikube)
 
 type Minikube struct{}
 
+
 func (m *Minikube) Ensure(ctx context.Context, input render.InputParams) error {
 	cmd.Stdout().Println("Ensuring minikube cluster")
 	// If minikube status seems healthy, just set context and return

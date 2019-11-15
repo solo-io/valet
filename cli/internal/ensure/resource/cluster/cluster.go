@@ -46,9 +46,11 @@ func (c *Cluster) Ensure(ctx context.Context, inputs render.InputParams) error {
 		return c.Minikube.Ensure(ctx, inputs)
 	}
 	if c.GKE != nil {
+		c.GKE.SetValues(inputs)
 		return c.GKE.Ensure(ctx, inputs)
 	}
 	if c.EKS != nil {
+		c.EKS.SetValues(inputs)
 		return c.EKS.Ensure(ctx, inputs)
 	}
 	return nil
@@ -59,9 +61,11 @@ func (c *Cluster) Teardown(ctx context.Context, inputs render.InputParams) error
 		return c.Minikube.Teardown(ctx, inputs)
 	}
 	if c.GKE != nil {
+		c.GKE.SetValues(inputs)
 		return c.GKE.Teardown(ctx, inputs)
 	}
 	if c.EKS != nil {
+		c.EKS.SetValues(inputs)
 		return c.EKS.Teardown(ctx, inputs)
 	}
 	return nil

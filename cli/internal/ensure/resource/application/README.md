@@ -122,27 +122,7 @@ A user can provide two types of inputs when specifying a workflow, cluster confi
 
 **Values** are a map (string -> string) that most commonly contains values that are string constants, as demonstrated above:
 
-```yaml
-values:
-  VirtualServiceName: smh
-  Namespace: sm-marketplace
-  UpstreamName: sm-marketplace-smm-apiserver-8080
-  UpstreamNamespace: gloo-system
-```
-
-However, there are a few prefixes that enable specifying other types of values:
-
-```yaml
-values:
-  EnvExample: "env:EXAMPLE_ONE" # This populates the value by reading this environment variable
-  CmdExample: "cmd:minikube ip" # This populates the value by running this command
-  KeyExample: "key:EnvExample" # This creates a value that is an alias for another key
-  TemplateExample: "template:{{ .KeyExample }}" # This creates a value by executing a go template using the other values
-```
-
-Conventionally, values are written in CamelCase, as demonstrated here. 
-
-An application may specify certain values are **required**, to help validate an input when trying to render an application. 
+**Values** are very powerful, more details about all of the available features can be found [here](../render/README.md)
 
 ## Flags
 
@@ -215,46 +195,6 @@ Instead of defining here, provide `Version` and `Namespace` as values to specify
 reduce the amount of work to maintain a cluster configuration over many upgrades. 
 
 Valet will wait for all the pods in the namespace are ready before finishing ensuring the helm chart resource. 
-
-### Secrets
-
-Often, when deploying an application, it is necessary to populate some secrets. Valet provides a flexible approach to
-defining secrets to support GitOps workflows where secrets often can't (or shouldn't) be committed to a repo.
-
-```yaml
-name: secret-example
-resources:
-  - secret:
-      name: aws-creds
-      namespace: example
-      entries:
-        aws_access_key_id:
-          envVar: AWS_ACCESS_KEY_ID
-        aws_secret_access_key:
-          envVar: AWS_SECRET_ACCESS_KEY
-  - secret:
-      name: gcloud-example
-      namespace: example
-      entries:
-        private-key:
-          gcloudKmsEncryptedFile:
-            ciphertextFile: cluster/approval-bot/private-key.enc
-            gcloudProject: solo-corp
-            keyring: build
-            key: buildkey
-        constant:
-          file: path/to/file.ext
-``` 
-
-In this example, two secrets are created. The first is a set of aws credentials, pulled from the environment. The 
-second is an example using two other ways to populate secret values with file contents. Valet supports
-decrypting files using gcloud kms decryption. Note that valet needs to be configured with the proper google credentials. 
-Valet also supports reading an unencrypted file's contents as a secret value. 
-
-In the future, this can be extended to support other secret providers. It was important for Valet to not rely on 
-the cluster to decrypt the secret, since the cluster may be created at the same time the secret is created -- making it impossible
-to save the encrypted secret in a repo for GitOps. However, valet could be used with something like SealedSecrets for 
-secret management, and rely on cluster creation and secret encryption to be handled elsewhere. 
 
 ### Templates
 
@@ -335,6 +275,60 @@ resources:
   - template: 
       path: path/to/template.yaml
 ```
+
+### Secrets
+
+Often, when deploying an application, it is necessary to populate some secrets. Valet provides a flexible approach to
+defining secrets to support GitOps workflows where secrets often can't (or shouldn't) be committed to a repo.
+
+```yaml
+name: secret-example
+resources:
+  - secret:
+      name: aws-creds
+      namespace: example
+      entries:
+        aws_access_key_id:
+          envVar: AWS_ACCESS_KEY_ID
+        aws_secret_access_key:
+          envVar: AWS_SECRET_ACCESS_KEY
+  - secret:
+      name: gcloud-example
+      namespace: example
+      entries:
+        private-key:
+          gcloudKmsEncryptedFile:
+            ciphertextFile: cluster/approval-bot/private-key.enc
+            gcloudProject: solo-corp
+            keyring: build
+            key: buildkey
+        constant:
+          file: path/to/file.ext
+``` 
+
+In this example, two secrets are created. The first is a set of aws credentials, pulled from the environment. The 
+second is an example using two other ways to populate secret values with file contents. Valet supports
+decrypting files using gcloud kms decryption. Note that valet needs to be configured with the proper google credentials. 
+Valet also supports reading an unencrypted file's contents as a secret value. 
+
+In the future, this can be extended to support other secret providers. It was important for Valet to not rely on 
+the cluster to decrypt the secret, since the cluster may be created at the same time the secret is created -- making it impossible
+to save the encrypted secret in a repo for GitOps. However, valet could be used with something like SealedSecrets for 
+secret management, and rely on cluster creation and secret encryption to be handled elsewhere. 
+
+##### Advanced Configuration
+
+In order to allow for more customization of secrets, the secret entry names can now [templated](#Templates) as well. For Example:
+```yaml
+- secret:
+  name: remote-kube-config
+  type: solo.io/kubeconfig
+  entries:
+    "{{.Cluster}}":
+      file: $HOME/.kube/eksctl/clusters/{{.Cluster}}
+```
+Notice here that not only is the file value being templated, but also the key by which that value will be stored in the secret.
+
 
 ### Namespaces
 

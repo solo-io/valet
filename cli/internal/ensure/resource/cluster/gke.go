@@ -11,6 +11,11 @@ import (
 
 var _ ClusterResource = new(GKE)
 
+const (
+	ProjectKey  = "Project"
+	LocationKey = "Location"
+)
+
 type GKE struct {
 	Name     string                `yaml:"name"`
 	Location string                `yaml:"location"`
@@ -38,6 +43,12 @@ func (g *GKE) Ensure(ctx context.Context, input render.InputParams) error {
 
 func (g *GKE) SetContext(ctx context.Context, runner cmd.Runner) error {
 	return runner.Run(ctx, cmd.New().Gcloud().GetCredentials().Project(g.Project).Zone(g.Location).WithName(g.Name).Cmd())
+}
+
+func (g *GKE) SetValues(input render.InputParams) {
+	input.Values[render.ClusterKey] = g.Name
+	input.Values[ProjectKey] = g.Project
+	input.Values[LocationKey] = g.Location
 }
 
 func (g *GKE) Teardown(ctx context.Context, input render.InputParams) error {

@@ -104,7 +104,15 @@ func (e *EksCtl) IsRunning(ctx context.Context, name, region string, runner Runn
 		if strings.Contains(output, "ResourceNotFoundException: No cluster found for name") {
 			return false, nil
 		}
-		return false, err
+		return false, errors.Wrapf(err, output)
 	}
 	return true, nil
+}
+
+func (e *EksCtl) WriteKubeConfig(ctx context.Context, name, region string, runner Runner) error {
+	output, err := runner.Output(ctx, e.GetCredentials().Region(region).Name(name).With("--auto-kubeconfig").SwallowError().Cmd())
+	if err != nil {
+		return errors.Wrapf(err, output)
+	}
+	return nil
 }

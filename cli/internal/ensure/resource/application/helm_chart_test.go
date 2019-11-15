@@ -2,6 +2,7 @@ package application_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	. "github.com/onsi/ginkgo"
@@ -146,11 +147,12 @@ var _ = Describe("helm chart", func() {
 		})
 
 		It("works for supplying values set values", func() {
+			namespaceCreateTemplate := "NamespaceCreate"
 			helmChart := getHelmChart()
 			helmChart.SetValues = render.Values{
-				"namespace.create": "template:{{ .NamespaceCreate }}",
+				setKey: fmt.Sprintf("template:{{ .%s }}", namespaceCreateTemplate),
 			}
-			input.Values["NamespaceCreate"] = "true"
+			input.Values[namespaceCreateTemplate] = "true"
 			resources, err := helmChart.Render(ctx, input)
 			Expect(err).To(BeNil())
 			Expect(len(resources)).To(Equal(23))

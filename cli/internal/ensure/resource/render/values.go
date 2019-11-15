@@ -161,16 +161,16 @@ func (v Values) RenderFields(input interface{}, runner cmd_runner.Runner) error 
 			if defaultValue := getTagValue(valetTags, DefaultTag); defaultValue != "" && rendered == "" {
 				rendered = defaultValue
 			}
-			if rendered == "" {
-				key := getTagValue(valetTags, KeyTag)
-				if key != "" && v.ContainsKey(key) {
-					val, err := v.GetValue(key, runner)
-					if err != nil {
-						return err
-					}
-					rendered = val
+
+			key := getTagValue(valetTags, KeyTag)
+			if key != "" && v.ContainsKey(key) {
+				val, err := v.GetValue(key, runner)
+				if err != nil {
+					return err
 				}
+				rendered = val
 			}
+
 			if stringutils.ContainsString(TemplateTag, valetTags) {
 				loaded, err := LoadTemplate(rendered, v, runner)
 				if err != nil {
@@ -178,6 +178,7 @@ func (v Values) RenderFields(input interface{}, runner cmd_runner.Runner) error 
 				}
 				rendered = loaded
 			}
+
 			fieldValue.SetString(rendered)
 		} else if fieldValue.Kind() == reflect.Int {
 			if fieldValue.Int() == 0 {

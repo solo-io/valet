@@ -26,7 +26,6 @@ var _ = Describe("helm chart", func() {
 		valuesFilePath     = "test/files/helm/example-values.yaml"
 		valuesRegistryPath = "files/helm/example-values.yaml"
 		setFilePath        = "test/files/helm/example-set-file.txt"
-		setRegistryPath    = "files/helm/example-set-file.txt"
 
 		setKey = "namespace.create"
 	)
@@ -136,20 +135,10 @@ var _ = Describe("helm chart", func() {
 			Expect(len(inTestNamespace)).To(Equal(0))
 		})
 
-		It("works for supplying helm values via set", func() {
-			helmChart := getHelmChart()
-			helmChart.Set = []string{"namespace.create=true"}
-			resources, err := helmChart.Render(ctx, emptyInput)
-			Expect(err).To(BeNil())
-			Expect(len(resources)).To(Equal(23))
-			namespaces := resources.Filter(namespaceFilter)
-			Expect(len(namespaces)).To(Equal(1))
-		})
-
 		It("works for supplying values set values", func() {
 			namespaceCreateTemplate := "NamespaceCreate"
 			helmChart := getHelmChart()
-			helmChart.SetValues = render.Values{
+			helmChart.Set = render.Values{
 				setKey: fmt.Sprintf("template:{{ .%s }}", namespaceCreateTemplate),
 			}
 			input.Values[namespaceCreateTemplate] = "true"
@@ -164,7 +153,9 @@ var _ = Describe("helm chart", func() {
 			envVar := "TEST_HELM_VALUE"
 			Expect(os.Setenv(envVar, "true")).To(BeNil())
 			helmChart := getHelmChart()
-			helmChart.SetEnv = map[string]string{setKey: envVar}
+			helmChart.Set = render.Values{
+				setKey: fmt.Sprintf("env:%s", envVar),
+			}
 			resources, err := helmChart.Render(ctx, emptyInput)
 			Expect(err).To(BeNil())
 			Expect(len(resources)).To(Equal(23))
@@ -195,18 +186,7 @@ var _ = Describe("helm chart", func() {
 
 		It("works for supplying helm values via set file with default registry", func() {
 			helmChart := getHelmChart()
-			helmChart.Files = render.Values{setKey: setFilePath}
-			resources, err := helmChart.Render(ctx, input)
-			Expect(err).To(BeNil())
-			Expect(len(resources)).To(Equal(23))
-			namespaces := resources.Filter(namespaceFilter)
-			Expect(len(namespaces)).To(Equal(1))
-		})
-
-		It("works for supplying helm values via set file with test registry", func() {
-			helmChart := getHelmChart()
-			helmChart.Files = render.Values{setKey: setRegistryPath}
-			helmChart.RegistryName = registryName
+			helmChart.Set = render.Values{setKey: fmt.Sprintf("file:%s",setFilePath)}
 			resources, err := helmChart.Render(ctx, input)
 			Expect(err).To(BeNil())
 			Expect(len(resources)).To(Equal(23))

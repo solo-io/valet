@@ -130,11 +130,11 @@ func (v Values) GetValue(key string, runner cmd_runner.Runner) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		content, err := ioutil.ReadFile(path)
+		byt, err := ioutil.ReadFile(path)
 		if err != nil {
 			return "", err
 		}
-		return string(content), nil
+		return string(byt), nil
 	} else {
 		return val, nil
 	}
@@ -158,6 +158,14 @@ func (v Values) RenderFields(input interface{}, runner cmd_runner.Runner) error 
 		if fieldValue.Kind() == reflect.String {
 			rendered := fieldValue.String()
 
+			if key := getTagValue(valetTags, KeyTag); key != "" && rendered == "" && v.ContainsKey(key) {
+				val, err := v.GetValue(key, runner)
+				if err != nil {
+					return err
+				}
+				rendered = val
+			}
+
 			if defaultValue := getTagValue(valetTags, DefaultTag); defaultValue != "" && rendered == "" {
 				rendered = defaultValue
 			}
@@ -168,12 +176,6 @@ func (v Values) RenderFields(input interface{}, runner cmd_runner.Runner) error 
 					return err
 				}
 				rendered = loaded
-			} else if key := getTagValue(valetTags, KeyTag); key != "" && v.ContainsKey(key) {
-				val, err := v.GetValue(key, runner)
-				if err != nil {
-					return err
-				}
-				rendered = val
 			}
 
 			fieldValue.SetString(rendered)

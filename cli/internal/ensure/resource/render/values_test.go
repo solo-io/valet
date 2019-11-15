@@ -44,6 +44,27 @@ var _ = Describe("values", func() {
 		BeforeEach(func() {
 			test = &testStruct{}
 		})
+
+
+		Context("key", func() {
+			It("Will use the key if it can be found", func() {
+				values[testKey] = testValue
+				err := values.RenderFields(test, runner)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(test.One).To(Equal(testValue))
+				Expect(test.Two).To(Equal(testValue))
+				Expect(test.Four).To(Equal(testValue))
+				Expect(test.Five).To(Equal(testValue))
+			})
+
+			It("Will not use the key if it canot be found", func() {
+				err := values.RenderFields(test, runner)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(test.Two).To(Equal(""))
+				Expect(test.Five).To(Equal(""))
+			})
+		})
+
 		Context("default", func() {
 
 			It("will use the default value if no value exists", func() {
@@ -73,22 +94,6 @@ var _ = Describe("values", func() {
 
 		})
 
-		Context("key", func() {
-			BeforeEach(func() {
-				values[testKey] = testValue
-			})
-			It("Will use the key if no default value exists unless template exists", func() {
-				err := values.RenderFields(test, runner)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(test.Five).To(Equal(testValue))
-			})
-
-			It("Will use the key and override the default value unless template exists", func() {
-				err := values.RenderFields(test, runner)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(test.Four).To(Equal(testValue))
-			})
-		})
 
 		Context("template", func() {
 			BeforeEach(func() {
@@ -106,7 +111,7 @@ var _ = Describe("values", func() {
 				Expect(test.Seven).To(Equal(templateValue))
 			})
 
-			It("will template when a default value exists", func() {
+			It("will template when a default value exists, or key has been found", func() {
 				test = &testStruct{
 					One:   testTemplate,
 					Three: testTemplate,
@@ -119,9 +124,5 @@ var _ = Describe("values", func() {
 				Expect(test.Seven).To(Equal(templateValue))
 			})
 		})
-	})
-
-	Context("get value", func() {
-
 	})
 })

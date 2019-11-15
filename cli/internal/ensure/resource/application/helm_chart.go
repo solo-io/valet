@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/go-utils/installutils/helmchart"
@@ -20,22 +19,20 @@ var (
 )
 
 type HelmChart struct {
-	RegistryName string            `yaml:"registryName" valet:"default=default"`
-	RepoUrl      string            `yaml:"repoUrl"`
-	ChartName    string            `yaml:"chartName"`
-	RepoName     string            `yaml:"repoName"`
-	Version      string            `yaml:"version" valet:"key=Version"`
-	Namespace    string            `yaml:"namespace" valet:"key=Namespace"`
-	Set          []string          `yaml:"set"`
-	SetEnv       map[string]string `yaml:"setEnv"`
-	ValuesFiles  []string          `yaml:"valuesFiles"`
-	Files        render.Values     `yaml:"files"`
+	RegistryName string   `yaml:"registryName" valet:"default=default"`
+	RepoUrl      string   `yaml:"repoUrl"`
+	ChartName    string   `yaml:"chartName"`
+	RepoName     string   `yaml:"repoName"`
+	Version      string   `yaml:"version" valet:"key=Version"`
+	Namespace    string   `yaml:"namespace" valet:"key=Namespace"`
+	ValuesFiles  []string `yaml:"valuesFiles"`
 	/*
 		These values allow you to perform values operations before setting them as helm values
 		setValues:
 			valueOne: template:{{ .TemplateValue }}
 	*/
-	SetValues render.Values `yaml:"setValues"`
+	Set render.Values `yaml:"set"`
+
 }
 
 func (h *HelmChart) addHelmRepo(ctx context.Context, input render.InputParams) error {
@@ -134,36 +131,15 @@ func (h *HelmChart) Render(ctx context.Context, input render.InputParams) (kuber
 
 func (h *HelmChart) getParams(input render.InputParams) (map[string]string, error) {
 	params := make(map[string]string)
-	for _, set := range h.Set {
-		parts := strings.Split(set, "=")
-		if len(parts) != 2 {
-			return nil, errors.Errorf("Invalid format (must be A=B): %s", set)
-		}
-		params[parts[0]] = parts[1]
-	}
-	for param, envVar := range h.SetEnv {
-		val := os.Getenv(envVar)
-		if val == "" {
-			return nil, errors.Errorf("Environment variable %s not set", envVar)
-		}
-		params[param] = val
-	}
-	for param, file := range h.Files {
-		contents, err := input.LoadFile(h.RegistryName, file)
-		if err != nil {
-			return nil, err
-		}
-		params[param] = contents
-	}
 
 	// Render the values here as separate from other values, but use the values engine.
 	// Create a placeholder values combination so set keys don't get lost.
-	tempValues := input.MergeValues(h.SetValues).Values
+	tempValues := input.MergeValues(h.Set).Values
 	values, err := tempValues.RenderStringValues(input.Runner())
 	if err != nil {
 		return nil, err
 	}
-	for key := range h.SetValues {
+	for key := range h.Set {
 		params[key] = values[key]
 	}
 

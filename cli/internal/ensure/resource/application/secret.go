@@ -74,6 +74,10 @@ func (s *Secret) Render(ctx context.Context, input render.InputParams) (kubereso
 		Data: make(map[string][]byte),
 	}
 	for k, v := range s.Entries {
+		k, err := render.LoadTemplate(k, input.Values, input.Runner())
+		if err != nil {
+			return nil, err
+		}
 		if v.File != "" {
 			contents, err := input.LoadFile(s.RegistryName, v.File)
 			if err != nil {

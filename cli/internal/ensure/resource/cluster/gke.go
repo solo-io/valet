@@ -12,13 +12,16 @@ import (
 var _ ClusterResource = new(GKE)
 
 type GKE struct {
-	Name     string                `yaml:"name"`
-	Location string                `yaml:"location"`
-	Project  string                `yaml:"project"`
+	Name     string                `yaml:"name" valet:"key=ClusterName"`
+	Location string                `yaml:"location" valet:"key=GcloudLocation"`
+	Project  string                `yaml:"project" valet:"key=GcloudProject"`
 	Options  *client.CreateOptions `yaml:"options"`
 }
 
 func (g *GKE) Ensure(ctx context.Context, input render.InputParams) error {
+	if err := input.RenderFields(g); err != nil {
+		return err
+	}
 	cmd.Stdout().Println("Ensuring GKE cluster %s (project: %s, location: %s)", g.Name, g.Project, g.Location)
 	gkeClient, err := client.NewGkeClient(ctx)
 	if err != nil {
@@ -41,6 +44,9 @@ func (g *GKE) SetContext(ctx context.Context, runner cmd.Runner) error {
 }
 
 func (g *GKE) Teardown(ctx context.Context, input render.InputParams) error {
+	if err := input.RenderFields(g); err != nil {
+		return err
+	}
 	gkeClient, err := client.NewGkeClient(ctx)
 	if err != nil {
 		return err

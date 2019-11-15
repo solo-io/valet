@@ -53,3 +53,23 @@ Note: this requires `eksctl` installed locally.
 
 Run `valet set-context -f path/to/config.yaml` to set your local Kubernetes context to the cluster in the config file. This will 
 not ensure or teardown any resources.  
+
+## Cluster Values
+
+The cluster information is key to the configuration and workflow that valet offers. In order to facilitate easier use of 
+this cluster information, valet will inject certain values from the cluster setup into the `Values` Object for use in 
+steps which occur after cluster ensure.
+
+As of right now the 3 different cluster types inject slightly different values:
+
+* GKE: 
+    * ClusterName: name of the cluster
+    * Project: Gcloud project ID
+    * Location: Gcloud location
+* EKS:
+    * ClusterName: name of the cluster
+    * Region: AWS region
+* Minikube: 
+    * No values as of right now
+
+More values are planned for the future, such as kube context, and kube config.

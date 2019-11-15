@@ -27,9 +27,10 @@ type HelmChart struct {
 	Namespace    string   `yaml:"namespace" valet:"key=Namespace"`
 	ValuesFiles  []string `yaml:"valuesFiles"`
 	/*
-		These values allow you to perform values operations before setting them as helm values
-		setValues:
-			valueOne: template:{{ .TemplateValue }}
+		These values allow you to perform values operations before setting them as helm values.
+		You can use any operations and keywords that general `values` support.
+		More information on `valet` values can be found at https://github.com/solo-io/valet/tree/master/cli/internal/ensure/resource/render
+
 	*/
 	Set render.Values `yaml:"set"`
 

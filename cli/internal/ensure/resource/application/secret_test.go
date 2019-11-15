@@ -26,6 +26,8 @@ var _ = Describe("Secret", func() {
 
 		secretFileEntry = "File"
 		secretFilePath  = "test/files/secrets/secret.txt"
+		expandedSecretFileEntry = "{{.File}}"
+		expandedSecretFilePath = "$TEST/files/secrets/{{.File}}"
 
 		secretGcloudFileEntry        = "GcloudFile"
 		secretGcloudFilePath         = "test/files/secrets/secret.txt.enc"
@@ -102,6 +104,35 @@ var _ = Describe("Secret", func() {
 			resources, err := secret.Render(ctx, emptyInput)
 			Expect(err).To(BeNil())
 			expectSecret(resources, secretFileEntry)
+		})
+
+		It("handles extended file expansion with default registry", func() {
+			value := application.SecretValue{
+				File: expandedSecretFilePath,
+			}
+			secret := getSecret(secretFileEntry, value)
+			Expect(os.Setenv("TEST","test")).NotTo(HaveOccurred())
+			resources, err := secret.Render(ctx, render.InputParams{
+				Values:        render.Values{
+					"File": "secret.txt",
+				},
+			})
+			Expect(err).To(BeNil())
+			expectSecret(resources, secretFileEntry)
+		})
+
+		It("can expand the value of a secret entry", func() {
+			value := application.SecretValue{
+				File: secretFilePath,
+			}
+			secret := getSecret(expandedSecretFileEntry, value)
+			resources, err := secret.Render(ctx, render.InputParams{
+				Values:        render.Values{
+					"File": secretFilePath,
+				},
+			})
+			Expect(err).To(BeNil())
+			expectSecret(resources, secretFilePath)
 		})
 
 		It("returns error on bad path for secret value file", func() {

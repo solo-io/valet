@@ -2,5 +2,3 @@ changelog:
 - type: NEW_FEATURE
   description: Add support for templating of helm set values.
   issueLink: https://github.com/solo-io/valet/issues/123
-
-

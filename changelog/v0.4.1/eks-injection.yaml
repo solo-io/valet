@@ -1,6 +1,6 @@
 changelog:
 - type: NEW_FEATURE
-  description: Support injection of cluster values into `Values`.
+  description: Support injection of cluster Values into cluster config.
   issueLink: https://github.com/solo-io/valet/issues/111
 - type: NEW_FEATURE
   description: Support templating of secret entry values. Always template paths passed to `LoadFile()`

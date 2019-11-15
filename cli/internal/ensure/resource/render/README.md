@@ -3,9 +3,9 @@
 A **Value** in valet is a key value pair which can be defined in quite a few ways, and is accessible during more parts 
 of a valet configuration to aid in customization.
 
-## Explination
+## Explanation
 
-**Values** are a map (string -> string) that most commonly contains values that are string constants, as demonstrated above:
+**Values** are a map (string -> string) that most commonly contains values that are string constants, as demonstrated below:
 
 ```yaml
 values:

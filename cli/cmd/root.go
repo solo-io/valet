@@ -19,7 +19,7 @@ func App(version string, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 
 	app := &cobra.Command{
 		Use:     "valet",
-		Short:   "CLI for ensuring the state of clusters, solo products, and demos",
+		Short:   "CLI for ensuring kubernetes clusters, applications, and workflows",
 		Version: version,
 	}
 
@@ -38,6 +38,7 @@ func ValetCli(version string) *cobra.Command {
 
 	optionsFunc := func(app *cobra.Command) {
 		app.SuggestionsMinimumDistance = 1
+		app.PersistentFlags().StringVarP(&opts.Config.GlobalConfigPath, "global-config-path", "", "", "alternate location for global config (default $HOME/.valet/global.yaml)")
 		app.AddCommand(
 			ensure.Ensure(opts),
 			teardown.Teardown(opts),

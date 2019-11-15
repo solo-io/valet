@@ -3,10 +3,8 @@ package ensure
 import (
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/valet/cli/cmd/common"
-	"github.com/solo-io/valet/cli/cmd/config"
 	"github.com/solo-io/valet/cli/cmd/teardown"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 )
@@ -18,11 +16,8 @@ func Ensure(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 		RunE: func(_ *cobra.Command, args []string) error {
 			err := ensure(opts)
 			if opts.Ensure.TeardownOnFinish {
-				cfg, teardownErr := common.LoadConfig(opts)
-				if teardownErr != nil {
+				if teardownErr := teardown.TeardownCfg(opts); teardownErr != nil {
 					cmd.Stderr().Println("error trying to teardown: %s", teardownErr.Error())
-				} else {
-					_ = teardown.TeardownCfg(opts, cfg)
 				}
 			}
 			return err
@@ -45,22 +40,13 @@ func Ensure(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 }
 
 func ensure(opts *options.Options) error {
-	globalConfig, err := config.LoadGlobalConfig(opts.Top.Ctx)
+	input, err := common.LoadInput(opts)
 	if err != nil {
 		return err
 	}
-	if err := common.LoadEnv(globalConfig); err != nil {
-		return err
-	}
-	input := render.InputParams{
-		Values:     opts.Ensure.Values,
-		Flags:      opts.Ensure.Flags,
-		Step:       opts.Ensure.Step,
-		Registries: common.GetRegistries(globalConfig),
-	}
-	cfg, err := common.LoadConfig(opts)
+	cfg, err := common.LoadConfig(opts, *input)
 	if err != nil {
 		return err
 	}
-	return cfg.Ensure(opts.Top.Ctx, input)
+	return cfg.Ensure(opts.Top.Ctx, *input)
 }

@@ -39,8 +39,8 @@ var _ = Describe("Secret", func() {
 	var (
 		ctx          = context.TODO()
 		emptyInput   = render.InputParams{}
-		testRegistry = render.LocalRegistry{
-			WorkingDirectory: registryPath,
+		testRegistry = render.DirectoryRegistry{
+			Path: registryPath,
 		}
 	)
 

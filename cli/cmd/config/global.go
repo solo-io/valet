@@ -1,7 +1,6 @@
 package config
 
 import (
-	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -28,6 +27,7 @@ func Config(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	cmd.AddCommand(SetCmd(opts))
+	cmd.AddCommand(RegistryCmd(opts))
 	return cmd
 }
 
@@ -37,7 +37,14 @@ type ValetGlobalConfig struct {
 }
 
 type ValetRegistry struct {
-	LocalRegistry *render.LocalRegistry `yaml:"local"`
+	DirectoryRegistry *render.DirectoryRegistry `yaml:"directory"`
+}
+
+func (v *ValetRegistry) GetType() string {
+	if v.DirectoryRegistry != nil {
+		return "Directory"
+	}
+	return "Unknown"
 }
 
 func GetValetConfigDir() (string, error) {
@@ -55,7 +62,10 @@ func GetValetConfigDir() (string, error) {
 	return valetDir, nil
 }
 
-func GetGlobalConfigPath() (string, error) {
+func GetGlobalConfigPath(opts *options.Options) (string, error) {
+	if opts.Config.GlobalConfigPath != "" {
+		return opts.Config.GlobalConfigPath, nil
+	}
 	valetDir, err := GetValetConfigDir()
 	if err != nil {
 		return "", err
@@ -63,9 +73,9 @@ func GetGlobalConfigPath() (string, error) {
 	return filepath.Join(valetDir, "global.yaml"), nil
 }
 
-func LoadGlobalConfig(ctx context.Context) (*ValetGlobalConfig, error) {
+func LoadGlobalConfig(opts *options.Options) (*ValetGlobalConfig, error) {
 	var c ValetGlobalConfig
-	path, err := GetGlobalConfigPath()
+	path, err := GetGlobalConfigPath(opts)
 	if err != nil {
 		cmd.Stderr().Println("Could not determine global config path")
 		return nil, err
@@ -91,8 +101,8 @@ func LoadGlobalConfig(ctx context.Context) (*ValetGlobalConfig, error) {
 	return &c, nil
 }
 
-func StoreGlobalConfig(ctx context.Context, config *ValetGlobalConfig) error {
-	path, err := GetGlobalConfigPath()
+func StoreGlobalConfig(opts *options.Options, config *ValetGlobalConfig) error {
+	path, err := GetGlobalConfigPath(opts)
 	if err != nil {
 		cmd.Stderr().Println("Could not determine global config path: %s", err.Error())
 		return err

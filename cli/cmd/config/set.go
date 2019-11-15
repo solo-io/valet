@@ -1,7 +1,6 @@
 package config
 
 import (
-	"context"
 	"strings"
 
 	"github.com/solo-io/go-utils/cliutils"
@@ -16,7 +15,7 @@ func SetCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 		Use:   "set",
 		Short: "set one or more config values (foo=bar)",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return setConfig(opts.Top.Ctx, args)
+			return setConfig(opts, args)
 		},
 	}
 
@@ -24,12 +23,12 @@ func SetCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 	return cmd
 }
 
-func setConfig(ctx context.Context, args []string) error {
+func setConfig(opts *options.Options, args []string) error {
 	if len(args) == 0 {
 		return errors.Errorf("Must provide at least one argument, i.e. 'foo=bar' (without single quotes)")
 	}
 
-	config, err := LoadGlobalConfig(ctx)
+	config, err := LoadGlobalConfig(opts)
 	if err != nil {
 		return err
 	}
@@ -46,7 +45,7 @@ func setConfig(ctx context.Context, args []string) error {
 		config.Env[splitArg[0]] = splitArg[1]
 	}
 
-	err = StoreGlobalConfig(ctx, config)
+	err = StoreGlobalConfig(opts, config)
 	if err != nil {
 		return err
 	}

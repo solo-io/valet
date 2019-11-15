@@ -52,6 +52,9 @@ They are the following:
 * `file:`
     * this prefix is a combination of the others, with additional capability. It will expand env vars, template the value, 
     and then retrieve the contents of the file which is pointed to. That file contents will then be used as the value.
+    * files in this context have one limitation compared to file refs in the rest of valet. Any file path here
+    has to be relative to the root directory in which valet is run. This is issue is being tracked
+    [here](https://github.com/solo-io/valet/issues/122)
 
 ## Tags
 

@@ -12,9 +12,9 @@ import (
 var _ ClusterResource = new(GKE)
 
 type GKE struct {
-	Name     string                `yaml:"name" valet:"key=ClusterName"`
-	Location string                `yaml:"location" valet:"key=GcloudLocation"`
-	Project  string                `yaml:"project" valet:"key=GcloudProject"`
+	Name     string                `yaml:"name" valet:"template,key=ClusterName"`
+	Location string                `yaml:"location" valet:"template,key=GcloudLocation"`
+	Project  string                `yaml:"project" valet:"template,key=GcloudProject"`
 	Options  *client.CreateOptions `yaml:"options"`
 }
 

@@ -325,8 +325,8 @@ In order to allow for more customization of secrets, the secret entry names can 
   name: remote-kube-config
   type: solo.io/kubeconfig
   entries:
-    "{{.Cluster}}":
-      file: $HOME/.kube/eksctl/clusters/{{.Cluster}}
+    "{{ .Cluster }}":
+      file: $HOME/.kube/eksctl/clusters/{{ .Cluster }}
 ```
 Notice here that not only is the file value being templated, but also the key by which that value will be stored in the secret.
 

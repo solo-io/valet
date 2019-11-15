@@ -22,7 +22,6 @@ const (
 	HostedZoneKey  = "HostedZone"
 	PathKey        = "Path"
 	NameKey        = "Name"
-	ClusterKey     = "Cluster"
 
 	EnvPrefix      = "env:"
 	TemplatePrefix = "template:"
@@ -158,12 +157,9 @@ func (v Values) RenderFields(input interface{}, runner cmd_runner.Runner) error 
 		fieldValue := structVal.Field(i)
 		if fieldValue.Kind() == reflect.String {
 			rendered := fieldValue.String()
-			if stringutils.ContainsString(TemplateTag, valetTags) {
-				loaded, err := LoadTemplate(rendered, v, runner)
-				if err != nil {
-					return err
-				}
-				rendered = loaded
+
+			if defaultValue := getTagValue(valetTags, DefaultTag); defaultValue != "" && rendered == "" {
+				rendered = defaultValue
 			}
 			if rendered == "" {
 				key := getTagValue(valetTags, KeyTag)
@@ -175,8 +171,12 @@ func (v Values) RenderFields(input interface{}, runner cmd_runner.Runner) error 
 					rendered = val
 				}
 			}
-			if rendered == "" {
-				rendered = getTagValue(valetTags, DefaultTag)
+			if stringutils.ContainsString(TemplateTag, valetTags) {
+				loaded, err := LoadTemplate(rendered, v, runner)
+				if err != nil {
+					return err
+				}
+				rendered = loaded
 			}
 			fieldValue.SetString(rendered)
 		} else if fieldValue.Kind() == reflect.Int {

@@ -141,26 +141,26 @@ var _ = Describe("helm chart", func() {
 			helmChart.Set = render.Values{
 				setKey: fmt.Sprintf("template:{{ .%s }}", namespaceCreateTemplate),
 			}
-			input.Values[namespaceCreateTemplate] = "true"
+			input.Values[namespaceCreateTemplate] = "false"
 			resources, err := helmChart.Render(ctx, input)
 			Expect(err).To(BeNil())
-			Expect(len(resources)).To(Equal(23))
+			Expect(len(resources)).To(Equal(22))
 			namespaces := resources.Filter(namespaceFilter)
-			Expect(len(namespaces)).To(Equal(1))
+			Expect(len(namespaces)).To(Equal(0))
 		})
 
 		It("works for supplying helm values via set env", func() {
 			envVar := "TEST_HELM_VALUE"
-			Expect(os.Setenv(envVar, "true")).To(BeNil())
+			Expect(os.Setenv(envVar, "false")).To(BeNil())
 			helmChart := getHelmChart()
 			helmChart.Set = render.Values{
 				setKey: fmt.Sprintf("env:%s", envVar),
 			}
 			resources, err := helmChart.Render(ctx, emptyInput)
 			Expect(err).To(BeNil())
-			Expect(len(resources)).To(Equal(23))
+			Expect(len(resources)).To(Equal(22))
 			namespaces := resources.Filter(namespaceFilter)
-			Expect(len(namespaces)).To(Equal(1))
+			Expect(len(namespaces)).To(Equal(0))
 		})
 
 		It("works for supplying helm values via values files with default registry", func() {

@@ -1,0 +1,4 @@
+changelog:
+  - type: FIX
+    description: Fix issue where we were calling expand env instead of get env for set, and it wasn't expanding since there was no `$` in the env var name. 
+    issueLink: https://github.com/solo-io/valet/issues/128

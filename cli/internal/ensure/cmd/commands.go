@@ -61,6 +61,7 @@ func (r *commandRunner) Output(ctx context.Context, c *Command) (string, error) 
 	if err != nil {
 		if !c.SwallowErrorLog {
 			Stderr().Println("Error running command: %s", err.Error())
+			Stderr().Println("STDIN: %s", c.StdIn)
 			Stderr().Println(string(bytes))
 		}
 		err = CommandError(err)

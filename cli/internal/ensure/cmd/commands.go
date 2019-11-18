@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"bufio"
 	"bytes"
 	"context"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os/exec"
 	"strings"
@@ -74,6 +77,26 @@ type CommandStreamHandler struct {
 	Stdout   io.Reader
 	Stderr   io.Reader
 }
+
+func (c *CommandStreamHandler) StreamHelper(inputErr error) error {
+	go func() {
+		stdoutScanner := bufio.NewScanner(c.Stdout)
+		for stdoutScanner.Scan() {
+			Stdout().Println(stdoutScanner.Text())
+		}
+		if err := stdoutScanner.Err(); err != nil {
+			Stderr().Println("reading stdout from current command context:", err)
+		}
+	}()
+	stderr, _ := ioutil.ReadAll(c.Stderr)
+	if err := c.WaitFunc(); err != nil {
+		Stderr().Println(fmt.Sprintf("%s\n", stderr))
+		return inputErr
+	}
+	return nil
+}
+
+
 
 func (r *commandRunner) Stream(ctx context.Context, c *Command) (*CommandStreamHandler, error) {
 	c.logCommand(ctx)

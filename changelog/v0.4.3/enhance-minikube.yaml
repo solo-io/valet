@@ -1,0 +1,5 @@
+changelog:
+- type: NEW_FEATURE
+  description: Expose more options and output for minikube command.
+  issueLink: https://github.com/solo-io/valet/issues/130
+

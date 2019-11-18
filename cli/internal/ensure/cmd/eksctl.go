@@ -1,10 +1,8 @@
 package cmd
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"strings"
 
 	"github.com/solo-io/go-utils/errors"
@@ -59,21 +57,8 @@ func (e *EksCtl) DeleteCluster(ctx context.Context, name, region string, runner 
 	if err != nil {
 		return err
 	}
-	go func() {
-		stdoutScanner := bufio.NewScanner(streamHandler.Stdout)
-		for stdoutScanner.Scan() {
-			Stdout().Println(stdoutScanner.Text())
-		}
-		if err := stdoutScanner.Err(); err != nil {
-			Stderr().Println("reading stdout from current command context:", err)
-		}
-	}()
-	stderr, _ := ioutil.ReadAll(streamHandler.Stderr)
-	if err := streamHandler.WaitFunc(); err != nil {
-		Stderr().Println(fmt.Sprintf("%s\n", stderr))
-		return errors.Errorf("unable to delete cluster resources")
-	}
-	return nil
+	inputErr := errors.New("unable to delete cluster resources")
+	return streamHandler.StreamHelper(inputErr)
 }
 
 func (e *EksCtl) CreateCluster(ctx context.Context, name, region string, runner Runner) error {
@@ -81,21 +66,8 @@ func (e *EksCtl) CreateCluster(ctx context.Context, name, region string, runner 
 	if err != nil {
 		return err
 	}
-	go func() {
-		stdoutScanner := bufio.NewScanner(streamHandler.Stdout)
-		for stdoutScanner.Scan() {
-			Stdout().Println(stdoutScanner.Text())
-		}
-		if err := stdoutScanner.Err(); err != nil {
-			Stderr().Println("reading stdout from current command context:", err)
-		}
-	}()
-	stderr, _ := ioutil.ReadAll(streamHandler.Stderr)
-	if err := streamHandler.WaitFunc(); err != nil {
-		Stderr().Println(fmt.Sprintf("%s\n", stderr))
-		return errors.Errorf("unable to create cluster resources")
-	}
-	return nil
+	inputErr := errors.New("unable to create cluster resources")
+	return streamHandler.StreamHelper(inputErr)
 }
 
 func (e *EksCtl) IsRunning(ctx context.Context, name, region string, runner Runner) (bool, error) {

@@ -31,14 +31,15 @@ func (k *Kind) Name(name string) *Kind {
 }
 
 func (k *Kind) IsRunning(ctx context.Context, runner Runner, name string) (bool, error) {
-	output, err := runner.Output(ctx, k.With("create", "cluster").Name(name).Cmd())
+	output, err := runner.Output(ctx, k.With("get", "clusters").SwallowError().Cmd())
 	if err != nil {
-		if strings.Contains(output, "ERROR: node(s) already exist for a cluster with the name") {
-			return false, nil
-		}
 		return false, errors.Wrapf(err, output)
+
 	}
-	return true, nil
+	if strings.Contains(output, name) {
+		return true, nil
+	}
+	return false, nil
 }
 
 func (k *Kind) CreateCluster(ctx context.Context, runner Runner, name string) error {

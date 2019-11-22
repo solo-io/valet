@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -40,6 +41,7 @@ type Command struct {
 
 type Runner interface {
 	Run(ctx context.Context, c *Command) error
+	RunInShell(ctx context.Context, c *Command) error
 	Output(ctx context.Context, c *Command) (string, error)
 	Stream(ctx context.Context, c *Command) (*CommandStreamHandler, error)
 	Request(ctx context.Context, req *http.Request) (string, int, error)
@@ -72,6 +74,23 @@ func (r *commandRunner) Output(ctx context.Context, c *Command) (string, error) 
 	return string(bytes), err
 }
 
+func (r *commandRunner) RunInShell(ctx context.Context, c *Command) error {
+	c.logCommand(ctx)
+	cmd := exec.Command(c.Name, c.Args...)
+	cmd.Stdin = strings.NewReader(c.StdIn)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		if !c.SwallowErrorLog {
+			Stderr().Println("Error running command: %s", err.Error())
+			Stderr().Println("STDIN: %s", c.StdIn)
+		}
+		err = CommandError(err)
+	}
+	return err
+}
+
 type CommandStreamHandler struct {
 	WaitFunc func() error
 	Stdout   io.Reader
@@ -95,8 +114,6 @@ func (c *CommandStreamHandler) StreamHelper(inputErr error) error {
 	}
 	return nil
 }
-
-
 
 func (r *commandRunner) Stream(ctx context.Context, c *Command) (*CommandStreamHandler, error) {
 	c.logCommand(ctx)

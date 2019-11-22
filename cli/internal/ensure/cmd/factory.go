@@ -6,6 +6,7 @@ const (
 	GcloudCmd   = "gcloud"
 	MinikubeCmd = "minikube"
 	EksCtlCmd   = "eksctl"
+	KindCmd     = "kind"
 )
 
 type Factory interface {
@@ -15,6 +16,7 @@ type Factory interface {
 	Minikube() *Minikube
 	Helm() *Helm
 	EksCtl() *EksCtl
+	Kind() *Kind
 }
 
 func New() Factory {
@@ -74,5 +76,11 @@ func (c *CommandFactory) Helm() *Helm {
 func (c *CommandFactory) EksCtl() *EksCtl {
 	return &EksCtl{
 		cmd: c.getCommand(EksCtlCmd),
+	}
+}
+
+func (c *CommandFactory) Kind() *Kind {
+	return &Kind{
+		cmd: c.getCommand(KindCmd),
 	}
 }

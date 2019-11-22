@@ -22,19 +22,21 @@ var (
 )
 
 type Cluster struct {
+	Kind     *Kind     `yaml:"kind"`
 	Minikube *Minikube `yaml:"minikube"`
 	GKE      *GKE      `yaml:"gke"`
 	EKS      *EKS      `yaml:"eks"`
 }
 
 func (c *Cluster) SetContext(ctx context.Context, runner cmd.Runner) error {
-	if c.Minikube != nil {
+	switch {
+	case c.Minikube != nil:
 		return c.Minikube.SetContext(ctx, runner)
-	}
-	if c.GKE != nil {
+	case c.GKE != nil:
 		return c.GKE.SetContext(ctx, runner)
-	}
-	if c.EKS != nil {
+	case c.EKS != nil:
+		return c.EKS.SetContext(ctx, runner)
+	case c.Kind != nil:
 		return c.EKS.SetContext(ctx, runner)
 	}
 
@@ -42,27 +44,29 @@ func (c *Cluster) SetContext(ctx context.Context, runner cmd.Runner) error {
 }
 
 func (c *Cluster) Ensure(ctx context.Context, inputs render.InputParams) error {
-	if c.Minikube != nil {
+	switch {
+	case c.Minikube != nil:
 		return c.Minikube.Ensure(ctx, inputs)
-	}
-	if c.GKE != nil {
+	case c.GKE != nil:
 		return c.GKE.Ensure(ctx, inputs)
-	}
-	if c.EKS != nil {
+	case c.EKS != nil:
 		return c.EKS.Ensure(ctx, inputs)
+	case c.Kind != nil:
+		return c.Kind.Ensure(ctx, inputs)
 	}
 	return nil
 }
 
 func (c *Cluster) Teardown(ctx context.Context, inputs render.InputParams) error {
-	if c.Minikube != nil {
+	switch {
+	case c.Minikube != nil:
 		return c.Minikube.Teardown(ctx, inputs)
-	}
-	if c.GKE != nil {
+	case c.GKE != nil:
 		return c.GKE.Teardown(ctx, inputs)
-	}
-	if c.EKS != nil {
+	case c.EKS != nil:
 		return c.EKS.Teardown(ctx, inputs)
+	case c.Kind != nil:
+		return c.Kind.Teardown(ctx, inputs)
 	}
 	return nil
 }

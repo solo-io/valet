@@ -1,4 +1,5 @@
-package ensure
+package teardown
+
 
 import (
 	"github.com/solo-io/go-utils/cliutils"
@@ -35,9 +36,7 @@ func runMultiple(opts *options.Options) error {
 	if err != nil {
 		return err
 	}
-	err = config.Ensure(opts.Top.Ctx, *input)
-	if opts.Ensure.TeardownOnFinish {
-		_ = config.Teardown(opts.Top.Ctx, *input)
-	}
+	err = config.Teardown(opts.Top.Ctx, *input)
 	return err
 }
+

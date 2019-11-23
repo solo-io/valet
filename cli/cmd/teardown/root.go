@@ -22,6 +22,8 @@ func Teardown(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra
 	cmd.PersistentFlags().StringVarP(&opts.Ensure.GkeClusterName, "gke-cluster-name", "", "", "GKE cluster name to use")
 
 	cmd.AddCommand(Application(opts))
+	cmd.AddCommand(Multiple(opts))
+
 	return cmd
 }
 

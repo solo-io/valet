@@ -14,6 +14,8 @@ type InputParams struct {
 	CommandRunner cmd.Runner
 	IngressClient client.IngressClient
 	DnsClient     client.AwsDnsClient
+
+	kubeConfig    *string
 }
 
 func (i *InputParams) LoadFile(registryName, path string) (string, error) {
@@ -119,13 +121,15 @@ func (i *InputParams) RenderFields(input interface{}) error {
 }
 
 func (i *InputParams) KubeConfig() string {
-	val, ok := i.Values[KubeConfig]
-	if !ok {
-		return clientcmd.RecommendedHomeFile
+	if i.kubeConfig == nil {
+		i.kubeConfig = &clientcmd.RecommendedHomeFile
 	}
-	return val
+	return *i.kubeConfig
 }
 
 func (i *InputParams) SetKubeConfig(kubeConfig string) {
-	i.Values[KubeConfig] = kubeConfig
+	if kubeConfig == "" {
+		i.kubeConfig = &clientcmd.RecommendedHomeFile
+	}
+	i.kubeConfig = &kubeConfig
 }

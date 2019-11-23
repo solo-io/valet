@@ -40,6 +40,7 @@ func (c *CommandFactory) getLocalPath(path string) string {
 func (c *CommandFactory) getCommand(path string) *Command {
 	return &Command{
 		Name: c.getLocalPath(path),
+		Env: make(map[string]string),
 	}
 }
 

@@ -186,6 +186,9 @@ func (c *Command) logCommand(ctx context.Context) {
 }
 
 func (c *Command) loadEnv(cmd *exec.Cmd) {
+	if cmd.Env == nil {
+		cmd.Env = os.Environ()
+	}
 	for key, val := range c.Env {
 		// Stdout().Println("")
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))

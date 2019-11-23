@@ -5,20 +5,30 @@ import (
 	"time"
 
 	"github.com/solo-io/go-utils/errors"
+	"github.com/solo-io/go-utils/kubeutils"
 	"github.com/solo-io/go-utils/testutils/kube"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	v12 "k8s.io/api/core/v1"
 	kubeerrs "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 var (
 	TimedOutWaitingForPodsError = errors.Errorf("Timed out waiting for pods to come online")
 )
 
-func WaitUntilPodsRunning(namespace string) error {
+func KubeClient(kubeConfig string) (kubernetes.Interface, error) {
+	cfg, err := kubeutils.GetConfig("", kubeConfig)
+	if err != nil {
+		return nil, errors.Wrapf(err, "getting kube config")
+	}
+	return kubernetes.NewForConfig(cfg)
+}
+
+func WaitUntilPodsRunning(kubeConfig, namespace string) error {
 	cmd.Stdout().Println("Waiting for pods in namespace %s", namespace)
-	kubeClient, err := kube.KubeClient()
+	kubeClient, err := KubeClient(kubeConfig)
 	if err != nil {
 		return err
 	}

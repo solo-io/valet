@@ -35,6 +35,7 @@ func Ensure(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 	ensureCmd.PersistentFlags().BoolVarP(&opts.Ensure.TeardownOnFinish, "teardown-on-finish", "", false, "attempt teardown before exit. return code should be 0 if ensure succeeded, nonzero otherwise")
 
 	ensureCmd.AddCommand(Application(opts))
+	ensureCmd.AddCommand(Multiple(opts))
 
 	return ensureCmd
 }
@@ -44,7 +45,7 @@ func ensure(opts *options.Options) error {
 	if err != nil {
 		return err
 	}
-	cfg, err := common.LoadConfig(opts, *input)
+	cfg, err := common.LoadClusterWorkflow(opts, *input)
 	if err != nil {
 		return err
 	}

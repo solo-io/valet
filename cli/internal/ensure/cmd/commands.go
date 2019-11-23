@@ -32,6 +32,7 @@ var (
 type Command struct {
 	Name  string
 	Args  []string
+	Env   map[string]string
 	StdIn string
 
 	PrintCommands   bool
@@ -61,6 +62,7 @@ func (r *commandRunner) Run(ctx context.Context, c *Command) error {
 func (r *commandRunner) Output(ctx context.Context, c *Command) (string, error) {
 	c.logCommand(ctx)
 	cmd := exec.Command(c.Name, c.Args...)
+	c.loadEnv(cmd)
 	cmd.Stdin = strings.NewReader(c.StdIn)
 	bytes, err := cmd.CombinedOutput()
 	if err != nil {
@@ -77,6 +79,7 @@ func (r *commandRunner) Output(ctx context.Context, c *Command) (string, error) 
 func (r *commandRunner) RunInShell(ctx context.Context, c *Command) error {
 	c.logCommand(ctx)
 	cmd := exec.Command(c.Name, c.Args...)
+	c.loadEnv(cmd)
 	cmd.Stdin = strings.NewReader(c.StdIn)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -118,6 +121,7 @@ func (c *CommandStreamHandler) StreamHelper(inputErr error) error {
 func (r *commandRunner) Stream(ctx context.Context, c *Command) (*CommandStreamHandler, error) {
 	c.logCommand(ctx)
 	cmd := exec.Command(c.Name, c.Args...)
+	c.loadEnv(cmd)
 	cmd.Stdin = strings.NewReader(c.StdIn)
 	outReader, err := cmd.StdoutPipe()
 	if err != nil {
@@ -180,6 +184,14 @@ func (c *Command) logCommand(ctx context.Context) {
 		Stdout().Println("Running command: %s", command)
 	}
 }
+
+func (c *Command) loadEnv(cmd *exec.Cmd) {
+	for key, val := range c.Env {
+		// Stdout().Println("")
+		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
+	}
+}
+
 
 func (c *Command) WithStdIn(stdIn string) *Command {
 	c.StdIn = stdIn

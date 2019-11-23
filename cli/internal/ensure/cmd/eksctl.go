@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/solo-io/go-utils/errors"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 type EksCtl struct {
@@ -14,6 +15,12 @@ type EksCtl struct {
 
 func (e *EksCtl) Cmd() *Command {
 	return e.cmd
+}
+
+
+func (e *EksCtl) KubeConfig(kubeConfig string) *EksCtl {
+	e.cmd.Env[clientcmd.RecommendedConfigPathEnvVar] = kubeConfig
+	return e
 }
 
 func (e *EksCtl) With(args ...string) *EksCtl {

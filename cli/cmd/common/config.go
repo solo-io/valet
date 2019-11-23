@@ -3,12 +3,11 @@ package common
 import (
 	"os"
 
-	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
-	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
-
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/cmd/config"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/multicluster"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/options"
 )
 
@@ -41,12 +40,12 @@ func LoadInput(opts *options.Options) (*render.InputParams, error) {
 	return &input, nil
 }
 
-func LoadConfig(opts *options.Options, input render.InputParams) (*workflow.Config, error) {
+func LoadClusterWorkflow(opts *options.Options, input render.InputParams) (*multicluster.Workflow, error) {
 	if opts.Ensure.File == "" {
 		return nil, MustProvideFileError
 	}
 
-	cfg, err := workflow.LoadConfig(opts.Ensure.Registry, opts.Ensure.File, input)
+	cfg, err := multicluster.LoadClusterWorkflow(opts.Ensure.Registry, opts.Ensure.File, input)
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +58,19 @@ func LoadConfig(opts *options.Options, input render.InputParams) (*workflow.Conf
 			cfg.Cluster.GKE.Name = opts.Ensure.GkeClusterName
 		}
 	}
+	return cfg, nil
+}
+
+func LoadMultiClusterWorkflow(opts *options.Options, input render.InputParams) (*multicluster.Config, error) {
+	if opts.Ensure.File == "" {
+		return nil, MustProvideFileError
+	}
+
+	cfg, err := multicluster.LoadConfig(opts.Ensure.Registry, opts.Ensure.File, input)
+	if err != nil {
+		return nil, err
+	}
+
 	return cfg, nil
 }
 

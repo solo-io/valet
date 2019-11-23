@@ -1,8 +1,13 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
+
+	"k8s.io/client-go/tools/clientcmd"
+)
+
+const (
+	KubeConfig = "KUBECONFIG"
 )
 
 type Kubectl struct {
@@ -14,8 +19,13 @@ func (k *Kubectl) SwallowErrorLog(swallow bool) *Kubectl {
 	return k
 }
 
-func (k *Kubectl) Cmd() *Command {
-	return k.cmd
+func (k *Kubectl) Cmd(kubeConfig string) *Command {
+	return k.KubeConfig(kubeConfig).cmd
+}
+
+func (k *Kubectl) KubeConfig(kubeConfig string) *Kubectl {
+	k.cmd.Env[clientcmd.RecommendedConfigPathEnvVar] = kubeConfig
+	return k
 }
 
 func (k *Kubectl) With(args ...string) *Kubectl {
@@ -92,13 +102,13 @@ func (k *Kubectl) CurrentContext() *Kubectl {
 	return k.With("config", "current-context")
 }
 
-func (k *Kubectl) DryRunAndApply(ctx context.Context, runner Runner) error {
-	out, err := runner.Output(ctx, k.DryRun().OutYaml().Cmd())
-	if err != nil {
-		return err
-	}
-	return runner.Run(ctx, New().Kubectl().ApplyStdIn(out).Cmd())
-}
+// func (k *Kubectl) DryRunAndApply(ctx context.Context, runner Runner) error {
+// 	out, err := runner.Output(ctx, k.DryRun().OutYaml().Cmd())
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return runner.Run(ctx, New().Kubectl().ApplyStdIn(out).Cmd())
+// }
 
 func (k *Kubectl) JsonPatch(jsonPatch string) *Kubectl {
 	return k.With("--type=json", jsonPatch)
@@ -116,8 +126,8 @@ func (k *Kubectl) OutJsonpath(jsonpath string) *Kubectl {
 	return k.With(fmt.Sprintf("-o=jsonpath=%s", jsonpath))
 }
 
-func (k *Kubectl) GetServiceIP(ctx context.Context, namespace, name string, runner Runner) (string, error) {
-	cmd := k.With("get", "svc", name).Namespace(namespace)
-	cmd = cmd.OutJsonpath("{ .status.loadBalancer.ingress[0].ip }")
-	return runner.Output(ctx, cmd.Cmd())
-}
+// func (k *Kubectl) GetServiceIP(ctx context.Context, namespace, name string, runner Runner) (string, error) {
+// 	cmd := k.With("get", "svc", name).Namespace(namespace)
+// 	cmd = cmd.OutJsonpath("{ .status.loadBalancer.ingress[0].ip }")
+// 	return runner.Output(ctx, cmd.Cmd())
+// }

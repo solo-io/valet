@@ -45,7 +45,7 @@ func (p *Patch) Ensure(ctx context.Context, input render.InputParams) error {
 		Namespace(p.Namespace).
 		With("--type", p.PatchType).
 		With("--patch", patchString).
-		Cmd()
+		Cmd(input.KubeConfig())
 	return input.Runner().Run(ctx, kubectl)
 }
 

@@ -36,11 +36,12 @@ func (g *GKE) Ensure(ctx context.Context, input render.InputParams) error {
 			return err
 		}
 	}
-	return g.SetContext(ctx, input.Runner())
+	return g.SetContext(ctx, input)
 }
 
-func (g *GKE) SetContext(ctx context.Context, runner cmd.Runner) error {
-	return runner.Run(ctx, cmd.New().Gcloud().GetCredentials().Project(g.Project).Zone(g.Location).WithName(g.Name).Cmd())
+func (g *GKE) SetContext(ctx context.Context, input render.InputParams) error {
+	return input.Runner().Run(ctx, cmd.New().Gcloud().KubeConfig(input.KubeConfig()).
+		GetCredentials().Project(g.Project).Zone(g.Location).WithName(g.Name).Cmd())
 }
 
 func (g *GKE) Teardown(ctx context.Context, input render.InputParams) error {

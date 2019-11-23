@@ -30,7 +30,7 @@ func TeardownCfg(opts *options.Options) error {
 	if err != nil {
 		return err
 	}
-	cfg, err := common.LoadConfig(opts, *input)
+	cfg, err := common.LoadClusterWorkflow(opts, *input)
 	if err != nil {
 		return err
 	}

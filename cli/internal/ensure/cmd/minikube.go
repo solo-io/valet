@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/solo-io/go-utils/errors"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 type Minikube struct {
@@ -23,6 +24,11 @@ func (m *Minikube) SwallowError() *Minikube {
 
 func (m *Minikube) Cmd() *Command {
 	return m.cmd
+}
+
+func (k *Minikube) KubeConfig(kubeConfig string) *Minikube {
+	k.cmd.Env[clientcmd.RecommendedConfigPathEnvVar] = kubeConfig
+	return k
 }
 
 func (m *Minikube) Status() *Minikube {

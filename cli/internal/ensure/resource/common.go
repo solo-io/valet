@@ -13,6 +13,19 @@ type Resource interface {
 	Teardown(ctx context.Context, inputs render.InputParams) error
 }
 
+func RenderAll(ctx context.Context, input render.InputParams, resources ...interface{}) error {
+	for _, resource := range resources {
+		t := reflect.ValueOf(resource)
+		if t.IsNil() {
+			continue
+		}
+		if err := input.RenderFields(resource); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func EnsureAll(ctx context.Context, input render.InputParams, resources ...Resource) error {
 	for _, resource := range resources {
 		t := reflect.ValueOf(resource)

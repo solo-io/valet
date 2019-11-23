@@ -3,6 +3,7 @@ package render
 import (
 	"github.com/solo-io/valet/cli/internal/ensure/client"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 type InputParams struct {
@@ -115,4 +116,16 @@ func (i *InputParams) GetDnsClient() (client.AwsDnsClient, error) {
 
 func (i *InputParams) RenderFields(input interface{}) error {
 	return i.Values.RenderFields(input, i.Runner())
+}
+
+func (i *InputParams) KubeConfig() string {
+	val, ok := i.Values[KubeConfig]
+	if !ok {
+		return clientcmd.RecommendedHomeFile
+	}
+	return val
+}
+
+func (i *InputParams) SetKubeConfig(kubeConfig string) {
+	i.Values[KubeConfig] = kubeConfig
 }

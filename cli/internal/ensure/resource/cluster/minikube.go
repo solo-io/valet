@@ -3,9 +3,8 @@ package cluster
 import (
 	"context"
 
-	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
-
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
+	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 )
 
 const (
@@ -29,15 +28,15 @@ func (m *Minikube) Ensure(ctx context.Context, input render.InputParams) error {
 		m.Cpus, m.Memory, m.KubeVersion, m.VmDriver)
 	// If minikube status seems healthy, just set context and return
 	if err := input.Runner().Run(ctx, cmd.New().Minikube().Status().SwallowError().Cmd()); err == nil {
-		return m.SetContext(ctx, input.Runner())
+		return m.SetContext(ctx, input)
 	}
 	_ = cmd.New().Minikube().SwallowError().Delete(ctx, input.Runner())
 	return cmd.New().Minikube().Cpus(m.Cpus).Memory(m.Memory).VmDriver(m.VmDriver).
-		KubeVersion(m.KubeVersion).Start(ctx, input.Runner())
+		KubeVersion(m.KubeVersion).KubeConfig(input.KubeConfig()).Start(ctx, input.Runner())
 }
 
-func (m *Minikube) SetContext(ctx context.Context, runner cmd.Runner) error {
-	return runner.Run(ctx, cmd.New().Kubectl().UseContext(MinikubeContext).Cmd())
+func (m *Minikube) SetContext(ctx context.Context, input render.InputParams) error {
+	return input.Runner().Run(ctx, cmd.New().Kubectl().UseContext(MinikubeContext).Cmd(input.KubeConfig()))
 }
 
 func (m *Minikube) Teardown(ctx context.Context, input render.InputParams) error {
@@ -45,5 +44,5 @@ func (m *Minikube) Teardown(ctx context.Context, input render.InputParams) error
 		return err
 	}
 	cmd.Stdout().Println("Tearing down minikube cluster")
-	return cmd.New().Minikube().SwallowError().Delete(ctx, input.Runner())
+	return cmd.New().Minikube().KubeConfig(input.KubeConfig()).SwallowError().Delete(ctx, input.Runner())
 }

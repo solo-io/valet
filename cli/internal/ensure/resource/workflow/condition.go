@@ -60,7 +60,7 @@ func (c *Condition) Ensure(ctx context.Context, input render.InputParams) error 
 }
 
 func (c *Condition) conditionMet(ctx context.Context, input render.InputParams) (bool, error) {
-	out, err := input.Runner().Output(ctx, c.GetConditionCmd())
+	out, err := input.Runner().Output(ctx, c.GetConditionCmd(input))
 	if err != nil {
 		cmd.Stderr().Println("Error checking condition")
 		return false, err
@@ -77,9 +77,9 @@ func (*Condition) Teardown(ctx context.Context, input render.InputParams) error 
 	return nil
 }
 
-func (c *Condition) GetConditionCmd() *cmd.Command {
+func (c *Condition) GetConditionCmd(input render.InputParams) *cmd.Command {
 	return cmd.New().Kubectl().
 		With("get", c.Type, c.Name).
 		Namespace(c.Namespace).
-		OutJsonpath(c.Jsonpath).Cmd()
+		OutJsonpath(c.Jsonpath).Cmd(input.KubeConfig())
 }

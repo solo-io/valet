@@ -4,7 +4,6 @@ import (
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/cmd/common"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 )
@@ -33,12 +32,16 @@ func setContext(opts *options.Options) error {
 	if err != nil {
 		return err
 	}
-	cfg, err := common.LoadConfig(opts, *input)
+	cfg, err := common.LoadClusterWorkflow(opts, *input)
 	if err != nil {
 		return err
 	}
 	if cfg.Cluster == nil {
 		return MustSpecifyClusterError
 	}
-	return cfg.Cluster.SetContext(opts.Top.Ctx, cmd.DefaultCommandRunner())
+	if err := input.RenderFields(cfg.Cluster); err != nil {
+		return err
+	}
+	// TODO(EItanya): clean up deref
+	return cfg.Cluster.SetContext(opts.Top.Ctx, *input)
 }

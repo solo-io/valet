@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -14,6 +16,12 @@ type Gcloud struct {
 
 func (g *Gcloud) Cmd() *Command {
 	return g.cmd
+}
+
+
+func (g *Gcloud) KubeConfig(kubeConfig string) *Gcloud {
+	g.cmd.Env[clientcmd.RecommendedConfigPathEnvVar] = kubeConfig
+	return g
 }
 
 func (g *Gcloud) With(args ...string) *Gcloud {

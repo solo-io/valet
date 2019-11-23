@@ -16,12 +16,13 @@ import (
 )
 
 const (
-	VersionKey     = "Version"
-	NamespaceKey   = "Namespace"
-	DomainKey      = "Domain"
-	HostedZoneKey  = "HostedZone"
-	PathKey        = "Path"
-	NameKey        = "Name"
+	VersionKey    = "Version"
+	NamespaceKey  = "Namespace"
+	DomainKey     = "Domain"
+	HostedZoneKey = "HostedZone"
+	PathKey       = "Path"
+	NameKey       = "Name"
+	KubeConfig    = "KubeConfig"
 
 	EnvPrefix      = "env:"
 	TemplatePrefix = "template:"
@@ -126,7 +127,7 @@ func (v Values) GetValue(key string, runner cmd_runner.Runner) (string, error) {
 		fileString := strings.TrimPrefix(val, FilePrefix)
 		otherVals := v.DeepCopy()
 		delete(otherVals, key)
-		path, err :=  LoadTemplate(fileString, otherVals, runner)
+		path, err := LoadTemplate(fileString, otherVals, runner)
 		if err != nil {
 			return "", err
 		}

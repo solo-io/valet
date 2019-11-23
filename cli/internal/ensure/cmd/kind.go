@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/solo-io/go-utils/errors"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 type Kind struct {
@@ -28,6 +29,11 @@ func (k *Kind) Cmd() *Command {
 
 func (k *Kind) Name(name string) *Kind {
 	return k.With(fmt.Sprintf("--name=%s", name))
+}
+
+func (k *Kind) KubeConfig(kubeConfig string) *Kind {
+	k.cmd.Env[clientcmd.RecommendedConfigPathEnvVar] = kubeConfig
+	return k
 }
 
 func (k *Kind) IsRunning(ctx context.Context, runner Runner, name string) (bool, error) {

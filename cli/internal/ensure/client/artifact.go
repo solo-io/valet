@@ -50,7 +50,7 @@ func (d *githubArtifactDownloader) Download(ctx context.Context, remotePath, loc
 func (d *githubArtifactDownloader) getRelease(ctx context.Context, client *github.Client) (*github.RepositoryRelease, error) {
 	release, _, err := client.Repositories.GetReleaseByTag(ctx, "solo-io", d.repoName, d.tag)
 	if err != nil {
-		cmd.Stderr(ctx).Println("Could not get release %s:%s", d.repoName, d.tag)
+		cmd.Stderr(ctx).Printf("Could not get release %s:%s", d.repoName, d.tag)
 		return nil, err
 	}
 	return release, nil
@@ -62,23 +62,23 @@ func (d *githubArtifactDownloader) getAsset(ctx context.Context, release *github
 			return &asset, nil
 		}
 	}
-	cmd.Stderr(ctx).Println("Could not find asset %s:%s %s", d.repoName, d.tag, remotePath)
+	cmd.Stderr(ctx).Printf("Could not find asset %s:%s %s", d.repoName, d.tag, remotePath)
 	return nil, CouldNotFindAssetError
 }
 
 func chmod(ctx context.Context, filepath string) error {
 	err := os.Chmod(filepath, os.ModePerm)
 	if err != nil {
-		cmd.Stderr(ctx).Println("Error changing file permissions: %s", err.Error())
+		cmd.Stderr(ctx).Printf("Error changing file permissions: %s", err.Error())
 	}
 	return err
 }
 
 func (d *githubArtifactDownloader) downloadAsset(ctx context.Context, asset *github.ReleaseAsset, filepath string) error {
-	cmd.Stdout(ctx).Println("Downloading asset %s to %s", asset.GetName(), filepath)
+	cmd.Stdout(ctx).Printf("Downloading asset %s to %s", asset.GetName(), filepath)
 	rc, redirectUrl, err := d.client.Repositories.DownloadReleaseAsset(ctx, "solo-io", d.repoName, asset.GetID())
 	if err != nil {
-		cmd.Stderr(ctx).Println("Could not download asset: %s", err.Error())
+		cmd.Stderr(ctx).Printf("Could not download asset: %s", err.Error())
 		return err
 	}
 	if rc != nil {
@@ -87,7 +87,7 @@ func (d *githubArtifactDownloader) downloadAsset(ctx context.Context, asset *git
 		err = downloadFile(filepath, redirectUrl)
 	}
 	if err != nil {
-		cmd.Stderr(ctx).Println("Could not download asset: %s", err.Error())
+		cmd.Stderr(ctx).Printf("Could not download asset: %s", err.Error())
 		return err
 	}
 	return chmod(ctx, filepath)
@@ -138,7 +138,7 @@ type urlArtifactDownloader struct {
 var _ ArtifactDownloader = new(urlArtifactDownloader)
 
 func (d *urlArtifactDownloader) Download(ctx context.Context, remotePath, localPath string) error {
-	cmd.Stdout(ctx).Println("Downloading file %s to %s", remotePath, localPath)
+	cmd.Stdout(ctx).Printf("Downloading file %s to %s", remotePath, localPath)
 	err := downloadFile(localPath, remotePath)
 	if err != nil {
 		return err

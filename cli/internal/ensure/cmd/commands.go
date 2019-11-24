@@ -67,9 +67,9 @@ func (r *commandRunner) Output(ctx context.Context, c *Command) (string, error) 
 	bytes, err := cmd.CombinedOutput()
 	if err != nil {
 		if !c.SwallowErrorLog {
-			Stderr(ctx).Println("Error running command: %s", err.Error())
-			Stderr(ctx).Println("STDIN: %s", c.StdIn)
-			Stderr(ctx).Println(string(bytes))
+			Stderr(ctx).Printf("Error running command: %s", err.Error())
+			Stderr(ctx).Printf("STDIN: %s", c.StdIn)
+			Stderr(ctx).Printf(string(bytes))
 		}
 		err = CommandError(err)
 	}
@@ -86,8 +86,8 @@ func (r *commandRunner) RunInShell(ctx context.Context, c *Command) error {
 	err := cmd.Run()
 	if err != nil {
 		if !c.SwallowErrorLog {
-			Stderr(ctx).Println("Error running command: %s", err.Error())
-			Stderr(ctx).Println("STDIN: %s", c.StdIn)
+			Stderr(ctx).Printf("Error running command: %s", err.Error())
+			Stderr(ctx).Printf("STDIN: %s", c.StdIn)
 		}
 		err = CommandError(err)
 	}
@@ -100,21 +100,47 @@ type CommandStreamHandler struct {
 	Stderr   io.Reader
 }
 
-func (c *CommandStreamHandler) StreamHelper(ctx context.Context, inputErr error) error {
+func (c *CommandStreamHandler) ScanOutput(ctx context.Context, inputErr error) error {
 	go func() {
 		stdoutScanner := bufio.NewScanner(c.Stdout)
 		for stdoutScanner.Scan() {
-			Stdout(ctx).Println(stdoutScanner.Text())
+			Stdout(ctx).Printf(stdoutScanner.Text())
 		}
 		if err := stdoutScanner.Err(); err != nil {
-			Stderr(ctx).Println("reading stdout from current command context:", err)
+			Stderr(ctx).Printf("reading stdout from current command context:", err)
 		}
 	}()
 	stderr, _ := ioutil.ReadAll(c.Stderr)
 	if err := c.WaitFunc(); err != nil {
-		Stderr(ctx).Println(fmt.Sprintf("%s\n", stderr))
+		Stderr(ctx).Printf(fmt.Sprintf("%s\n", stderr))
 		return inputErr
 	}
+	return nil
+}
+
+func (c *CommandStreamHandler) PollingOperation(ctx context.Context, operationName string) error {
+	Stdout(ctx).Printf("beginning %s", operationName)
+	startTime := time.Now()
+	done := make(chan struct{})
+	go func() {
+		ticker := time.Tick(time.Second * 5)
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker:
+				Stdout(ctx).Printf("performing %s (duration %s)", operationName, time.Since(startTime))
+			}
+		}
+	}()
+	stderr, _ := ioutil.ReadAll(c.Stderr)
+	err := c.WaitFunc()
+	done <- struct{}{}
+	if err != nil {
+		Stderr(ctx).Printf(fmt.Sprintf("%s\n", stderr))
+		return err
+	}
+	Stdout(ctx).Printf("successfully %s", operationName)
 	return nil
 }
 
@@ -181,7 +207,7 @@ func (c *Command) logCommand(ctx context.Context) {
 	}
 	command := strings.Join(parts, " ")
 	if c.PrintCommands {
-		Stdout(ctx).Println("Running command: %s", command)
+		Stdout(ctx).Printf("Running command: %s", command)
 	}
 }
 
@@ -190,7 +216,7 @@ func (c *Command) loadEnv(cmd *exec.Cmd) {
 		cmd.Env = os.Environ()
 	}
 	for key, val := range c.Env {
-		// Stdout(ctx).Println("")
+		// Stdout(ctx).Printf("")
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
 	}
 }

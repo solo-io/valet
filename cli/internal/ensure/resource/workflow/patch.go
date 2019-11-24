@@ -31,7 +31,7 @@ func (p *Patch) Ensure(ctx context.Context, input render.InputParams) error {
 	if err := input.RenderFields(p); err != nil {
 		return err
 	}
-	cmd.Stdout(ctx).Println("Patching %s.%s (%s) from file %s (%s) %s", p.Namespace, p.Name, p.KubeType, p.Path, p.PatchType, input.Values.ToString())
+	cmd.Stdout(ctx).Printf("Patching %s.%s (%s) from file %s (%s) %s", p.Namespace, p.Name, p.KubeType, p.Path, p.PatchType, input.Values.ToString())
 	patchTemplate, err := input.LoadFile(ctx, p.RegistryName, p.Path)
 	if err != nil {
 		return UnableToLoadPatchError(err)
@@ -54,6 +54,6 @@ func (p *Patch) Teardown(ctx context.Context, input render.InputParams) error {
 	if err := input.RenderFields(p); err != nil {
 		return err
 	}
-	cmd.Stdout(ctx).Println("Skipping teardown for patch")
+	cmd.Stdout(ctx).Printf("Skipping teardown for patch")
 	return nil
 }

@@ -24,7 +24,7 @@ func (n *Namespace) Render(ctx context.Context, inputs render.InputParams) (kube
 	if err := inputs.RenderFields(n); err != nil {
 		return nil, err
 	}
-	cmd.Stdout(ctx).Println("Rendering namespace %s", n.Name)
+	cmd.Stdout(ctx).Printf("Rendering namespace %s", n.Name)
 	namespace := corev1.Namespace{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Namespace",

@@ -28,7 +28,7 @@ func KubeClient(kubeConfig string) (kubernetes.Interface, error) {
 }
 
 func WaitUntilPodsRunning(ctx context.Context, kubeConfig, namespace string) error {
-	cmd.Stdout(ctx).Println("Waiting for pods in namespace %s", namespace)
+	cmd.Stdout(ctx).Printf("Waiting for pods in namespace %s", namespace)
 	kubeClient, err := KubeClient(kubeConfig)
 	if err != nil {
 		return err
@@ -61,17 +61,17 @@ func WaitUntilPodsRunning(ctx context.Context, kubeConfig, namespace string) err
 	for {
 		select {
 		case <-failed:
-			cmd.Stderr(ctx).Println("Timed out waiting for pods to come online: %v", notYetRunning)
+			cmd.Stderr(ctx).Printf("Timed out waiting for pods to come online: %v", notYetRunning)
 			return TimedOutWaitingForPodsError
 		case <-time.After(time.Second / 2):
 			notYetRunning = make(map[string]struct{})
 			ready, err := podsReady()
 			if err != nil {
-				cmd.Stderr(ctx).Println("Error checking for ready pods: %s", err.Error())
+				cmd.Stderr(ctx).Printf("Error checking for ready pods: %s", err.Error())
 				return err
 			}
 			if ready {
-				cmd.Stdout(ctx).Println("Pods are ready")
+				cmd.Stdout(ctx).Printf("Pods are ready")
 				return nil
 			}
 		}
@@ -88,11 +88,11 @@ func NamespaceIsActive(ctx context.Context, namespace string) (bool, error) {
 		if kubeerrs.IsNotFound(err) {
 			return false, nil
 		}
-		cmd.Stderr(ctx).Println("Error trying to get namespace %s: %s", namespace, err.Error())
+		cmd.Stderr(ctx).Printf("Error trying to get namespace %s: %s", namespace, err.Error())
 		return false, err
 	}
 	if ns.Status.Phase != v12.NamespaceActive {
-		cmd.Stderr(ctx).Println("Namespace is not active (%s)", ns.Status.Phase)
+		cmd.Stderr(ctx).Printf("Namespace is not active (%s)", ns.Status.Phase)
 	}
 	return true, nil
 }
@@ -104,11 +104,11 @@ func PodsReadyAndVersionsMatch(ctx context.Context, namespace, selector, version
 	}
 	pods, err := kubeClient.CoreV1().Pods(namespace).List(v1.ListOptions{LabelSelector: selector})
 	if err != nil {
-		cmd.Stderr(ctx).Println("Error listing pods: %s", err.Error())
+		cmd.Stderr(ctx).Printf("Error listing pods: %s", err.Error())
 		return false, err
 	}
 	if len(pods.Items) == 0 {
-		cmd.Stdout(ctx).Println("No pods")
+		cmd.Stdout(ctx).Printf("No pods")
 		return false, nil
 	}
 	for _, pod := range pods.Items {
@@ -117,7 +117,7 @@ func PodsReadyAndVersionsMatch(ctx context.Context, namespace, selector, version
 		}
 		for _, cond := range pod.Status.Conditions {
 			if cond.Type == v12.ContainersReady && cond.Status != v12.ConditionTrue {
-				cmd.Stdout(ctx).Println("Pods not ready")
+				cmd.Stdout(ctx).Printf("Pods not ready")
 				return false, nil
 			}
 		}
@@ -130,6 +130,6 @@ func PodsReadyAndVersionsMatch(ctx context.Context, namespace, selector, version
 			}
 		}
 	}
-	cmd.Stdout(ctx).Println("Detected install, but did not find any containers with the expected version %s", version)
+	cmd.Stdout(ctx).Printf("Detected install, but did not find any containers with the expected version %s", version)
 	return false, nil
 }

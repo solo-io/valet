@@ -23,14 +23,14 @@ func (t *Template) Load(ctx context.Context, input render.InputParams) (string, 
 	if err := input.RenderFields(t); err != nil {
 		return "", err
 	}
-	cmd.Stdout(ctx).Println("Loading template %s:%s", t.RegistryName, t.Path)
+	cmd.Stdout(ctx).Printf("Loading template %s:%s", t.RegistryName, t.Path)
 	tmpl, err := input.LoadFile(ctx, t.RegistryName, t.Path)
 	if err != nil {
 		return "", err
 	}
 	loaded, err := render.LoadTemplate(tmpl, input.Values, input.Runner())
 	if err != nil {
-		cmd.Stderr(ctx).Println("Error loading template: %s", err.Error())
+		cmd.Stderr(ctx).Printf("Error loading template: %s", err.Error())
 	}
 	return loaded, err
 }

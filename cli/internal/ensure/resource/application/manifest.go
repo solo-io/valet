@@ -34,7 +34,7 @@ func (m *Manifest) load(ctx context.Context, input render.InputParams) (string, 
 	if m.RegistryName != "" && m.RegistryName != render.DefaultRegistry {
 		manifest = fmt.Sprintf("%s:%s", m.RegistryName, manifest)
 	}
-	cmd.Stdout(ctx).Println("Loading manifest %s", manifest)
+	cmd.Stdout(ctx).Printf("Loading manifest %s", manifest)
 	contents, err := input.LoadFile(ctx, m.RegistryName, m.Path)
 	if err != nil {
 		return "", err

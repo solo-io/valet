@@ -19,7 +19,7 @@ func Ensure(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 			err := ensure(opts)
 			if opts.Ensure.TeardownOnFinish {
 				if teardownErr := teardown.TeardownCfg(opts); teardownErr != nil {
-					cmd.Stderr(context.TODO()).Println("error trying to teardown: %s", teardownErr.Error())
+					cmd.Stderr(context.TODO()).Printf("error trying to teardown: %s", teardownErr.Error())
 				}
 			}
 			return err

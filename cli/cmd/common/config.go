@@ -82,7 +82,7 @@ func LoadEnv(ctx context.Context, globalConfig *config.ValetGlobalConfig) error 
 		if val == "" {
 			err := os.Setenv(k, v)
 			if err != nil {
-				cmd.Stderr(ctx).Println("Failed to set environment variable: %s", err.Error())
+				cmd.Stderr(ctx).Printf("Failed to set environment variable: %s", err.Error())
 				return err
 			}
 		}

@@ -11,6 +11,7 @@ import (
 )
 
 type Workflow struct {
+	Name         string           `yaml:"name"`
 	Cluster      *cluster.Cluster `yaml:"cluster"`
 	CleanupSteps []workflow.Step  `yaml:"cleanupSteps"`
 	Steps        []workflow.Step  `yaml:"steps"`
@@ -62,7 +63,7 @@ func LoadClusterWorkflow(ctx context.Context, registry, path string, input rende
 	}
 
 	if err := yaml.UnmarshalStrict([]byte(b), &c); err != nil {
-		cmd.Stderr(ctx).Println("Failed to unmarshal file '%s': %s", path, err.Error())
+		cmd.Stderr(ctx).Printf("Failed to unmarshal file '%s': %s", path, err.Error())
 		return nil, err
 	}
 

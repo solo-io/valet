@@ -40,9 +40,9 @@ func (i *InputParams) DeepCopy() InputParams {
 	for k, v := range i.Registries {
 		registries[k] = v
 	}
-	newKubeConfig := &clientcmd.RecommendedHomeFile
+	newKubeConfig := clientcmd.RecommendedHomeFile
 	if i.kubeConfig != nil {
-		*newKubeConfig = *i.kubeConfig
+		newKubeConfig = i.KubeConfig()
 	}
 	return InputParams{
 		Values:        values,
@@ -51,7 +51,7 @@ func (i *InputParams) DeepCopy() InputParams {
 		Registries:    registries,
 		CommandRunner: i.CommandRunner,
 		IngressClient: i.IngressClient,
-		kubeConfig:    newKubeConfig,
+		kubeConfig:    &newKubeConfig,
 	}
 }
 

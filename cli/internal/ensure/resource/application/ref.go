@@ -65,7 +65,7 @@ func (a *Ref) loadApplication(ctx context.Context, input render.InputParams) (*A
 		return nil, err
 	}
 	if err := yaml.UnmarshalStrict([]byte(b), &app); err != nil {
-		cmd.Stderr(ctx).Println("Failed to unmarshal file: %s", err.Error())
+		cmd.Stderr(ctx).Printf("Failed to unmarshal file: %s", err.Error())
 		return nil, err
 	}
 	return &app, nil
@@ -86,10 +86,10 @@ func (a *Ref) Ensure(ctx context.Context, input render.InputParams) error {
 	if a.RegistryName != render.DefaultRegistry {
 		appString = fmt.Sprintf("%s:%s", a.RegistryName, appString)
 	}
-	cmd.Stdout(ctx).Println("Ensuring application %s values=%s flags=%s", appString, input.Values.ToString(), input.Flags.ToString())
+	cmd.Stdout(ctx).Printf("Ensuring application %s values=%s flags=%s", appString, input.Values.ToString(), input.Flags.ToString())
 	err = app.Ensure(ctx, input)
 	if err == nil {
-		cmd.Stdout(ctx).Println("Done ensuring application %s", a.Path)
+		cmd.Stdout(ctx).Printf("Done ensuring application %s", a.Path)
 	}
 	return err
 }
@@ -105,10 +105,10 @@ func (a *Ref) Teardown(ctx context.Context, input render.InputParams) error {
 		return err
 	}
 	input.SetRegistry(render.DefaultRegistry, appRegistry)
-	cmd.Stdout(ctx).Println("Tearing down application %s values=%s flags=%s", a.Path, input.Values.ToString(), input.Flags.ToString())
+	cmd.Stdout(ctx).Printf("Tearing down application %s values=%s flags=%s", a.Path, input.Values.ToString(), input.Flags.ToString())
 	err = app.Teardown(ctx, input)
 	if err == nil {
-		cmd.Stdout(ctx).Println("Done tearing down application %s", a.Path)
+		cmd.Stdout(ctx).Printf("Done tearing down application %s", a.Path)
 	}
 	return err
 }

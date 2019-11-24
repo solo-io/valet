@@ -60,7 +60,7 @@ func (s *Secret) Render(ctx context.Context, input render.InputParams) (kubereso
 		return nil, err
 
 	}
-	cmd.Stdout(ctx).Println("Rendering secret %s.%s with type %s and %d entries", s.Namespace, s.Name, s.Type, len(s.Entries))
+	cmd.Stdout(ctx).Printf("Rendering secret %s.%s with type %s and %d entries", s.Namespace, s.Name, s.Type, len(s.Entries))
 	secret := v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Secret",
@@ -138,6 +138,6 @@ func (s *Secret) Render(ctx context.Context, input render.InputParams) (kubereso
 
 func cleanupFile(ctx context.Context, name string) {
 	if err := os.Remove(name); err != nil {
-		cmd.Stderr(ctx).Println("Error cleaning up file %s: %s", name, err.Error())
+		cmd.Stderr(ctx).Printf("Error cleaning up file %s: %s", name, err.Error())
 	}
 }

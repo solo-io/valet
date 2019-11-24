@@ -65,7 +65,7 @@ func (e *EksCtl) DeleteCluster(ctx context.Context, name, region string, runner 
 		return err
 	}
 	inputErr := errors.New("unable to delete cluster resources")
-	return streamHandler.StreamHelper(ctx, inputErr)
+	return streamHandler.ScanOutput(ctx, inputErr)
 }
 
 func (e *EksCtl) CreateCluster(ctx context.Context, name, region string, runner Runner) error {
@@ -74,7 +74,7 @@ func (e *EksCtl) CreateCluster(ctx context.Context, name, region string, runner 
 		return err
 	}
 	inputErr := errors.New("unable to create cluster resources")
-	return streamHandler.StreamHelper(ctx, inputErr)
+	return streamHandler.ScanOutput(ctx, inputErr)
 }
 
 func (e *EksCtl) IsRunning(ctx context.Context, name, region string, runner Runner) (bool, error) {

@@ -39,7 +39,7 @@ type awsDnsClient struct {
 }
 
 func (c *awsDnsClient) getHostedZone(ctx context.Context, name string) (*route53.HostedZone, error) {
-	cmd.Stdout(ctx).Println("Getting hosted zone id")
+	cmd.Stdout(ctx).Printf("Getting hosted zone id")
 	listHostedZonesInput := route53.ListHostedZonesInput{}
 	output, err := c.svc.ListHostedZones(&listHostedZonesInput)
 	if err != nil {
@@ -86,7 +86,7 @@ func (c *awsDnsClient) CreateMapping(ctx context.Context, hostedZoneName, domain
 		HostedZoneId: hostedZone.Id,
 		ChangeBatch:  changeBatch,
 	}
-	cmd.Stdout(ctx).Println("Creating DNS mapping for %s to %s", domain, ip)
+	cmd.Stdout(ctx).Printf("Creating DNS mapping for %s to %s", domain, ip)
 	_, err = c.svc.ChangeResourceRecordSets(&input)
 	return err
 }

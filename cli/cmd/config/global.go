@@ -78,24 +78,24 @@ func LoadGlobalConfig(opts *options.Options) (*ValetGlobalConfig, error) {
 	var c ValetGlobalConfig
 	path, err := GetGlobalConfigPath(opts)
 	if err != nil {
-		cmd.Stderr(context.TODO()).Println("Could not determine global config path")
+		cmd.Stderr(context.TODO()).Printf("Could not determine global config path")
 		return nil, err
 	}
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		cmd.Stdout(context.TODO()).Println("No global config exists")
+		cmd.Stdout(context.TODO()).Printf("No global config exists")
 		return &c, nil
 	}
 
 	osClient := osutils.NewOsClient()
 	bytes, err := osClient.ReadFile(path)
 	if err != nil {
-		cmd.Stderr(context.TODO()).Println("Could not read file %s: %s", path, err.Error())
+		cmd.Stderr(context.TODO()).Printf("Could not read file %s: %s", path, err.Error())
 		return nil, err
 	}
 
 	if err := yaml.UnmarshalStrict(bytes, &c); err != nil {
-		cmd.Stderr(context.TODO()).Println("Failed to unmarshal file %s: %s", path, err.Error())
+		cmd.Stderr(context.TODO()).Printf("Failed to unmarshal file %s: %s", path, err.Error())
 		return nil, err
 	}
 
@@ -105,18 +105,18 @@ func LoadGlobalConfig(opts *options.Options) (*ValetGlobalConfig, error) {
 func StoreGlobalConfig(opts *options.Options, config *ValetGlobalConfig) error {
 	path, err := GetGlobalConfigPath(opts)
 	if err != nil {
-		cmd.Stderr(context.TODO()).Println("Could not determine global config path: %s", err.Error())
+		cmd.Stderr(context.TODO()).Printf("Could not determine global config path: %s", err.Error())
 		return err
 	}
 
 	bytes, err := yaml.Marshal(config)
 	if err != nil {
-		cmd.Stderr(context.TODO()).Println("Failed to marshal config: %s", err.Error())
+		cmd.Stderr(context.TODO()).Printf("Failed to marshal config: %s", err.Error())
 		return err
 	}
 
 	if err := ioutil.WriteFile(path, bytes, os.ModePerm); err != nil {
-		cmd.Stderr(context.TODO()).Println("Failed to write file %s: %s", path, err.Error())
+		cmd.Stderr(context.TODO()).Printf("Failed to write file %s: %s", path, err.Error())
 		return err
 	}
 

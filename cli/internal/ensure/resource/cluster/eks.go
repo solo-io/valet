@@ -21,7 +21,7 @@ func (e *EKS) Ensure(ctx context.Context, input render.InputParams) error {
 	if err := input.RenderFields(e); err != nil {
 		return err
 	}
-	cmd.Stdout(ctx).Println("Ensuring eks cluster %s (region : %s)", e.Name, e.Region)
+	cmd.Stdout(ctx).Printf("Ensuring eks cluster %s (region : %s)", e.Name, e.Region)
 	running, err := cmd.New().EksCtl().IsRunning(ctx, e.Name, e.Region, input.Runner())
 	if err != nil {
 		return err
@@ -43,7 +43,7 @@ func (e *EKS) Teardown(ctx context.Context, input render.InputParams) error {
 	if err := input.RenderFields(e); err != nil {
 		return err
 	}
-	cmd.Stdout(ctx).Println("tearing down eks cluster %s (region : %s)", e.Name, e.Region)
+	cmd.Stdout(ctx).Printf("tearing down eks cluster %s (region : %s)", e.Name, e.Region)
 	running, err := cmd.New().EksCtl().KubeConfig(input.KubeConfig()).IsRunning(ctx, e.Name, e.Region, input.Runner())
 	if err != nil {
 		return err

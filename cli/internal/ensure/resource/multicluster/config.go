@@ -27,7 +27,7 @@ func (c *Config) Ensure(ctx context.Context, input render.InputParams) error {
 			cluster := cluster
 			i := i
 			eg.Go(func() error {
-				return cluster.Ensure(context.WithValue(ctx, cmd.ColorKey, uint8(i)), input.DeepCopy())
+				return cluster.Ensure(cmd.NewPrinterContext(ctx, uint8(i), ""), input.DeepCopy())
 			})
 		}
 
@@ -35,7 +35,7 @@ func (c *Config) Ensure(ctx context.Context, input render.InputParams) error {
 	}
 
 	for i, cluster := range c.Clusters {
-		if err := cluster.Ensure(context.WithValue(ctx, cmd.ColorKey, uint8(i)), input.DeepCopy()); err != nil {
+		if err := cluster.Ensure(cmd.NewPrinterContext(ctx, uint8(i), ""), input.DeepCopy()); err != nil {
 			return err
 		}
 	}
@@ -52,7 +52,7 @@ func (c *Config) Teardown(ctx context.Context, input render.InputParams) error {
 			cluster := cluster
 			i := i
 			eg.Go(func() error {
-				return cluster.Teardown(context.WithValue(ctx, cmd.ColorKey, uint8(i)), input.DeepCopy())
+				return cluster.Teardown(cmd.NewPrinterContext(ctx, uint8(i), ""), input.DeepCopy())
 			})
 		}
 
@@ -60,7 +60,7 @@ func (c *Config) Teardown(ctx context.Context, input render.InputParams) error {
 	}
 
 	for i, cluster := range c.Clusters {
-		if err := cluster.Teardown(context.WithValue(ctx, cmd.ColorKey, uint8(i)), input.DeepCopy()); err != nil {
+		if err := cluster.Teardown(cmd.NewPrinterContext(ctx, uint8(i), ""), input.DeepCopy()); err != nil {
 			return err
 		}
 	}
@@ -76,7 +76,7 @@ func LoadConfig(ctx context.Context, registry, path string, input render.InputPa
 	}
 
 	if err := yaml.UnmarshalStrict([]byte(b), &c); err != nil {
-		cmd.Stderr(context.TODO()).Println("Failed to unmarshal file '%s': %s", path, err.Error())
+		cmd.Stderr(context.TODO()).Printf("Failed to unmarshal file '%s': %s", path, err.Error())
 		return nil, err
 	}
 

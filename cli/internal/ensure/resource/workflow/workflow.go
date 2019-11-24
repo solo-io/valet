@@ -37,7 +37,7 @@ func (w *Workflow) Ensure(ctx context.Context, input render.InputParams) error {
 	if err := EnsureSteps(ctx, input, w.Steps); err != nil {
 		return err
 	}
-	cmd.Stdout(ctx).Println("Workflow successful, cleaning up")
+	cmd.Stdout(ctx).Printf("Workflow successful, cleaning up")
 	if err := EnsureSteps(ctx, input, w.CleanupSteps); err != nil {
 		return err
 	}

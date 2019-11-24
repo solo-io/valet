@@ -49,7 +49,7 @@ func (d *DnsEntry) Ensure(ctx context.Context, input render.InputParams) error {
 }
 
 func (d *DnsEntry) Teardown(ctx context.Context, input render.InputParams) error {
-	cmd.Stderr(ctx).Println("Teardown not implemented")
+	cmd.Stderr(ctx).Printf("Teardown not implemented")
 	return nil
 }
 

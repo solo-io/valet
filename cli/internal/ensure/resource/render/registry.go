@@ -73,7 +73,7 @@ func (l *DirectoryRegistry) loadBytes(ctx context.Context, path string) ([]byte,
 	expandedPath := expandEnv(path)
 	contents, err := osClient.ReadFile(expandedPath)
 	if err != nil {
-		cmd.Stderr(ctx).Println("Failed to read file '%s': %s", expandedPath, err.Error())
+		cmd.Stderr(ctx).Printf("Failed to read file '%s': %s", expandedPath, err.Error())
 		return nil, err
 	}
 	return contents, nil

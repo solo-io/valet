@@ -61,13 +61,13 @@ func NewGkeClient(ctx context.Context) (*gkeClient, error) {
 func getClusterManagerClient(ctx context.Context) (*container.ClusterManagerClient, error) {
 	ts, err := google.DefaultTokenSource(ctx, iam.CloudPlatformScope)
 	if err != nil {
-		cmd.Stderr(ctx).Println("Error locating token: %s", err.Error())
+		cmd.Stderr(ctx).Printf("Error locating token: %s", err.Error())
 		return nil, err
 	}
 
 	client, err := container.NewClusterManagerClient(ctx, option.WithTokenSource(ts))
 	if err != nil {
-		cmd.Stderr(ctx).Println("Error creating cluster manager client: %s", err.Error())
+		cmd.Stderr(ctx).Printf("Error creating cluster manager client: %s", err.Error())
 		return nil, err
 	}
 	return client, nil
@@ -76,12 +76,12 @@ func getClusterManagerClient(ctx context.Context) (*container.ClusterManagerClie
 func (c *gkeClient) IsRunning(ctx context.Context, name, project, zone string) (bool, error) {
 	cluster, err := c.getCluster(ctx, name, project, zone)
 	if err != nil {
-		cmd.Stderr(ctx).Println("Error checking stauts of cluster %s: %s", getClusterIdentifier(name, project, zone), err.Error())
+		cmd.Stderr(ctx).Printf("Error checking stauts of cluster %s: %s", getClusterIdentifier(name, project, zone), err.Error())
 		return false, err
 	} else if cluster == nil {
 		return false, nil
 	}
-	cmd.Stdout(ctx).Println("Found cluster %s", cluster.GetName())
+	cmd.Stdout(ctx).Printf("Found cluster %s", cluster.GetName())
 	return cluster.GetStatus() == container2.Cluster_RUNNING, nil
 }
 
@@ -90,10 +90,10 @@ func (c *gkeClient) getCluster(ctx context.Context, name, project, zone string) 
 	if err != nil {
 		st, ok := status.FromError(err)
 		if ok && st.Code() == codes.NotFound {
-			cmd.Stdout(ctx).Println("Cluster %s not found", name)
+			cmd.Stdout(ctx).Printf("Cluster %s not found", name)
 			return nil, nil
 		}
-		cmd.Stderr(ctx).Println("Error getting cluster %s: %s", name, err.Error())
+		cmd.Stderr(ctx).Printf("Error getting cluster %s: %s", name, err.Error())
 		return nil, err
 	}
 	return cluster, nil
@@ -101,7 +101,7 @@ func (c *gkeClient) getCluster(ctx context.Context, name, project, zone string) 
 
 func (c *gkeClient) Create(ctx context.Context, name, project, zone string, opts *CreateOptions) error {
 	opts = opts.WithDefaults()
-	cmd.Stdout(ctx).Println("Creating cluster %s", name)
+	cmd.Stdout(ctx).Printf("Creating cluster %s", name)
 	nodePool := container2.NodePool{
 		Name:             "pool-1",
 		InitialNodeCount: opts.InitialNodeCount,
@@ -130,31 +130,31 @@ func (c *gkeClient) Create(ctx context.Context, name, project, zone string, opts
 	}
 	operation, err := c.client.CreateCluster(ctx, &req)
 	if err != nil {
-		cmd.Stderr(ctx).Println("Error creating cluster %s: %s", name, err.Error())
+		cmd.Stderr(ctx).Printf("Error creating cluster %s: %s", name, err.Error())
 		return err
 	}
-	cmd.Stdout(ctx).Println("Create cluster operation started (%v)", operation)
+	cmd.Stdout(ctx).Printf("Create cluster operation started (%v)", operation)
 	err = c.waitForOperation(ctx, getOperationIdentifier(project, zone, operation.Name))
 	if err != nil {
-		cmd.Stderr(ctx).Println("Error waiting for cluster creation: %s", err.Error())
+		cmd.Stderr(ctx).Printf("Error waiting for cluster creation: %s", err.Error())
 	}
 	return err
 }
 
 func (c *gkeClient) Destroy(ctx context.Context, name, project, zone string) error {
-	cmd.Stdout(ctx).Println("Deleting cluster %s", name)
+	cmd.Stdout(ctx).Printf("Deleting cluster %s", name)
 	req := container2.DeleteClusterRequest{
 		Name: getClusterIdentifier(name, project, zone),
 	}
 	operation, err := c.client.DeleteCluster(ctx, &req)
 	if err != nil {
-		cmd.Stderr(ctx).Println("Error deleting cluster %s: %s", name, err.Error())
+		cmd.Stderr(ctx).Printf("Error deleting cluster %s: %s", name, err.Error())
 		return err
 	}
-	cmd.Stdout(ctx).Println("Delete cluster operation started (%v)", operation)
+	cmd.Stdout(ctx).Printf("Delete cluster operation started (%v)", operation)
 	err = c.waitForOperation(ctx, getOperationIdentifier(project, zone, operation.Name))
 	if err != nil {
-		cmd.Stderr(ctx).Println("Error waiting for cluster to be deleted: %s", err.Error())
+		cmd.Stderr(ctx).Printf("Error waiting for cluster to be deleted: %s", err.Error())
 	}
 	return err
 }
@@ -167,14 +167,14 @@ func (c *gkeClient) waitForOperation(ctx context.Context, operationId string) er
 	for range ticker.C {
 		operation, err := c.client.GetOperation(ctx, &getOp)
 		if err != nil {
-			cmd.Stdout(ctx).Print("\n")
-			cmd.Stderr(ctx).Println("Error monitoring operation: %s", err.Error())
+			cmd.Stdout(ctx).Println("\n")
+			cmd.Stderr(ctx).Printf("Error monitoring operation: %s", err.Error())
 			return err
 		}
-		cmd.Stdout(ctx).Print(".")
+		cmd.Stdout(ctx).Println(".")
 		if operation.Status == container2.Operation_DONE {
-			cmd.Stdout(ctx).Print("\n")
-			cmd.Stdout(ctx).Println("Operation done!")
+			cmd.Stdout(ctx).Println("\n")
+			cmd.Stdout(ctx).Printf("Operation done!")
 			return nil
 		}
 	}

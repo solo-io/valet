@@ -58,7 +58,7 @@ func (r *Ref) loadWorkflow(ctx context.Context, input render.InputParams) (*Work
 		return nil, err
 	}
 	if err := yaml.UnmarshalStrict([]byte(b), &w); err != nil {
-		cmd.Stderr(ctx).Println("Failed to unmarshal file: %s", err.Error())
+		cmd.Stderr(ctx).Printf("Failed to unmarshal file: %s", err.Error())
 		return nil, err
 	}
 	return &w, nil
@@ -70,11 +70,11 @@ func (r *Ref) Ensure(ctx context.Context, input render.InputParams) error {
 		return err
 	}
 	input = input.MergeValues(r.Values)
-	cmd.Stdout(ctx).Println("Ensuring workflow %s %s", r.Path, r.Values.ToString())
+	cmd.Stdout(ctx).Printf("Ensuring workflow %s %s", r.Path, r.Values.ToString())
 	if err := workflow.Ensure(ctx, input); err != nil {
 		return err
 	}
-	cmd.Stdout(ctx).Println("Done ensuring workflow %s", r.Path)
+	cmd.Stdout(ctx).Printf("Done ensuring workflow %s", r.Path)
 	return nil
 }
 
@@ -84,10 +84,10 @@ func (r *Ref) Teardown(ctx context.Context, input render.InputParams) error {
 		return err
 	}
 	input = input.MergeValues(r.Values)
-	cmd.Stdout(ctx).Println("Tearing down workflow %s %s", r.Path, r.Values.ToString())
+	cmd.Stdout(ctx).Printf("Tearing down workflow %s %s", r.Path, r.Values.ToString())
 	if err := workflow.Teardown(ctx, input); err != nil {
 		return err
 	}
-	cmd.Stdout(ctx).Println("Done tearing down workflow %s", r.Path)
+	cmd.Stdout(ctx).Printf("Done tearing down workflow %s", r.Path)
 	return nil
 }

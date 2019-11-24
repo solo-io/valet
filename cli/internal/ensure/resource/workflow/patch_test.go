@@ -12,6 +12,7 @@ import (
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	mock_render "github.com/solo-io/valet/cli/internal/ensure/resource/render/mocks"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var _ = Describe("patch", func() {
@@ -33,7 +34,8 @@ var _ = Describe("patch", func() {
 		input       render.InputParams
 		emptyErr    = errors.Errorf("")
 		ctx         = context.TODO()
-		expectedCmd = cmd.New().Kubectl().With("patch", kubeType, name, "-n", namespace, "--type", patchType, "--patch", patchContents).Cmd()
+		expectedCmd = cmd.New().Kubectl().With("patch", kubeType, name, "-n", namespace,
+			"--type", patchType, "--patch", patchContents).Cmd(clientcmd.RecommendedHomeFile)
 	)
 
 	BeforeEach(func() {
@@ -61,14 +63,14 @@ var _ = Describe("patch", func() {
 		}
 
 		It("works for patch", func() {
-			registry.EXPECT().LoadFile(path).Return(patchContents, nil).Times(1)
+			registry.EXPECT().LoadFile(ctx, path).Return(patchContents, nil).Times(1)
 			runner.EXPECT().Run(ctx, expectedCmd).Return(nil).Times(1)
 			err := patch.Ensure(ctx, input)
 			Expect(err).To(BeNil())
 		})
 
 		It("returns error when patch file can't be loaded", func() {
-			registry.EXPECT().LoadFile(path).Return("", emptyErr).Times(1)
+			registry.EXPECT().LoadFile(ctx, path).Return("", emptyErr).Times(1)
 			err := patch.Ensure(ctx, input)
 			Expect(err).To(Equal(workflow.UnableToLoadPatchError(emptyErr)))
 		})
@@ -92,7 +94,7 @@ var _ = Describe("patch", func() {
 
 		It("works for patch when values in input", func() {
 			input.Values = values
-			registry.EXPECT().LoadFile(path).Return(patchContents, nil).Times(1)
+			registry.EXPECT().LoadFile(ctx, path).Return(patchContents, nil).Times(1)
 			runner.EXPECT().Run(ctx, expectedCmd).Return(nil).Times(1)
 			err := patch.Ensure(ctx, input)
 			Expect(err).To(BeNil())
@@ -100,7 +102,7 @@ var _ = Describe("patch", func() {
 
 		It("works for patch when values on step", func() {
 			patch.Values = values
-			registry.EXPECT().LoadFile(path).Return(patchContents, nil).Times(1)
+			registry.EXPECT().LoadFile(ctx, path).Return(patchContents, nil).Times(1)
 			runner.EXPECT().Run(ctx, expectedCmd).Return(nil).Times(1)
 			err := patch.Ensure(ctx, input)
 			Expect(err).To(BeNil())
@@ -111,7 +113,7 @@ var _ = Describe("patch", func() {
 			patch.Values = render.Values{
 				render.NamespaceKey: otherNamespace,
 			}
-			registry.EXPECT().LoadFile(path).Return(patchContents, nil).Times(1)
+			registry.EXPECT().LoadFile(ctx, path).Return(patchContents, nil).Times(1)
 			runner.EXPECT().Run(ctx, expectedCmd).Return(nil).Times(1)
 			err := patch.Ensure(ctx, input)
 			Expect(err).To(BeNil())

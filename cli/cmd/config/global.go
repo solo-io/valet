@@ -18,7 +18,7 @@ import (
 )
 
 func Config(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
-	cmd := &cobra.Command{
+	configCommand := &cobra.Command{
 		Use:   "config",
 		Short: "manage global config for valet",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -26,10 +26,10 @@ func Config(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 		},
 	}
 
-	cliutils.ApplyOptions(cmd, optionsFunc)
-	cmd.AddCommand(SetCmd(opts))
-	cmd.AddCommand(RegistryCmd(opts))
-	return cmd
+	cliutils.ApplyOptions(configCommand, optionsFunc)
+	configCommand.AddCommand(SetCmd(opts))
+	configCommand.AddCommand(RegistryCmd(opts))
+	return configCommand
 }
 
 type ValetGlobalConfig struct {

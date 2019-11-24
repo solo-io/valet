@@ -64,16 +64,16 @@ func (r *commandRunner) Output(ctx context.Context, c *Command) (string, error) 
 	cmd := exec.Command(c.Name, c.Args...)
 	c.loadEnv(cmd)
 	cmd.Stdin = strings.NewReader(c.StdIn)
-	bytes, err := cmd.CombinedOutput()
+	byt, err := cmd.CombinedOutput()
 	if err != nil {
 		if !c.SwallowErrorLog {
 			Stderr(ctx).Printf("Error running command: %s", err.Error())
 			Stderr(ctx).Printf("STDIN: %s", c.StdIn)
-			Stderr(ctx).Printf(string(bytes))
+			Stderr(ctx).Printf(string(byt))
 		}
 		err = CommandError(err)
 	}
-	return string(bytes), err
+	return string(byt), err
 }
 
 func (r *commandRunner) RunInShell(ctx context.Context, c *Command) error {

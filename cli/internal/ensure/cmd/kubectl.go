@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/solo-io/go-utils/errors"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -78,10 +80,6 @@ func (k *Kubectl) Apply() *Kubectl {
 	return k.With("apply")
 }
 
-func (k *Kubectl) ApplyStdIn(stdIn string) *Kubectl {
-	return k.Apply().File("-").WithStdIn(stdIn)
-}
-
 func (k *Kubectl) ApplyFile(path string) *Kubectl {
 	return k.Apply().File(path)
 }
@@ -102,14 +100,6 @@ func (k *Kubectl) CurrentContext() *Kubectl {
 	return k.With("config", "current-context")
 }
 
-// func (k *Kubectl) DryRunAndApply(ctx context.Context, runner Runner) error {
-// 	out, err := runner.Output(ctx, k.DryRun().OutYaml().Cmd())
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return runner.Run(ctx, New().Kubectl().ApplyStdIn(out).Cmd())
-// }
-
 func (k *Kubectl) JsonPatch(jsonPatch string) *Kubectl {
 	return k.With("--type=json", jsonPatch)
 }
@@ -118,16 +108,25 @@ func (k *Kubectl) DeleteFile(path string) *Kubectl {
 	return k.With("delete", "-f", path)
 }
 
-func (k *Kubectl) DeleteStdIn(stdIn string) *Kubectl {
-	return k.DeleteFile("-").WithStdIn(stdIn)
-}
-
 func (k *Kubectl) OutJsonpath(jsonpath string) *Kubectl {
 	return k.With(fmt.Sprintf("-o=jsonpath=%s", jsonpath))
 }
 
-// func (k *Kubectl) GetServiceIP(ctx context.Context, namespace, name string, runner Runner) (string, error) {
-// 	cmd := k.With("get", "svc", name).Namespace(namespace)
-// 	cmd = cmd.OutJsonpath("{ .status.loadBalancer.ingress[0].ip }")
-// 	return runner.Output(ctx, cmd.Cmd())
-// }
+func (k *Kubectl) ApplyStdIn(ctx context.Context, runner Runner, stdIn, kubeConfig string) error {
+	streamHandler, err := runner.Stream(ctx, k.Apply().File("-").WithStdIn(stdIn).Cmd(kubeConfig))
+	if err != nil {
+		return err
+	}
+	inputErr := errors.New("unable to apply cluster resources")
+	return streamHandler.ScanOutput(ctx, inputErr)
+}
+
+
+func (k *Kubectl) DeleteStdIn(ctx context.Context, runner Runner, stdIn, kubeConfig string) error {
+	streamHandler, err := runner.Stream(ctx, k.DeleteFile("-").WithStdIn(stdIn).IgnoreNotFound().Cmd(kubeConfig))
+	if err != nil {
+		return err
+	}
+	inputErr := errors.New("unable to delete cluster resources")
+	return streamHandler.ScanOutput(ctx, inputErr)
+}

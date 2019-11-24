@@ -11,7 +11,7 @@ import (
 )
 
 func SetCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
-	cmd := &cobra.Command{
+	setCmd := &cobra.Command{
 		Use:   "set",
 		Short: "set one or more config values (foo=bar)",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -19,8 +19,8 @@ func SetCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 		},
 	}
 
-	cliutils.ApplyOptions(cmd, optionsFunc)
-	return cmd
+	cliutils.ApplyOptions(setCmd, optionsFunc)
+	return setCmd
 }
 
 func setConfig(opts *options.Options, args []string) error {

@@ -6,10 +6,10 @@ import (
 
 	"github.com/solo-io/go-utils/contextutils"
 	"go.uber.org/zap"
+	"helm.sh/helm/v3/pkg/strvals"
 
 	"github.com/ghodss/yaml"
 
-	"github.com/helm/helm/pkg/strvals"
 	"github.com/pkg/errors"
 )
 

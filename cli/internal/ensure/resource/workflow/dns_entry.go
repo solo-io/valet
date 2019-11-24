@@ -63,7 +63,8 @@ func (s *ServiceRef) getAddress(ctx context.Context, input render.InputParams) (
 	if err := input.RenderFields(s); err != nil {
 		return "", err
 	}
-	return input.GetIngressClient().GetIngressHost(s.Name, s.Namespace, s.Port)
+	return input.GetIngressClient().GetIngressHost(input.KubeConfig(),
+		s.Name, s.Namespace, s.Port)
 }
 
 func (s *ServiceRef) getIp(ctx context.Context, input render.InputParams) (string, error) {

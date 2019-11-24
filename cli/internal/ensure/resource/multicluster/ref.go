@@ -66,14 +66,14 @@ func (r *Ref) loadWorkflow(ctx context.Context, input render.InputParams) (*Work
 }
 
 func (r *Ref) Ensure(ctx context.Context, input render.InputParams) error {
-	workflow, err := r.Load(ctx, input)
+	wf, err := r.Load(ctx, input)
 	if err != nil {
 		return err
 	}
-	ctx = cmd.UpdatePrinterContext(ctx, workflow.Name)
+	ctx = cmd.UpdatePrinterContext(ctx, wf.Name)
 	input = input.MergeValues(r.Values)
 	cmd.Stdout(ctx).Printf("Ensuring workflow %s %s", r.Path, r.Values.ToString())
-	if err := workflow.Ensure(ctx, input); err != nil {
+	if err := wf.Ensure(ctx, input); err != nil {
 		return err
 	}
 	cmd.Stdout(ctx).Printf("Done ensuring workflow %s", r.Path)

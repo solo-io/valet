@@ -41,7 +41,7 @@ func (a *Resource) Ensure(ctx context.Context, input render.InputParams) error {
 		if manifest == "" {
 			return nil
 		}
-		return input.Runner().Run(ctx, cmd.New().Kubectl().ApplyStdIn(manifest).Cmd(input.KubeConfig()))
+		return cmd.New().Kubectl().ApplyStdIn(ctx, input.Runner(), manifest, input.KubeConfig())
 	}
 	return a.renderAndRun(ctx, input, applyFunc)
 }
@@ -55,7 +55,7 @@ func (a *Resource) Teardown(ctx context.Context, input render.InputParams) error
 		if manifest == "" {
 			return nil
 		}
-		return input.Runner().Run(ctx, cmd.New().Kubectl().DeleteStdIn(manifest).IgnoreNotFound().Cmd(input.KubeConfig()))
+		return cmd.New().Kubectl().DeleteStdIn(ctx, input.Runner(), manifest, input.KubeConfig())
 	}
 	return a.renderAndRun(ctx, input, teardownFunc)
 }

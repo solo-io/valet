@@ -6,9 +6,8 @@ package mock_client
 
 import (
 	context "context"
-	reflect "reflect"
-
 	gomock "github.com/golang/mock/gomock"
+	reflect "reflect"
 )
 
 // MockAwsDnsClient is a mock of AwsDnsClient interface

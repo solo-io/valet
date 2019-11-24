@@ -6,11 +6,10 @@ package mock_cmd
 
 import (
 	context "context"
-	http "net/http"
-	reflect "reflect"
-
 	gomock "github.com/golang/mock/gomock"
 	cmd "github.com/solo-io/valet/cli/internal/ensure/cmd"
+	http "net/http"
+	reflect "reflect"
 )
 
 // MockRunner is a mock of Runner interface
@@ -79,6 +78,20 @@ func (m *MockRunner) Run(arg0 context.Context, arg1 *cmd.Command) error {
 func (mr *MockRunnerMockRecorder) Run(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockRunner)(nil).Run), arg0, arg1)
+}
+
+// RunInShell mocks base method
+func (m *MockRunner) RunInShell(arg0 context.Context, arg1 *cmd.Command) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RunInShell", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RunInShell indicates an expected call of RunInShell
+func (mr *MockRunnerMockRecorder) RunInShell(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunInShell", reflect.TypeOf((*MockRunner)(nil).RunInShell), arg0, arg1)
 }
 
 // Stream mocks base method

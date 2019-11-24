@@ -6,7 +6,7 @@ import (
 	"os/exec"
 
 	"github.com/solo-io/go-utils/errors"
-	"github.com/solo-io/go-utils/kubeutils"
+	"github.com/solo-io/valet/cli/internal"
 	v1 "k8s.io/api/core/v1"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -24,19 +24,15 @@ const (
 )
 
 type IngressClient interface {
-	GetIngressHost(name, namespace, proxyPort string) (string, error)
+	GetIngressHost(kubeConfig, name, namespace, proxyPort string) (string, error)
 }
 
 type KubeIngressClient struct{}
 
-func (k *KubeIngressClient) GetIngressHost(name, namespace, proxyPort string) (string, error) {
-	restCfg, err := kubeutils.GetConfig("", "")
+func (k *KubeIngressClient) GetIngressHost(kubeConfig, name, namespace, proxyPort string) (string, error) {
+	kube, err := internal.KubeClient(kubeConfig)
 	if err != nil {
-		return "", errors.Wrapf(err, "getting kube rest config")
-	}
-	kube, err := kubernetes.NewForConfig(restCfg)
-	if err != nil {
-		return "", errors.Wrapf(err, "starting kube client")
+		return "", errors.Wrapf(err, "getting kube client")
 	}
 	svc, err := kube.CoreV1().Services(namespace).Get(name, v12.GetOptions{})
 	if err != nil {

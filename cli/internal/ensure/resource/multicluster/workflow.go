@@ -31,11 +31,11 @@ func (c *Workflow) Ensure(ctx context.Context, input render.InputParams) error {
 			return err
 		}
 	}
-	workflow := workflow.Workflow{
+	wf := workflow.Workflow{
 		Steps:        c.Steps,
 		CleanupSteps: c.CleanupSteps,
 	}
-	return workflow.Ensure(ctx, input)
+	return wf.Ensure(ctx, input)
 }
 
 func (c *Workflow) Teardown(ctx context.Context, input render.InputParams) error {

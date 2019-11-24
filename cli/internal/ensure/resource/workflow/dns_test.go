@@ -11,6 +11,7 @@ import (
 	mock_cmd "github.com/solo-io/valet/cli/internal/ensure/cmd/mocks"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var _ = Describe("dns", func() {
@@ -63,20 +64,23 @@ var _ = Describe("dns", func() {
 		}
 
 		It("works for expected dns entry", func() {
-			ingressClient.EXPECT().GetIngressHost(serviceName, serviceNamespace, servicePort).Return(ip, nil).Times(1)
+			ingressClient.EXPECT().GetIngressHost(clientcmd.RecommendedHomeFile, serviceName,
+				serviceNamespace, servicePort).Return(ip, nil).Times(1)
 			awsDnsClient.EXPECT().CreateMapping(ctx, hostedZone, domain, ip).Return(nil).Times(1)
 			err := dns.Ensure(ctx, input)
 			Expect(err).To(BeNil())
 		})
 
 		It("returns error if service ip can't be determined", func() {
-			ingressClient.EXPECT().GetIngressHost(serviceName, serviceNamespace, servicePort).Return("", emptyErr).Times(1)
+			ingressClient.EXPECT().GetIngressHost(clientcmd.RecommendedHomeFile, serviceName,
+				serviceNamespace, servicePort).Return("", emptyErr).Times(1)
 			err := dns.Ensure(ctx, input)
 			Expect(err).To(Equal(workflow.UnableToGetServiceIpError(emptyErr)))
 		})
 
 		It("returns error if creating mapping fails", func() {
-			ingressClient.EXPECT().GetIngressHost(serviceName, serviceNamespace, servicePort).Return(ip, nil).Times(1)
+			ingressClient.EXPECT().GetIngressHost(clientcmd.RecommendedHomeFile, serviceName,
+				serviceNamespace, servicePort).Return(ip, nil).Times(1)
 			awsDnsClient.EXPECT().CreateMapping(ctx, hostedZone, domain, ip).Return(emptyErr).Times(1)
 			err := dns.Ensure(ctx, input)
 			Expect(err).To(Equal(workflow.UnableToCreateDnsMappingError(emptyErr)))

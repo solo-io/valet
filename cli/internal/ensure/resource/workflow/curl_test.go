@@ -11,6 +11,7 @@ import (
 	mock_cmd "github.com/solo-io/valet/cli/internal/ensure/cmd/mocks"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var _ = Describe("curl", func() {
@@ -73,7 +74,8 @@ var _ = Describe("curl", func() {
 		}
 
 		It("works for expected curl", func() {
-			ingressClient.EXPECT().GetIngressHost(serviceName, serviceNamespace, servicePort).Return(ip, nil).Times(1)
+			ingressClient.EXPECT().GetIngressHost(clientcmd.RecommendedHomeFile, serviceName,
+				serviceNamespace, servicePort).Return(ip, nil).Times(1)
 			req, err := curl.GetHttpRequest(ip)
 			Expect(err).To(BeNil())
 			runner.EXPECT().Request(ctx, gomock.Eq(req)).Return(responseBody, statusCode, nil)
@@ -82,7 +84,8 @@ var _ = Describe("curl", func() {
 		})
 
 		It("returns error for unexpected response body", func() {
-			ingressClient.EXPECT().GetIngressHost(serviceName, serviceNamespace, servicePort).Return(ip, nil).Times(1)
+			ingressClient.EXPECT().GetIngressHost(clientcmd.RecommendedHomeFile, serviceName,
+				serviceNamespace, servicePort).Return(ip, nil).Times(1)
 			req, err := curl.GetHttpRequest(ip)
 			Expect(err).To(BeNil())
 			runner.EXPECT().Request(ctx, gomock.Eq(req)).Return(otherResponseBody, statusCode, nil).Times(attempts)
@@ -91,7 +94,8 @@ var _ = Describe("curl", func() {
 		})
 
 		It("returns error for unexpected status code", func() {
-			ingressClient.EXPECT().GetIngressHost(serviceName, serviceNamespace, servicePort).Return(ip, nil).Times(1)
+			ingressClient.EXPECT().GetIngressHost(clientcmd.RecommendedHomeFile, serviceName,
+				serviceNamespace, servicePort).Return(ip, nil).Times(1)
 			req, err := curl.GetHttpRequest(ip)
 			Expect(err).To(BeNil())
 			runner.EXPECT().Request(ctx, gomock.Eq(req)).Return(responseBody, otherStatusCode, nil).Times(attempts)
@@ -100,7 +104,8 @@ var _ = Describe("curl", func() {
 		})
 
 		It("returns error for request error", func() {
-			ingressClient.EXPECT().GetIngressHost(serviceName, serviceNamespace, servicePort).Return(ip, nil).Times(1)
+			ingressClient.EXPECT().GetIngressHost(clientcmd.RecommendedHomeFile, serviceName,
+				serviceNamespace, servicePort).Return(ip, nil).Times(1)
 			req, err := curl.GetHttpRequest(ip)
 			Expect(err).To(BeNil())
 			runner.EXPECT().Request(ctx, gomock.Eq(req)).Return(responseBody, statusCode, emptyErr).Times(attempts)
@@ -109,7 +114,8 @@ var _ = Describe("curl", func() {
 		})
 
 		It("returns error for service error", func() {
-			ingressClient.EXPECT().GetIngressHost(serviceName, serviceNamespace, servicePort).Return(ip, emptyErr).Times(1)
+			ingressClient.EXPECT().GetIngressHost(clientcmd.RecommendedHomeFile, serviceName,
+				serviceNamespace, servicePort).Return(ip, emptyErr).Times(1)
 			err := curl.Ensure(ctx, input)
 			Expect(err).To(Equal(emptyErr))
 		})

@@ -12,6 +12,7 @@ import (
 	mock_cmd "github.com/solo-io/valet/cli/internal/ensure/cmd/mocks"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/workflow"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var _ = Describe("condition", func() {
@@ -34,7 +35,8 @@ var _ = Describe("condition", func() {
 
 		ctx         = context.TODO()
 		emptyErr    = errors.Errorf("")
-		expectedCmd = cmd.New().Kubectl().With("get", kubeType, name, "-n", namespace, fmt.Sprintf("-o=jsonpath=%s", jsonPath)).Cmd()
+		expectedCmd = cmd.New().Kubectl().With("get", kubeType, name, "-n",
+			namespace, fmt.Sprintf("-o=jsonpath=%s", jsonPath)).Cmd(clientcmd.RecommendedHomeFile)
 	)
 
 	BeforeEach(func() {

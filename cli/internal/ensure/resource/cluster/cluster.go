@@ -34,7 +34,7 @@ func (c *Cluster) getKubeConfig() error {
 	if c.KubeConfig == "" {
 		switch {
 		case c.Minikube != nil:
-			c.KubeConfig = filepath.Join(clientcmd.RecommendedConfigDir, "minikube")
+			c.KubeConfig = clientcmd.RecommendedHomeFile
 		case c.GKE != nil:
 			c.KubeConfig = filepath.Join(clientcmd.RecommendedConfigDir, "gke", c.GKE.Name)
 		case c.EKS != nil:

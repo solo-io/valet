@@ -25,8 +25,9 @@ func (c *Config) Ensure(ctx context.Context, input render.InputParams) error {
 	if c.RunInParallel {
 		for i, cluster := range c.Clusters {
 			cluster := cluster
+			i := i
 			eg.Go(func() error {
-				return cluster.Ensure(context.WithValue(ctx, cmd.ColorKey, uint8(i)), input)
+				return cluster.Ensure(context.WithValue(ctx, cmd.ColorKey, uint8(i)), input.DeepCopy())
 			})
 		}
 
@@ -34,7 +35,7 @@ func (c *Config) Ensure(ctx context.Context, input render.InputParams) error {
 	}
 
 	for i, cluster := range c.Clusters {
-		if err := cluster.Ensure(context.WithValue(ctx, cmd.ColorKey, uint8(i)), input); err != nil {
+		if err := cluster.Ensure(context.WithValue(ctx, cmd.ColorKey, uint8(i)), input.DeepCopy()); err != nil {
 			return err
 		}
 	}
@@ -51,7 +52,7 @@ func (c *Config) Teardown(ctx context.Context, input render.InputParams) error {
 			cluster := cluster
 			i := i
 			eg.Go(func() error {
-				return cluster.Teardown(context.WithValue(ctx, cmd.ColorKey, uint8(i)), input)
+				return cluster.Teardown(context.WithValue(ctx, cmd.ColorKey, uint8(i)), input.DeepCopy())
 			})
 		}
 
@@ -59,7 +60,7 @@ func (c *Config) Teardown(ctx context.Context, input render.InputParams) error {
 	}
 
 	for i, cluster := range c.Clusters {
-		if err := cluster.Teardown(context.WithValue(ctx, cmd.ColorKey, uint8(i)), input); err != nil {
+		if err := cluster.Teardown(context.WithValue(ctx, cmd.ColorKey, uint8(i)), input.DeepCopy()); err != nil {
 			return err
 		}
 	}

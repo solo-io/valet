@@ -60,7 +60,7 @@ func (s *Secret) Render(ctx context.Context, input render.InputParams) (kubereso
 		return nil, err
 
 	}
-	cmd.Stdout().Println("Rendering secret %s.%s with type %s and %d entries", s.Namespace, s.Name, s.Type, len(s.Entries))
+	cmd.Stdout(ctx).Println("Rendering secret %s.%s with type %s and %d entries", s.Namespace, s.Name, s.Type, len(s.Entries))
 	secret := v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Secret",
@@ -79,7 +79,7 @@ func (s *Secret) Render(ctx context.Context, input render.InputParams) (kubereso
 			return nil, err
 		}
 		if v.File != "" {
-			contents, err := input.LoadFile(s.RegistryName, v.File)
+			contents, err := input.LoadFile(ctx, s.RegistryName, v.File)
 			if err != nil {
 				return nil, err
 			}
@@ -94,7 +94,7 @@ func (s *Secret) Render(ctx context.Context, input render.InputParams) (kubereso
 			if !strings.HasSuffix(v.GcloudKmsEncryptedFile.CiphertextFile, encryptedSuffix) {
 				return nil, InvalidCiphertextFilenameError
 			}
-			encContents, err := input.LoadFile(s.RegistryName, v.GcloudKmsEncryptedFile.CiphertextFile)
+			encContents, err := input.LoadFile(ctx, s.RegistryName, v.GcloudKmsEncryptedFile.CiphertextFile)
 			if err != nil {
 				return nil, err
 			}
@@ -102,7 +102,7 @@ func (s *Secret) Render(ctx context.Context, input render.InputParams) (kubereso
 			if err != nil {
 				return nil, err
 			}
-			defer cleanupFile(encrypted.Name())
+			defer cleanupFile(ctx, encrypted.Name())
 			if err := ioutil.WriteFile(encrypted.Name(), []byte(encContents), os.ModePerm); err != nil {
 				return nil, err
 			}
@@ -110,7 +110,7 @@ func (s *Secret) Render(ctx context.Context, input render.InputParams) (kubereso
 			if err != nil {
 				return nil, err
 			}
-			defer cleanupFile(unencrypted.Name())
+			defer cleanupFile(ctx, unencrypted.Name())
 			command := cmd.New().Gcloud().DecryptFile(
 				encrypted.Name(),
 				unencrypted.Name(),
@@ -136,8 +136,8 @@ func (s *Secret) Render(ctx context.Context, input render.InputParams) (kubereso
 	return kuberesource.UnstructuredResources{resource}, nil
 }
 
-func cleanupFile(name string) {
+func cleanupFile(ctx context.Context, name string) {
 	if err := os.Remove(name); err != nil {
-		cmd.Stderr().Println("Error cleaning up file %s: %s", name, err.Error())
+		cmd.Stderr(ctx).Println("Error cleaning up file %s: %s", name, err.Error())
 	}
 }

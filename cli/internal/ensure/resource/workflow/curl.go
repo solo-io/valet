@@ -64,7 +64,7 @@ func (c *Curl) doCurl(ctx context.Context, input render.InputParams) error {
 	}
 	delay, err := time.ParseDuration(c.Delay)
 	fullUrl := c.GetUrl(ip)
-	cmd.Stdout().Println("Curling %s: {host: %s, headers: %v, expectedStatus: %d}", fullUrl, c.Host, c.Headers, c.StatusCode)
+	cmd.Stdout(ctx).Println("Curling %s: {host: %s, headers: %v, expectedStatus: %d}", fullUrl, c.Host, c.Headers, c.StatusCode)
 
 	return retry.Do(func() error {
 		req, err := c.GetHttpRequest(ip)
@@ -82,7 +82,7 @@ func (c *Curl) doCurl(ctx context.Context, input render.InputParams) error {
 			return UnexpectedResponseBodyError(responseBody)
 		}
 
-		cmd.Stdout().Println("Curl successful")
+		cmd.Stdout(ctx).Println("Curl successful")
 		return nil
 	}, retry.Delay(delay), retry.Attempts(uint(c.Attempts)), retry.DelayType(retry.FixedDelay), retry.LastErrorOnly(true))
 

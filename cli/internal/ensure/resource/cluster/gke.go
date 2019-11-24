@@ -22,7 +22,7 @@ func (g *GKE) Ensure(ctx context.Context, input render.InputParams) error {
 	if err := input.RenderFields(g); err != nil {
 		return err
 	}
-	cmd.Stdout().Println("Ensuring GKE cluster %s (project: %s, location: %s)", g.Name, g.Project, g.Location)
+	cmd.Stdout(ctx).Println("Ensuring GKE cluster %s (project: %s, location: %s)", g.Name, g.Project, g.Location)
 	gkeClient, err := client.NewGkeClient(ctx)
 	if err != nil {
 		return err

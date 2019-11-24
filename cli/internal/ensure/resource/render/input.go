@@ -1,6 +1,8 @@
 package render
 
 import (
+	"context"
+
 	"github.com/solo-io/valet/cli/internal/ensure/client"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"k8s.io/client-go/tools/clientcmd"
@@ -15,10 +17,10 @@ type InputParams struct {
 	IngressClient client.IngressClient
 	DnsClient     client.AwsDnsClient
 
-	kubeConfig    *string
+	kubeConfig *string
 }
 
-func (i *InputParams) LoadFile(registryName, path string) (string, error) {
+func (i *InputParams) LoadFile(ctx context.Context, registryName, path string) (string, error) {
 	registry, err := i.GetRegistry(registryName)
 	if err != nil {
 		return "", err
@@ -27,7 +29,7 @@ func (i *InputParams) LoadFile(registryName, path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return registry.LoadFile(path)
+	return registry.LoadFile(ctx, path)
 }
 
 func (i *InputParams) DeepCopy() InputParams {
@@ -38,13 +40,18 @@ func (i *InputParams) DeepCopy() InputParams {
 	for k, v := range i.Registries {
 		registries[k] = v
 	}
+	newKubeConfig := &clientcmd.RecommendedHomeFile
+	if i.kubeConfig != nil {
+		*newKubeConfig = *i.kubeConfig
+	}
 	return InputParams{
-		Flags:         flags,
 		Values:        values,
+		Flags:         flags,
 		Step:          i.Step,
 		Registries:    registries,
 		CommandRunner: i.CommandRunner,
 		IngressClient: i.IngressClient,
+		kubeConfig:    newKubeConfig,
 	}
 }
 
@@ -128,8 +135,16 @@ func (i *InputParams) KubeConfig() string {
 }
 
 func (i *InputParams) SetKubeConfig(kubeConfig string) {
+	var val *string
 	if kubeConfig == "" {
-		i.kubeConfig = &clientcmd.RecommendedHomeFile
+		val = &clientcmd.RecommendedHomeFile
+	} else {
+		val = &kubeConfig
 	}
-	i.kubeConfig = &kubeConfig
+
+	if i.kubeConfig == nil {
+		i.kubeConfig = val
+	} else {
+		*i.kubeConfig = *val
+	}
 }

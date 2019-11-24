@@ -37,26 +37,26 @@ type HelmChart struct {
 }
 
 func (h *HelmChart) addHelmRepo(ctx context.Context, input render.InputParams) error {
-	cmd.Stdout().Println("Adding helm repo %s %s", h.RepoName, h.RepoUrl)
+	cmd.Stdout(ctx).Println("Adding helm repo %s %s", h.RepoName, h.RepoUrl)
 	if err := input.Runner().Run(ctx, cmd.New().Helm().AddRepo(h.RepoName, h.RepoUrl).Cmd()); err != nil {
 		return err
 	}
-	cmd.Stdout().Println("Running helm repo update")
+	cmd.Stdout(ctx).Println("Running helm repo update")
 	return input.Runner().Run(ctx, cmd.New().Helm().With("repo", "update").Cmd())
 }
 
 func (h *HelmChart) fetchChart(ctx context.Context, input render.InputParams) (string, error) {
-	downloadDir, err := h.getLocalDirectory()
+	downloadDir, err := h.getLocalDirectory(ctx)
 	if err != nil {
 		return "", err
 	}
 	downloadPath := h.getDownloadPath(downloadDir)
 	if exists, err := fileExists(downloadPath); err == nil && exists {
-		cmd.Stdout().Println("Chart already downloaded to %s", downloadPath)
+		cmd.Stdout(ctx).Println("Chart already downloaded to %s", downloadPath)
 		return downloadPath, nil
 	}
 	if err := os.MkdirAll(downloadDir, os.ModePerm); err != nil {
-		cmd.Stderr().Println("Error making directory: %s", err.Error())
+		cmd.Stderr(ctx).Println("Error making directory: %s", err.Error())
 		return "", err
 	}
 	if err := h.addHelmRepo(ctx, input); err != nil {
@@ -70,11 +70,11 @@ func (h *HelmChart) fetchChart(ctx context.Context, input render.InputParams) (s
 		Cmd()
 	out, err := input.Runner().Output(ctx, command)
 	if err != nil {
-		cmd.Stderr().Println("Error trying to extract chart: %s", err.Error())
-		cmd.Stderr().Println(out)
+		cmd.Stderr(ctx).Println("Error trying to extract chart: %s", err.Error())
+		cmd.Stderr(ctx).Println(out)
 		return "", err
 	}
-	cmd.Stdout().Println("Successfully downloaded chart %s", downloadPath)
+	cmd.Stdout(ctx).Println("Successfully downloaded chart %s", downloadPath)
 	return downloadPath, nil
 }
 
@@ -95,10 +95,10 @@ func (h *HelmChart) getDownloadPath(downloadDir string) string {
 	return filepath.Join(downloadDir, fmt.Sprintf("%s-%s.tgz", h.ChartName, h.Version))
 }
 
-func (h *HelmChart) getLocalDirectory() (string, error) {
+func (h *HelmChart) getLocalDirectory(ctx context.Context) (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		cmd.Stderr().Println("Error determining local directory for extracting chart: %s", err.Error())
+		cmd.Stderr(ctx).Println("Error determining local directory for extracting chart: %s", err.Error())
 		return "", err
 	}
 	return filepath.Join(home, ".helm", "cache", "valet", h.RepoName), nil
@@ -116,7 +116,7 @@ func (h *HelmChart) Render(ctx context.Context, input render.InputParams) (kuber
 	if err != nil {
 		return nil, err
 	}
-	cmd.Stdout().Println("Successfully computed helm chart values")
+	cmd.Stdout(ctx).Println("Successfully computed helm chart values")
 	manifests, err := helmchart.RenderManifests(ctx,
 		downloadPath,
 		values,
@@ -126,7 +126,7 @@ func (h *HelmChart) Render(ctx context.Context, input render.InputParams) (kuber
 	if err != nil {
 		return nil, err
 	}
-	cmd.Stdout().Println("Successfully rendered helm chart")
+	cmd.Stdout(ctx).Println("Successfully rendered helm chart")
 	return manifests.ResourceList()
 }
 
@@ -157,7 +157,7 @@ func (h *HelmChart) computeValues(ctx context.Context, input render.InputParams)
 		return "", err
 	}
 	for _, valuesFile := range h.ValuesFiles {
-		valuesYaml, err := input.LoadFile(h.RegistryName, valuesFile)
+		valuesYaml, err := input.LoadFile(ctx, h.RegistryName, valuesFile)
 		if err != nil {
 			return "", err
 		}

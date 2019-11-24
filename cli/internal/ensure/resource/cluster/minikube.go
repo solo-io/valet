@@ -24,7 +24,7 @@ func (m *Minikube) Ensure(ctx context.Context, input render.InputParams) error {
 	if err := input.RenderFields(m); err != nil {
 		return err
 	}
-	cmd.Stdout().Println("Ensuring minikube cluster (cpus: %d, memory: %d, version: %s, driver: %s)",
+	cmd.Stdout(ctx).Println("Ensuring minikube cluster (cpus: %d, memory: %d, version: %s, driver: %s)",
 		m.Cpus, m.Memory, m.KubeVersion, m.VmDriver)
 	// If minikube status seems healthy, just set context and return
 	if err := input.Runner().Run(ctx, cmd.New().Minikube().Status().SwallowError().Cmd()); err == nil {
@@ -43,6 +43,6 @@ func (m *Minikube) Teardown(ctx context.Context, input render.InputParams) error
 	if err := input.RenderFields(m); err != nil {
 		return err
 	}
-	cmd.Stdout().Println("Tearing down minikube cluster")
+	cmd.Stdout(ctx).Println("Tearing down minikube cluster")
 	return cmd.New().Minikube().KubeConfig(input.KubeConfig()).SwallowError().Delete(ctx, input.Runner())
 }

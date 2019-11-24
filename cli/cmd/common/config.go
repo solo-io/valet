@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"os"
 
 	"github.com/solo-io/go-utils/errors"
@@ -20,7 +21,7 @@ func LoadInput(opts *options.Options) (*render.InputParams, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := LoadEnv(globalConfig); err != nil {
+	if err := LoadEnv(opts.Top.Ctx, globalConfig); err != nil {
 		return nil, err
 	}
 
@@ -30,6 +31,7 @@ func LoadInput(opts *options.Options) (*render.InputParams, error) {
 		Step:       opts.Ensure.Step,
 		Registries: GetRegistries(globalConfig),
 	}
+	input.SetKubeConfig(os.ExpandEnv(opts.Ensure.KubeConfig))
 	if opts.Ensure.Registry != "" && opts.Ensure.Registry != render.DefaultRegistry {
 		registry, err := input.GetRegistry(opts.Ensure.Registry)
 		if err != nil {
@@ -45,7 +47,7 @@ func LoadClusterWorkflow(opts *options.Options, input render.InputParams) (*mult
 		return nil, MustProvideFileError
 	}
 
-	cfg, err := multicluster.LoadClusterWorkflow(opts.Ensure.Registry, opts.Ensure.File, input)
+	cfg, err := multicluster.LoadClusterWorkflow(opts.Top.Ctx, opts.Ensure.Registry, opts.Ensure.File, input)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +68,7 @@ func LoadMultiClusterWorkflow(opts *options.Options, input render.InputParams) (
 		return nil, MustProvideFileError
 	}
 
-	cfg, err := multicluster.LoadConfig(opts.Ensure.Registry, opts.Ensure.File, input)
+	cfg, err := multicluster.LoadConfig(opts.Top.Ctx, opts.Ensure.Registry, opts.Ensure.File, input)
 	if err != nil {
 		return nil, err
 	}
@@ -74,13 +76,13 @@ func LoadMultiClusterWorkflow(opts *options.Options, input render.InputParams) (
 	return cfg, nil
 }
 
-func LoadEnv(globalConfig *config.ValetGlobalConfig) error {
+func LoadEnv(ctx context.Context, globalConfig *config.ValetGlobalConfig) error {
 	for k, v := range globalConfig.Env {
 		val := os.Getenv(k)
 		if val == "" {
 			err := os.Setenv(k, v)
 			if err != nil {
-				cmd.Stderr().Println("Failed to set environment variable: %s", err.Error())
+				cmd.Stderr(ctx).Println("Failed to set environment variable: %s", err.Error())
 				return err
 			}
 		}

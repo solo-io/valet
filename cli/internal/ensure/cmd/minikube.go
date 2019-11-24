@@ -64,7 +64,7 @@ func (m *Minikube) Start(ctx context.Context, runner Runner) error {
 		return err
 	}
 	inputErr := errors.New("could not delete minikube cluster")
-	return streamHandler.StreamHelper(inputErr)
+	return streamHandler.StreamHelper(ctx, inputErr)
 }
 
 func (m *Minikube) Delete(ctx context.Context, runner Runner) error {
@@ -73,5 +73,5 @@ func (m *Minikube) Delete(ctx context.Context, runner Runner) error {
 		return err
 	}
 	inputErr := errors.New("could not delete minikube cluster")
-	return streamHandler.StreamHelper(inputErr)
+	return streamHandler.StreamHelper(ctx, inputErr)
 }

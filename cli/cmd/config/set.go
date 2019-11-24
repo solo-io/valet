@@ -49,6 +49,6 @@ func setConfig(opts *options.Options, args []string) error {
 	if err != nil {
 		return err
 	}
-	cmd.Stdout().Println("Successfully updated config")
+	cmd.Stdout(opts.Top.Ctx).Println("Successfully updated config")
 	return nil
 }

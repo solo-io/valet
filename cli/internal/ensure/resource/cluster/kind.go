@@ -18,7 +18,7 @@ func (k *Kind) Ensure(ctx context.Context, input render.InputParams) error {
 	if err := input.RenderFields(k); err != nil {
 		return err
 	}
-	cmd.Stdout().Println("Ensuring kind cluster (name: %s)", k.Name)
+	cmd.Stdout(ctx).Println("Ensuring kind cluster (name: %s)", k.Name)
 	running, err := cmd.New().Kind().IsRunning(ctx, input.Runner(), k.Name)
 	if err != nil {
 		return err
@@ -37,6 +37,6 @@ func (k *Kind) Teardown(ctx context.Context, input render.InputParams) error {
 	if err := input.RenderFields(k); err != nil {
 		return err
 	}
-	cmd.Stdout().Println("Tearing down kind cluster")
+	cmd.Stdout(ctx).Println("Tearing down kind cluster")
 	return cmd.New().Kind().KubeConfig(input.KubeConfig()).DeleteCluster(ctx, input.Runner(), k.Name)
 }

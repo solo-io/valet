@@ -23,18 +23,18 @@ func (c *Config) Ensure(ctx context.Context, input render.InputParams) error {
 
 	eg := errgroup.Group{}
 	if c.RunInParallel {
-		for _, cluster := range c.Clusters {
+		for i, cluster := range c.Clusters {
 			cluster := cluster
 			eg.Go(func() error {
-				return cluster.Ensure(ctx, input)
+				return cluster.Ensure(context.WithValue(ctx, cmd.ColorKey, uint8(i)), input)
 			})
 		}
 
 		return eg.Wait()
 	}
 
-	for _, cluster := range c.Clusters {
-		if err := cluster.Ensure(ctx, input); err != nil {
+	for i, cluster := range c.Clusters {
+		if err := cluster.Ensure(context.WithValue(ctx, cmd.ColorKey, uint8(i)), input); err != nil {
 			return err
 		}
 	}
@@ -47,34 +47,35 @@ func (c *Config) Teardown(ctx context.Context, input render.InputParams) error {
 
 	eg := errgroup.Group{}
 	if c.RunInParallel {
-		for _, cluster := range c.Clusters {
+		for i, cluster := range c.Clusters {
 			cluster := cluster
+			i := i
 			eg.Go(func() error {
-				return cluster.Teardown(ctx, input)
+				return cluster.Teardown(context.WithValue(ctx, cmd.ColorKey, uint8(i)), input)
 			})
 		}
 
 		return eg.Wait()
 	}
 
-	for _, cluster := range c.Clusters {
-		if err := cluster.Teardown(ctx, input); err != nil {
+	for i, cluster := range c.Clusters {
+		if err := cluster.Teardown(context.WithValue(ctx, cmd.ColorKey, uint8(i)), input); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func LoadConfig(registry, path string, input render.InputParams) (*Config, error) {
+func LoadConfig(ctx context.Context, registry, path string, input render.InputParams) (*Config, error) {
 	var c Config
 
-	b, err := input.LoadFile(registry, path)
+	b, err := input.LoadFile(ctx, registry, path)
 	if err != nil {
 		return nil, err
 	}
 
 	if err := yaml.UnmarshalStrict([]byte(b), &c); err != nil {
-		cmd.Stderr().Println("Failed to unmarshal file '%s': %s", path, err.Error())
+		cmd.Stderr(context.TODO()).Println("Failed to unmarshal file '%s': %s", path, err.Error())
 		return nil, err
 	}
 

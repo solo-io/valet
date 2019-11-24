@@ -53,16 +53,16 @@ func (c *Workflow) Teardown(ctx context.Context, input render.InputParams) error
 	return workflow.Teardown(ctx, input)
 }
 
-func LoadClusterWorkflow(registry, path string, input render.InputParams) (*Workflow, error) {
+func LoadClusterWorkflow(ctx context.Context, registry, path string, input render.InputParams) (*Workflow, error) {
 	var c Workflow
 
-	b, err := input.LoadFile(registry, path)
+	b, err := input.LoadFile(ctx, registry, path)
 	if err != nil {
 		return nil, err
 	}
 
 	if err := yaml.UnmarshalStrict([]byte(b), &c); err != nil {
-		cmd.Stderr().Println("Failed to unmarshal file '%s': %s", path, err.Error())
+		cmd.Stderr(ctx).Println("Failed to unmarshal file '%s': %s", path, err.Error())
 		return nil, err
 	}
 

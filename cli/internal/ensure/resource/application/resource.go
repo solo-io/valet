@@ -36,7 +36,7 @@ func (a *Resource) Ensure(ctx context.Context, input render.InputParams) error {
 	if a.Application != nil {
 		return a.Application.Ensure(ctx, input.MergeValues(a.Values))
 	}
-	cmd.Stdout().Println("Applying resources")
+	cmd.Stdout(ctx).Println("Applying resources")
 	applyFunc := func(manifest string) error {
 		if manifest == "" {
 			return nil
@@ -50,7 +50,7 @@ func (a *Resource) Teardown(ctx context.Context, input render.InputParams) error
 	if a.Application != nil {
 		return a.Application.Teardown(ctx, input.MergeValues(a.Values))
 	}
-	cmd.Stdout().Println("Deleting resources")
+	cmd.Stdout(ctx).Println("Deleting resources")
 	teardownFunc := func(manifest string) error {
 		if manifest == "" {
 			return nil

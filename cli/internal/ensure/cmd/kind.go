@@ -3,7 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"strings"
+	"time"
 
 	"github.com/solo-io/go-utils/errors"
 	"k8s.io/client-go/tools/clientcmd"
@@ -49,9 +51,38 @@ func (k *Kind) IsRunning(ctx context.Context, runner Runner, name string) (bool,
 }
 
 func (k *Kind) CreateCluster(ctx context.Context, runner Runner, name string) error {
-	return runner.RunInShell(ctx, k.With("create", "cluster").Name(name).Cmd())
+	streamHandler, err := runner.Stream(ctx, k.With("create", "cluster").Name(name).Cmd())
+	if err != nil {
+		return err
+	}
+	done := make(chan struct{})
+	go func() {
+		ticker := time.Tick(time.Second * 5)
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker:
+				Stdout(ctx).Println("creating kind cluster")
+			}
+		}
+	}()
+	stderr, _ := ioutil.ReadAll(streamHandler.Stderr)
+	err = streamHandler.WaitFunc()
+	done <- struct{}{}
+	if err != nil {
+		Stderr(ctx).Println(fmt.Sprintf("%s\n", stderr))
+		return err
+	}
+	Stdout(ctx).Println("successfully created kind cluster")
+	return nil
 }
 
 func (k *Kind) DeleteCluster(ctx context.Context, runner Runner, name string) error {
-	return runner.RunInShell(ctx, k.With("delete", "cluster").Name(name).Cmd())
+	streamHandler, err := runner.Stream(ctx, k.With("delete", "cluster").Name(name).Cmd())
+	if err != nil {
+		return err
+	}
+	inputErr := errors.New("unable to delete cluster resources")
+	return streamHandler.StreamHelper(ctx, inputErr)
 }

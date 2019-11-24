@@ -19,14 +19,14 @@ type Manifest struct {
 }
 
 func (m *Manifest) Render(ctx context.Context, input render.InputParams) (kuberesource.UnstructuredResources, error) {
-	contents, err := m.load(input)
+	contents, err := m.load(ctx, input)
 	if err != nil {
 		return nil, err
 	}
 	return render.YamlToResources([]byte(contents))
 }
 
-func (m *Manifest) load(input render.InputParams) (string, error) {
+func (m *Manifest) load(ctx context.Context, input render.InputParams) (string, error) {
 	if err := input.RenderFields(m); err != nil {
 		return "", err
 	}
@@ -34,8 +34,8 @@ func (m *Manifest) load(input render.InputParams) (string, error) {
 	if m.RegistryName != "" && m.RegistryName != render.DefaultRegistry {
 		manifest = fmt.Sprintf("%s:%s", m.RegistryName, manifest)
 	}
-	cmd.Stdout().Println("Loading manifest %s", manifest)
-	contents, err := input.LoadFile(m.RegistryName, m.Path)
+	cmd.Stdout(ctx).Println("Loading manifest %s", manifest)
+	contents, err := input.LoadFile(ctx, m.RegistryName, m.Path)
 	if err != nil {
 		return "", err
 	}

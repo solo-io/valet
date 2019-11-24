@@ -2,6 +2,7 @@ package render
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -27,7 +28,7 @@ var (
 )
 
 type Registry interface {
-	LoadFile(path string) (string, error)
+	LoadFile(ctx context.Context, path string) (string, error)
 }
 
 type DirectoryRegistry struct {
@@ -48,19 +49,19 @@ func (l *DirectoryRegistry) resolvePath(path string) string {
 	return filepath.Join(l.Path, path)
 }
 
-func (l *DirectoryRegistry) LoadFile(path string) (string, error) {
-	return l.loadFile(l.resolvePath(path))
+func (l *DirectoryRegistry) LoadFile(ctx context.Context, path string) (string, error) {
+	return l.loadFile(ctx, l.resolvePath(path))
 }
 
-func (l *DirectoryRegistry) loadFile(path string) (string, error) {
-	b, err := l.loadBytes(path)
+func (l *DirectoryRegistry) loadFile(ctx context.Context, path string) (string, error) {
+	b, err := l.loadBytes(ctx, path)
 	if err != nil {
 		return "", err
 	}
 	return string(b), nil
 }
 
-func (l *DirectoryRegistry) loadBytes(path string) ([]byte, error) {
+func (l *DirectoryRegistry) loadBytes(ctx context.Context, path string) ([]byte, error) {
 	if l.isValidUrl(path) {
 		contents, err := LoadBytesFromUrl(path)
 		if err == nil {
@@ -72,7 +73,7 @@ func (l *DirectoryRegistry) loadBytes(path string) ([]byte, error) {
 	expandedPath := expandEnv(path)
 	contents, err := osClient.ReadFile(expandedPath)
 	if err != nil {
-		cmd.Stderr().Println("Failed to read file '%s': %s", expandedPath, err.Error())
+		cmd.Stderr(ctx).Println("Failed to read file '%s': %s", expandedPath, err.Error())
 		return nil, err
 	}
 	return contents, nil

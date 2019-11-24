@@ -23,7 +23,7 @@ func (r *Ref) Load(ctx context.Context, input render.InputParams) (*Workflow, er
 	if err := input.RenderFields(r); err != nil {
 		return nil, err
 	}
-	w, err := r.loadWorkflow(input)
+	w, err := r.loadWorkflow(ctx, input)
 	if err != nil {
 		return nil, err
 	}
@@ -52,14 +52,14 @@ func (r *Ref) Load(ctx context.Context, input render.InputParams) (*Workflow, er
 	return w, nil
 }
 
-func (r *Ref) loadWorkflow(input render.InputParams) (*Workflow, error) {
+func (r *Ref) loadWorkflow(ctx context.Context, input render.InputParams) (*Workflow, error) {
 	var w Workflow
-	b, err := input.LoadFile(r.RegistryName, r.Path)
+	b, err := input.LoadFile(ctx, r.RegistryName, r.Path)
 	if err != nil {
 		return nil, err
 	}
 	if err := yaml.UnmarshalStrict([]byte(b), &w); err != nil {
-		cmd.Stderr().Println("Failed to unmarshal file: %s", err.Error())
+		cmd.Stderr(ctx).Println("Failed to unmarshal file: %s", err.Error())
 		return nil, err
 	}
 	return &w, nil
@@ -71,11 +71,11 @@ func (r *Ref) Ensure(ctx context.Context, input render.InputParams) error {
 		return err
 	}
 	input = input.MergeValues(r.Values)
-	cmd.Stdout().Println("Ensuring workflow %s %s", r.Path, r.Values.ToString())
+	cmd.Stdout(ctx).Println("Ensuring workflow %s %s", r.Path, r.Values.ToString())
 	if err := workflow.Ensure(ctx, input); err != nil {
 		return err
 	}
-	cmd.Stdout().Println("Done ensuring workflow %s", r.Path)
+	cmd.Stdout(ctx).Println("Done ensuring workflow %s", r.Path)
 	return nil
 }
 
@@ -85,10 +85,10 @@ func (r *Ref) Teardown(ctx context.Context, input render.InputParams) error {
 		return err
 	}
 	input = input.MergeValues(r.Values)
-	cmd.Stdout().Println("Tearing down workflow %s %s", r.Path, r.Values.ToString())
+	cmd.Stdout(ctx).Println("Tearing down workflow %s %s", r.Path, r.Values.ToString())
 	if err := workflow.Teardown(ctx, input); err != nil {
 		return err
 	}
-	cmd.Stdout().Println("Done tearing down workflow %s", r.Path)
+	cmd.Stdout(ctx).Println("Done tearing down workflow %s", r.Path)
 	return nil
 }

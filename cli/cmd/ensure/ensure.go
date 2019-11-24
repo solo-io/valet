@@ -1,6 +1,8 @@
 package ensure
 
 import (
+	"context"
+
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/valet/cli/cmd/common"
 	"github.com/solo-io/valet/cli/cmd/teardown"
@@ -17,7 +19,7 @@ func Ensure(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 			err := ensure(opts)
 			if opts.Ensure.TeardownOnFinish {
 				if teardownErr := teardown.TeardownCfg(opts); teardownErr != nil {
-					cmd.Stderr().Println("error trying to teardown: %s", teardownErr.Error())
+					cmd.Stderr(context.TODO()).Println("error trying to teardown: %s", teardownErr.Error())
 				}
 			}
 			return err
@@ -30,6 +32,7 @@ func Ensure(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 	ensureCmd.PersistentFlags().StringVarP(&opts.Ensure.File, "file", "f", "", "path to file containing config to ensure")
 	ensureCmd.PersistentFlags().BoolVarP(&opts.Ensure.ValetArtifacts, "valet-artifacts", "", false, "use valet artifacts (in google storage)")
 	ensureCmd.PersistentFlags().StringVarP(&opts.Ensure.GlooVersion, "gloo-version", "", "", "gloo version")
+	ensureCmd.PersistentFlags().StringVarP(&opts.Ensure.KubeConfig, "kubeconfig", "", "$HOME/.kube/config", "kubeconfig")
 	ensureCmd.PersistentFlags().StringVarP(&opts.Ensure.GkeClusterName, "gke-cluster-name", "", "", "GKE cluster name to use")
 	ensureCmd.PersistentFlags().StringVarP(&opts.Ensure.LocalArtifactsDir, "local-artifacts-dir", "", "", "local directory containing artifacts")
 	ensureCmd.PersistentFlags().BoolVarP(&opts.Ensure.TeardownOnFinish, "teardown-on-finish", "", false, "attempt teardown before exit. return code should be 0 if ensure succeeded, nonzero otherwise")

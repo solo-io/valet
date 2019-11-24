@@ -63,7 +63,7 @@ func (a *Application) Ensure(ctx context.Context, input render.InputParams) erro
 			return err
 		}
 	}
-	return internal.WaitUntilPodsRunning(input.KubeConfig(), a.Namespace)
+	return internal.WaitUntilPodsRunning(ctx, input.KubeConfig(), a.Namespace)
 }
 
 func (a *Application) getLabel(step int) string {

@@ -18,25 +18,25 @@ type Template struct {
 	Values       render.Values `yaml:"values"`
 }
 
-func (t *Template) Load(input render.InputParams) (string, error) {
+func (t *Template) Load(ctx context.Context, input render.InputParams) (string, error) {
 	input = input.MergeValues(t.Values)
 	if err := input.RenderFields(t); err != nil {
 		return "", err
 	}
-	cmd.Stdout().Println("Loading template %s:%s", t.RegistryName, t.Path)
-	tmpl, err := input.LoadFile(t.RegistryName, t.Path)
+	cmd.Stdout(ctx).Println("Loading template %s:%s", t.RegistryName, t.Path)
+	tmpl, err := input.LoadFile(ctx, t.RegistryName, t.Path)
 	if err != nil {
 		return "", err
 	}
 	loaded, err := render.LoadTemplate(tmpl, input.Values, input.Runner())
 	if err != nil {
-		cmd.Stderr().Println("Error loading template: %s", err.Error())
+		cmd.Stderr(ctx).Println("Error loading template: %s", err.Error())
 	}
 	return loaded, err
 }
 
 func (t *Template) Render(ctx context.Context, input render.InputParams) (kuberesource.UnstructuredResources, error) {
-	loaded, err := t.Load(input)
+	loaded, err := t.Load(ctx, input)
 	if err != nil {
 		return nil, err
 	}

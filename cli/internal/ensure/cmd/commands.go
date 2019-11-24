@@ -67,9 +67,9 @@ func (r *commandRunner) Output(ctx context.Context, c *Command) (string, error) 
 	bytes, err := cmd.CombinedOutput()
 	if err != nil {
 		if !c.SwallowErrorLog {
-			Stderr().Println("Error running command: %s", err.Error())
-			Stderr().Println("STDIN: %s", c.StdIn)
-			Stderr().Println(string(bytes))
+			Stderr(ctx).Println("Error running command: %s", err.Error())
+			Stderr(ctx).Println("STDIN: %s", c.StdIn)
+			Stderr(ctx).Println(string(bytes))
 		}
 		err = CommandError(err)
 	}
@@ -86,8 +86,8 @@ func (r *commandRunner) RunInShell(ctx context.Context, c *Command) error {
 	err := cmd.Run()
 	if err != nil {
 		if !c.SwallowErrorLog {
-			Stderr().Println("Error running command: %s", err.Error())
-			Stderr().Println("STDIN: %s", c.StdIn)
+			Stderr(ctx).Println("Error running command: %s", err.Error())
+			Stderr(ctx).Println("STDIN: %s", c.StdIn)
 		}
 		err = CommandError(err)
 	}
@@ -100,19 +100,19 @@ type CommandStreamHandler struct {
 	Stderr   io.Reader
 }
 
-func (c *CommandStreamHandler) StreamHelper(inputErr error) error {
+func (c *CommandStreamHandler) StreamHelper(ctx context.Context, inputErr error) error {
 	go func() {
 		stdoutScanner := bufio.NewScanner(c.Stdout)
 		for stdoutScanner.Scan() {
-			Stdout().Println(stdoutScanner.Text())
+			Stdout(ctx).Println(stdoutScanner.Text())
 		}
 		if err := stdoutScanner.Err(); err != nil {
-			Stderr().Println("reading stdout from current command context:", err)
+			Stderr(ctx).Println("reading stdout from current command context:", err)
 		}
 	}()
 	stderr, _ := ioutil.ReadAll(c.Stderr)
 	if err := c.WaitFunc(); err != nil {
-		Stderr().Println(fmt.Sprintf("%s\n", stderr))
+		Stderr(ctx).Println(fmt.Sprintf("%s\n", stderr))
 		return inputErr
 	}
 	return nil
@@ -181,7 +181,7 @@ func (c *Command) logCommand(ctx context.Context) {
 	}
 	command := strings.Join(parts, " ")
 	if c.PrintCommands {
-		Stdout().Println("Running command: %s", command)
+		Stdout(ctx).Println("Running command: %s", command)
 	}
 }
 
@@ -190,7 +190,7 @@ func (c *Command) loadEnv(cmd *exec.Cmd) {
 		cmd.Env = os.Environ()
 	}
 	for key, val := range c.Env {
-		// Stdout().Println("")
+		// Stdout(ctx).Println("")
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
 	}
 }

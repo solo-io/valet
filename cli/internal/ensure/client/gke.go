@@ -164,6 +164,7 @@ func (c *gkeClient) waitForOperation(ctx context.Context, operationId string) er
 	getOp := container2.GetOperationRequest{
 		Name: operationId,
 	}
+	startTime := time.Now()
 	for range ticker.C {
 		operation, err := c.client.GetOperation(ctx, &getOp)
 		if err != nil {
@@ -171,7 +172,7 @@ func (c *gkeClient) waitForOperation(ctx context.Context, operationId string) er
 			cmd.Stderr(ctx).Printf("Error monitoring operation: %s", err.Error())
 			return err
 		}
-		cmd.Stdout(ctx).Println(".")
+		cmd.Stdout(ctx).Printf("%s, (duration: %s)", operation.Detail, time.Since(startTime))
 		if operation.Status == container2.Operation_DONE {
 			cmd.Stdout(ctx).Println("\n")
 			cmd.Stdout(ctx).Printf("Operation done!")

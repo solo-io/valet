@@ -17,23 +17,9 @@ import (
 	"google.golang.org/api/option"
 )
 
-const (
-	defaultInitialNodeCount = int32(1)
-)
-
 type CreateOptions struct {
-	InitialNodeCount int32 `yaml:"initialNodeCount"`
-}
-
-func (c *CreateOptions) WithDefaults() *CreateOptions {
-	optsShadow := c
-	if c == nil {
-		optsShadow = &CreateOptions{InitialNodeCount: defaultInitialNodeCount}
-	}
-	if optsShadow.InitialNodeCount == 0 {
-		optsShadow.InitialNodeCount = defaultInitialNodeCount
-	}
-	return optsShadow
+	InitialNodeCount int  `yaml:"initialNodeCount" valet:"template,key=InitialNodeCount,default=1"`
+	KubeVersion          string `yaml:"version" valet:"template,key=KubeVersion,default=1.13.0"`
 }
 
 type GkeClient interface {
@@ -76,7 +62,7 @@ func getClusterManagerClient(ctx context.Context) (*container.ClusterManagerClie
 func (c *gkeClient) IsRunning(ctx context.Context, name, project, zone string) (bool, error) {
 	cluster, err := c.getCluster(ctx, name, project, zone)
 	if err != nil {
-		cmd.Stderr().Println("Error checking stauts of cluster %s: %s", getClusterIdentifier(name, project, zone), err.Error())
+		cmd.Stderr().Println("Error checking status of cluster %s: %s", getClusterIdentifier(name, project, zone), err.Error())
 		return false, err
 	} else if cluster == nil {
 		return false, nil
@@ -100,11 +86,10 @@ func (c *gkeClient) getCluster(ctx context.Context, name, project, zone string) 
 }
 
 func (c *gkeClient) Create(ctx context.Context, name, project, zone string, opts *CreateOptions) error {
-	opts = opts.WithDefaults()
 	cmd.Stdout().Println("Creating cluster %s", name)
 	nodePool := container2.NodePool{
 		Name:             "pool-1",
-		InitialNodeCount: opts.InitialNodeCount,
+		InitialNodeCount: int32(opts.InitialNodeCount),
 		Autoscaling: &container2.NodePoolAutoscaling{
 			Enabled:      true,
 			MinNodeCount: 1,
@@ -118,8 +103,9 @@ func (c *gkeClient) Create(ctx context.Context, name, project, zone string, opts
 		},
 	}
 	clusterToCreate := container2.Cluster{
-		Name:      name,
-		NodePools: []*container2.NodePool{&nodePool},
+		Name:                  name,
+		NodePools:             []*container2.NodePool{&nodePool},
+		InitialClusterVersion: opts.KubeVersion,
 		ResourceLabels: map[string]string{
 			"creator": "valet",
 		},

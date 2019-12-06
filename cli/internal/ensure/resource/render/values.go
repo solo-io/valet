@@ -191,6 +191,18 @@ func (v Values) RenderFields(input interface{}, runner cmd_runner.Runner) error 
 				}
 				fieldValue.SetInt(int64(val))
 			}
+		} else if fieldValue.Kind() == reflect.Struct {
+			if err := v.RenderFields(fieldValue.Addr().Interface(), runner); err != nil {
+				return err
+			}
+		} else if fieldValue.Kind() == reflect.Ptr {
+			originalValue := fieldValue.Elem()
+			if !originalValue.IsValid() || originalValue.Kind() != reflect.Struct {
+				continue
+			}
+			if err := v.RenderFields(fieldValue.Interface(), runner); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

@@ -26,7 +26,7 @@ var _ = Describe("values", func() {
 		values = Values{}
 	})
 
-	FContext("nested struct", func() {
+	Context("nested struct", func() {
 		type innerTestStruct struct {
 			One string `valet:"template,key=TestKey,default=one"`
 		}

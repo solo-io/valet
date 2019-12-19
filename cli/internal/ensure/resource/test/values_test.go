@@ -176,6 +176,7 @@ var _ = Describe("Values", func() {
 				Service: workflow.ServiceRef{
 					Name:      "foo3",
 					Namespace: "foo4",
+					Port:      "http",
 				},
 			}
 		)

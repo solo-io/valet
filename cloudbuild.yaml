@@ -11,13 +11,13 @@ steps:
         path: '/go/pkg'
     id: 'untar-mod-cache'
     waitFor: ['-']
-  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.1.5'
+  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
     volumes: *vol
     entrypoint: 'helm'
     args: ['init', '--client-only']
     id: 'helm-init'
     waitFor: ['-']
-  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.1.5'
+  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
     volumes: *vol
     entrypoint: 'go'
     args: ['test', './...']

@@ -26,6 +26,59 @@ var _ = Describe("values", func() {
 		values = Values{}
 	})
 
+	Context("nested struct", func() {
+		type innerTestStruct struct {
+			One string `valet:"template,key=TestKey,default=one"`
+		}
+		type testStructPtr struct {
+			One string `valet:"template,key=TestKey,default=one"`
+			Two *innerTestStruct
+		}
+
+		type testStruct struct {
+			One string `valet:"template,key=TestKey,default=one"`
+			Two innerTestStruct
+		}
+		var (
+			testPtr *testStructPtr
+			test    *testStruct
+		)
+
+		It("will render child with pointer recursively", func() {
+			testPtr = &testStructPtr{
+				Two: &innerTestStruct{},
+			}
+			values[testKey] = testValue
+			err := values.RenderFields(testPtr, runner)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(testPtr.One).To(Equal(testValue))
+			Expect(testPtr.Two.One).To(Equal(testValue))
+		})
+
+		It("will render child struct recursively", func() {
+			test = &testStruct{
+				Two: innerTestStruct{},
+			}
+			values[testKey] = testValue
+			err := values.RenderFields(test, runner)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(test.One).To(Equal(testValue))
+			Expect(test.Two.One).To(Equal(testValue))
+		})
+
+		It("will not render nil child struct", func() {
+			testPtr = &testStructPtr{
+				Two: nil,
+			}
+			values[testKey] = testValue
+			err := values.RenderFields(testPtr, runner)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(testPtr.One).To(Equal(testValue))
+			Expect(testPtr.Two).To(BeNil())
+		})
+
+	})
+
 	Context("tags", func() {
 		type testStruct struct {
 			One   string `valet:"template,key=TestKey,default=one"`
@@ -44,7 +97,6 @@ var _ = Describe("values", func() {
 		BeforeEach(func() {
 			test = &testStruct{}
 		})
-
 
 		Context("key", func() {
 			It("Will use the key if it can be found", func() {
@@ -93,7 +145,6 @@ var _ = Describe("values", func() {
 			})
 
 		})
-
 
 		Context("template", func() {
 			BeforeEach(func() {

@@ -10,8 +10,6 @@ import (
 
 var _ ClusterResource = new(EKS)
 
-
-
 type EKS struct {
 	Name   string `yaml:"name"   valet:"template,key=ClusterName"`
 	Region string `yaml:"region" valet:"template,key=AwsRegion,default=us-east-2"`

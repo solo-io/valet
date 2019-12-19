@@ -33,7 +33,6 @@ type HelmChart struct {
 
 	*/
 	Set render.Values `yaml:"set"`
-
 }
 
 func (h *HelmChart) addHelmRepo(ctx context.Context, input render.InputParams) error {

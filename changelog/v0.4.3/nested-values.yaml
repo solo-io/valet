@@ -1,0 +1,4 @@
+changelog:
+- type: NEW_FEATURE
+  description: Make values hydration function recursive to handle nested structs
+  issueLink: https://github.com/solo-io/valet/issues/135

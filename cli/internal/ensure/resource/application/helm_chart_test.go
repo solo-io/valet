@@ -186,7 +186,7 @@ var _ = Describe("helm chart", func() {
 
 		It("works for supplying helm values via set file with default registry", func() {
 			helmChart := getHelmChart()
-			helmChart.Set = render.Values{setKey: fmt.Sprintf("file:%s",setFilePath)}
+			helmChart.Set = render.Values{setKey: fmt.Sprintf("file:%s", setFilePath)}
 			resources, err := helmChart.Render(ctx, input)
 			Expect(err).To(BeNil())
 			Expect(len(resources)).To(Equal(23))

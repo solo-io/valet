@@ -30,7 +30,7 @@ var _ = Describe("Manifests", func() {
 		It("should load multiple manifests from a registry", func() {
 			manifests := &application.Manifests{
 				RegistryName: registryName,
-				Paths:        []string{
+				Paths: []string{
 					manifestRegistryPath,
 					otherManifestRegistryPath,
 				},

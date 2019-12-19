@@ -41,7 +41,7 @@ var _ = Describe("values", func() {
 		}
 		var (
 			testPtr *testStructPtr
-			test *testStruct
+			test    *testStruct
 		)
 
 		It("will render child with pointer recursively", func() {

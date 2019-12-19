@@ -96,8 +96,6 @@ func (c *CommandStreamHandler) StreamHelper(inputErr error) error {
 	return nil
 }
 
-
-
 func (r *commandRunner) Stream(ctx context.Context, c *Command) (*CommandStreamHandler, error) {
 	c.logCommand(ctx)
 	cmd := exec.Command(c.Name, c.Args...)

@@ -24,10 +24,10 @@ var _ = Describe("Secret", func() {
 		secretEnvVarEntry = "EnvVar"
 		secretEnvVar      = "TEST_SECRET_ENV_VAR"
 
-		secretFileEntry = "File"
-		secretFilePath  = "test/files/secrets/secret.txt"
+		secretFileEntry         = "File"
+		secretFilePath          = "test/files/secrets/secret.txt"
 		expandedSecretFileEntry = "{{.File}}"
-		expandedSecretFilePath = "$TEST/files/secrets/{{.File}}"
+		expandedSecretFilePath  = "$TEST/files/secrets/{{.File}}"
 
 		secretGcloudFileEntry        = "GcloudFile"
 		secretGcloudFilePath         = "test/files/secrets/secret.txt.enc"
@@ -111,9 +111,9 @@ var _ = Describe("Secret", func() {
 				File: expandedSecretFilePath,
 			}
 			secret := getSecret(secretFileEntry, value)
-			Expect(os.Setenv("TEST","test")).NotTo(HaveOccurred())
+			Expect(os.Setenv("TEST", "test")).NotTo(HaveOccurred())
 			resources, err := secret.Render(ctx, render.InputParams{
-				Values:        render.Values{
+				Values: render.Values{
 					"File": "secret.txt",
 				},
 			})
@@ -127,7 +127,7 @@ var _ = Describe("Secret", func() {
 			}
 			secret := getSecret(expandedSecretFileEntry, value)
 			resources, err := secret.Render(ctx, render.InputParams{
-				Values:        render.Values{
+				Values: render.Values{
 					"File": secretFilePath,
 				},
 			})

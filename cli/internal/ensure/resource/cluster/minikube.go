@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	MinikubeContext    = "minikube"
+	MinikubeContext = "minikube"
 )
 
 var _ ClusterResource = new(Minikube)

@@ -1,4 +1,4 @@
-FROM golang:1.12
+FROM golang:1.13.6
 
 RUN apt-get update && \
     wget -q https://github.com/gohugoio/hugo/releases/download/v0.57.2/hugo_0.57.2_Linux-64bit.tar.gz && \
@@ -39,8 +39,7 @@ ENV PATH=/builder/google-cloud-sdk/bin/:/builder/bin:$PATH
 # Install kubectl component
 RUN gcloud -q components install kubectl
 
-RUN curl https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash && \
-    helm init --client-only
+RUN curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
 COPY valet-linux-amd64 /usr/local/bin/valet
 ENTRYPOINT [ "/usr/local/bin/valet" ]

@@ -1,0 +1,4 @@
+changelog:
+- type: NEW_FEATURE
+  description: Update Dockerfile to use helm 3 and go 1.13.6
+  issueLink: https://github.com/solo-io/valet/issues/139

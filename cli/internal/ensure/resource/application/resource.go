@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"github.com/solo-io/valet/cli/internal"
 
 	"github.com/avast/retry-go"
 	"github.com/mitchellh/hashstructure"
@@ -43,7 +44,16 @@ func (a *Resource) Ensure(ctx context.Context, input render.InputParams) error {
 		}
 		return input.Runner().Run(ctx, cmd.New().Kubectl().ApplyStdIn(manifest).Cmd())
 	}
-	return a.renderAndRun(ctx, input, applyFunc)
+	err := a.renderAndRun(ctx, input, applyFunc)
+	if err != nil {
+		return err
+	}
+	// if there's a namespace value, then use that for validating running pods
+	namespace, err := a.Values.GetValue("Namespace", input.CommandRunner)
+	if err == nil {
+		return internal.WaitUntilPodsRunning(namespace)
+	}
+	return nil
 }
 
 func (a *Resource) Teardown(ctx context.Context, input render.InputParams) error {

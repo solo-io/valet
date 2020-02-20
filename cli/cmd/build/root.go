@@ -3,8 +3,8 @@ package build
 import (
 	"os"
 
+	errors "github.com/rotisserie/eris"
 	"github.com/solo-io/go-utils/cliutils"
-	"github.com/solo-io/go-utils/errors"
 	"github.com/solo-io/valet/cli/cmd/build/artifacts"
 	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/options"

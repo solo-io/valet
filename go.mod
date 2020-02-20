@@ -14,7 +14,8 @@ require (
 	github.com/onsi/ginkgo v1.10.1
 	github.com/onsi/gomega v1.7.0
 	github.com/pkg/errors v0.8.1
-	github.com/solo-io/go-utils v0.11.2
+	github.com/rotisserie/eris v0.1.1
+	github.com/solo-io/go-utils v0.14.0
 	github.com/spf13/cobra v0.0.5
 	go.uber.org/zap v1.9.1
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45

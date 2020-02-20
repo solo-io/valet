@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/solo-io/go-utils/errors"
+	errors "github.com/rotisserie/eris"
 	"github.com/solo-io/go-utils/testutils/kube"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	v12 "k8s.io/api/core/v1"

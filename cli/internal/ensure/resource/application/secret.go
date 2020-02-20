@@ -13,7 +13,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/solo-io/go-utils/errors"
+	errors "github.com/rotisserie/eris"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 

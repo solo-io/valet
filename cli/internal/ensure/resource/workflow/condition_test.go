@@ -7,7 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/solo-io/go-utils/errors"
+	errors "github.com/rotisserie/eris"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	mock_cmd "github.com/solo-io/valet/cli/internal/ensure/cmd/mocks"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"

@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/solo-io/go-utils/errors"
+	errors "github.com/rotisserie/eris"
 	"github.com/solo-io/go-utils/osutils"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )

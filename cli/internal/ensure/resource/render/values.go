@@ -10,7 +10,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/solo-io/go-utils/errors"
+	errors "github.com/rotisserie/eris"
 	"github.com/solo-io/go-utils/stringutils"
 	cmd_runner "github.com/solo-io/valet/cli/internal/ensure/cmd"
 )

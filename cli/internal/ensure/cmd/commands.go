@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/solo-io/go-utils/errors"
+	errors "github.com/rotisserie/eris"
 )
 
 //go:generate mockgen -destination ./mocks/command_runner_mock.go github.com/solo-io/valet/cli/internal/ensure/cmd Runner

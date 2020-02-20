@@ -18,6 +18,7 @@ type Step struct {
 	Apply       *application.Resource `yaml:"apply"`
 	Delete      *application.Resource `yaml:"delete"`
 	Patch       *Patch                `yaml:"patch"`
+	Helm3Deploy *Helm3Deploy          `yaml:"helm3Deploy"`
 
 	Values render.Values `yaml:"values"`
 	Flags  render.Flags  `yaml:"flags"`
@@ -28,10 +29,10 @@ func (s *Step) Ensure(ctx context.Context, input render.InputParams) error {
 	if s.Uninstall != nil || s.Delete != nil {
 		return resource.TeardownFirst(ctx, input, s.Uninstall, s.Delete)
 	}
-	return resource.EnsureFirst(ctx, input, s.Curl, s.Condition, s.DnsEntry, s.Install, s.WorkflowRef, s.Apply, s.Patch)
+	return resource.EnsureFirst(ctx, input, s.Curl, s.Condition, s.DnsEntry, s.Install, s.WorkflowRef, s.Apply, s.Patch, s.Helm3Deploy)
 }
 
 func (s *Step) Teardown(ctx context.Context, input render.InputParams) error {
 	input = input.MergeValues(s.Values)
-	return resource.TeardownFirst(ctx, input, s.Curl, s.Condition, s.DnsEntry, s.Install, s.WorkflowRef, s.Apply, s.Patch)
+	return resource.TeardownFirst(ctx, input, s.Curl, s.Condition, s.DnsEntry, s.Install, s.WorkflowRef, s.Apply, s.Patch, s.Helm3Deploy)
 }

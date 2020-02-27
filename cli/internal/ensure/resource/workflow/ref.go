@@ -15,6 +15,7 @@ type Ref struct {
 	Path         string        `yaml:"path"`
 	Values       render.Values `yaml:"values"`
 	Flags        render.Flags  `yaml:"flags"`
+	Docs *Docs `yaml:"docs"`
 }
 
 func (r *Ref) Load(ctx context.Context, input render.InputParams) (*Workflow, error) {
@@ -91,3 +92,13 @@ func (r *Ref) Teardown(ctx context.Context, input render.InputParams) error {
 	cmd.Stdout().Println("Done tearing down workflow %s", r.Path)
 	return nil
 }
+
+func (r *Ref) Document(ctx context.Context, input render.InputParams, section *Section) {
+	workflow, err := r.Load(ctx, input)
+	if err != nil {
+		return //err
+	}
+	workflow.Document(ctx, input, section)
+}
+
+

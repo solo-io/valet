@@ -15,6 +15,8 @@ type Config struct {
 	Steps        []Step           `yaml:"steps"`
 	Flags        render.Flags     `yaml:"flags"`
 	Values       render.Values    `yaml:"values"`
+
+	Docs *Docs `yaml:"docs"`
 }
 
 func (c *Config) Ensure(ctx context.Context, input render.InputParams) error {
@@ -43,6 +45,17 @@ func (c *Config) Teardown(ctx context.Context, input render.InputParams) error {
 		CleanupSteps: c.CleanupSteps,
 	}
 	return workflow.Teardown(ctx, input)
+}
+
+func (c *Config) Document(ctx context.Context, input render.InputParams, section *Section) {
+	input = input.MergeValues(c.Values)
+	input = input.MergeFlags(c.Flags)
+	workflow := Workflow{
+		Steps:        c.Steps,
+		CleanupSteps: c.CleanupSteps,
+		Docs:         c.Docs,
+	}
+	workflow.Document(ctx, input, section)
 }
 
 func LoadConfig(registry, path string, input render.InputParams) (*Config, error) {

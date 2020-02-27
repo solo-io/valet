@@ -15,6 +15,8 @@ type Workflow struct {
 
 	Values render.Values `yaml:"values"`
 	Flags  render.Flags  `yaml:"flags"`
+
+	Docs *Docs `yaml:"docs"`
 }
 
 func (w *Workflow) checkRequiredValues(input render.InputParams) error {
@@ -69,4 +71,17 @@ func (w *Workflow) Teardown(ctx context.Context, input render.InputParams) error
 		}
 	}
 	return nil
+}
+
+func (w *Workflow) Document(ctx context.Context, input render.InputParams, section *Section) {
+	if w.Docs != nil {
+		section.Title = w.Docs.Title
+		section.Description = w.Docs.Description
+		section.Notes = w.Docs.Notes
+	}
+	for _, step := range w.Steps {
+		stepSection := Section{}
+		step.Document(ctx, input, &stepSection)
+		section.Sections = append(section.Sections, stepSection)
+	}
 }

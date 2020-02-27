@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	gen_docs "github.com/solo-io/valet/cli/cmd/gen-docs"
 
 	"github.com/solo-io/valet/cli/cmd/build"
 	"github.com/solo-io/valet/cli/cmd/config"
@@ -45,6 +46,7 @@ func ValetCli(version string) *cobra.Command {
 			config.Config(opts),
 			build.Build(opts),
 			set_context.SetContext(opts),
+			gen_docs.GenDocs(opts),
 		)
 	}
 

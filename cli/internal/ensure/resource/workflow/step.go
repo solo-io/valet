@@ -85,10 +85,6 @@ func (s *Step) Document(ctx context.Context, input render.InputParams, section *
 	} else {
 		DocumentFirst(ctx, input, section, s.WorkflowRef)
 	}
-
-	if section.Notes != "" {
-		section.Description = section.Description + "\n\n" + section.Notes
-	}
 }
 
 func (s *Step) documentApplySecret(input render.InputParams, section *Section, resource *application.Resource) error {

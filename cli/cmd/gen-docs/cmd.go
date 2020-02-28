@@ -64,6 +64,9 @@ func toMarkdown(section *workflow.Section, indent int) string {
 	}
 
 	body := title + "\n\n" +  section.Description
+	if section.Notes != "" {
+		body = body + "\n\n" + section.Notes
+	}
 
 	for _, subsection := range section.Sections {
 		body = body + "\n\n" + toMarkdown(&subsection, indent+1)

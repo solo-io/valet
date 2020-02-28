@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -122,9 +123,14 @@ func (r *commandRunner) Stream(ctx context.Context, c *Command) (*CommandStreamH
 }
 
 func (c *commandRunner) Request(ctx context.Context, req *http.Request) (string, int, error) {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 	httpClient := &http.Client{
 		Timeout: time.Second * 1,
+		Transport: tr,
 	}
+
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return "", 0, err

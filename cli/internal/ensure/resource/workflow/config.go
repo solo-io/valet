@@ -55,6 +55,7 @@ func (c *Config) Document(ctx context.Context, input render.InputParams, section
 		CleanupSteps: c.CleanupSteps,
 		Docs:         c.Docs,
 	}
+
 	workflow.Document(ctx, input, section)
 }
 

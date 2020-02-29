@@ -79,6 +79,7 @@ func (w *Workflow) Document(ctx context.Context, input render.InputParams, secti
 		section.Description = w.Docs.Description
 		section.Notes = w.Docs.Notes
 	}
+
 	for _, step := range w.Steps {
 		stepSection := Section{}
 		step.Document(ctx, input, &stepSection)

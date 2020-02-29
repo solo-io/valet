@@ -15,7 +15,6 @@ type Ref struct {
 	Path         string        `yaml:"path"`
 	Values       render.Values `yaml:"values"`
 	Flags        render.Flags  `yaml:"flags"`
-	Docs *Docs `yaml:"docs"`
 }
 
 func (r *Ref) Load(ctx context.Context, input render.InputParams) (*Workflow, error) {

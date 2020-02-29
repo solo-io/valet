@@ -12,15 +12,19 @@ import (
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 )
 
+const (
+	RenderAsYamlFlag = "RenderAsYaml"
+)
+
 type Docs struct {
-	Title       string `yaml:"title"`
-	Description string `yaml:"description"`
-	Notes       string `yaml:"notes"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Notes       string `json:"notes"`
 }
 
 type Section struct {
 	Docs
-	Sections []Section `yaml:"sections"`
+	Sections []Section `json:"sections"`
 }
 
 type Documented interface {
@@ -49,12 +53,12 @@ type Step struct {
 	Delete      *application.Resource `yaml:"delete"`
 	Patch       *Patch                `yaml:"patch"`
 	Helm3Deploy *Helm3Deploy          `yaml:"helm3Deploy"`
+	RestartPods *RestartPods          `yaml:"restartPods"`
 
 	Values render.Values `yaml:"values"`
 	Flags  render.Flags  `yaml:"flags"`
 
 	Docs         *Docs `yaml:"docs"`
-	RenderAsYaml bool  `yaml:"renderAsYaml"`
 }
 
 func (s *Step) Ensure(ctx context.Context, input render.InputParams) error {
@@ -62,20 +66,22 @@ func (s *Step) Ensure(ctx context.Context, input render.InputParams) error {
 	if s.Uninstall != nil || s.Delete != nil {
 		return resource.TeardownFirst(ctx, input, s.Uninstall, s.Delete)
 	}
-	return resource.EnsureFirst(ctx, input, s.Curl, s.Condition, s.DnsEntry, s.Install, s.WorkflowRef, s.Apply, s.Patch, s.Helm3Deploy)
+	return resource.EnsureFirst(ctx, input, s.Curl, s.Condition, s.DnsEntry, s.Install, s.WorkflowRef, s.Apply, s.Patch, s.Helm3Deploy, s.RestartPods)
 }
 
 func (s *Step) Teardown(ctx context.Context, input render.InputParams) error {
 	input = input.MergeValues(s.Values)
-	return resource.TeardownFirst(ctx, input, s.Curl, s.Condition, s.DnsEntry, s.Install, s.WorkflowRef, s.Apply, s.Patch, s.Helm3Deploy)
+	return resource.TeardownFirst(ctx, input, s.Curl, s.Condition, s.DnsEntry, s.Install, s.WorkflowRef, s.Apply, s.Patch, s.Helm3Deploy, s.RestartPods)
 }
 
 func (s *Step) Document(ctx context.Context, input render.InputParams, section *Section) {
+	input = input.MergeValues(s.Values)
 	if s.Docs != nil {
 		section.Title = s.Docs.Title
 		section.Description = s.Docs.Description
 		section.Notes = s.Docs.Notes
 	}
+
 	if s.Apply != nil {
 		if err := s.documentApplyManifests(input, section, s.Apply); err != nil {
 			log.Fatal(err)
@@ -121,7 +127,16 @@ func (s *Step) documentApplyManifests(input render.InputParams, section *Section
 	}
 
 	describe := "```"
-	if s.RenderAsYaml {
+	renderAsYaml := false
+	if input.Values.ContainsKey(RenderAsYamlFlag) {
+		renderAsYamlVal, err := input.Values.GetValue(RenderAsYamlFlag, input.Runner())
+		if err != nil {
+			log.Fatal(err)
+		}
+		renderAsYaml = renderAsYamlVal == "true"
+	}
+
+	if renderAsYaml {
 		var yamls []string
 		for _, manifest := range manifests {
 			yaml, err := input.LoadFile(render.DefaultRegistry, manifest)
@@ -140,5 +155,3 @@ func (s *Step) documentApplyManifests(input render.InputParams, section *Section
 	section.Description = section.Description + "\n\n" + describe
 	return nil
 }
-
-

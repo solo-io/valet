@@ -70,6 +70,11 @@ func (r *Ref) Ensure(ctx context.Context, input render.InputParams) error {
 		return err
 	}
 	input = input.MergeValues(r.Values)
+	if input.Step {
+		if err := cmd.PromptPressAnyKeyToContinue(workflow.Title); err != nil {
+			return err
+		}
+	}
 	cmd.Stdout().Println("Ensuring workflow %s %s", r.Path, r.Values.ToString())
 	if err := workflow.Ensure(ctx, input); err != nil {
 		return err

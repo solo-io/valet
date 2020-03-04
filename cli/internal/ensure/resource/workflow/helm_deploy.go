@@ -10,17 +10,17 @@ import (
 )
 
 type Helm3Deploy struct {
-	ReleaseName string   `yaml:"releaseName"`
-	ReleaseUri  string   `yaml:"releaseUri"`
-	Namespace   string   `yaml:"namespace"`
-	ValuesFiles []string `yaml:"valuesFiles"`
+	ReleaseName string   `json:"releaseName"`
+	ReleaseUri  string   `json:"releaseUri"`
+	Namespace   string   `json:"namespace"`
+	ValuesFiles []string `json:"valuesFiles"`
 	/*
 		These values allow you to perform values operations before setting them as helm values.
 		You can use any operations and keywords that general `values` support.
 		More information on `valet` values can be found at https://github.com/solo-io/valet/tree/master/cli/internal/ensure/resource/render
 
 	*/
-	Set render.Values `yaml:"set"`
+	Set render.Values `json:"set"`
 }
 
 func (h *Helm3Deploy) Ensure(ctx context.Context, inputs render.InputParams) error {

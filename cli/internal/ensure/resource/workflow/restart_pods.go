@@ -8,8 +8,8 @@ import (
 )
 
 type RestartPods struct {
-	Namespace string   `yaml:"namespace" valet:"key=Namespace"`
-	Labels    []string `yaml:"labels"`
+	Namespace string   `json:"namespace" valet:"key=Namespace"`
+	Labels    []string `json:"labels"`
 }
 
 func (r *RestartPods) Ensure(ctx context.Context, inputs render.InputParams) error {

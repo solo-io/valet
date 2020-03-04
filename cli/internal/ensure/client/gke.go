@@ -18,8 +18,8 @@ import (
 )
 
 type CreateOptions struct {
-	InitialNodeCount int    `yaml:"initialNodeCount" valet:"template,key=InitialNodeCount,default=1"`
-	KubeVersion      string `yaml:"version" valet:"template,key=KubeVersion,default=1.13.0"`
+	InitialNodeCount int    `json:"initialNodeCount" valet:"template,key=InitialNodeCount,default=1"`
+	KubeVersion      string `json:"version" valet:"template,key=KubeVersion,default=1.13.0"`
 }
 
 type GkeClient interface {

@@ -21,16 +21,16 @@ var (
 )
 
 type Resource struct {
-	Namespace   *Namespace `yaml:"namespace"`
-	HelmChart   *HelmChart `yaml:"helmChart"`
-	Secret      *Secret    `yaml:"secret"`
-	Template    *Template  `yaml:"template"`
-	Manifest    *Manifest  `yaml:"manifest"`
-	Manifests   *Manifests `yaml:"manifests"`
-	Application *Ref       `yaml:"application"`
+	Namespace   *Namespace `json:"namespace"`
+	HelmChart   *HelmChart `json:"helmChart"`
+	Secret      *Secret    `json:"secret"`
+	Template    *Template  `json:"template"`
+	Manifest    *Manifest  `json:"manifest"`
+	Manifests   *Manifests `json:"manifests"`
+	Application *Ref       `json:"application"`
 
-	Values render.Values `yaml:"values"`
-	Flags  render.Flags  `yaml:"flags"`
+	Values render.Values `json:"values"`
+	Flags  render.Flags  `json:"flags"`
 }
 
 func (a *Resource) Ensure(ctx context.Context, input render.InputParams) error {

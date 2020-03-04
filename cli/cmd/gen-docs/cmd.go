@@ -38,7 +38,10 @@ func setContext(opts *options.Options) error {
 		return err
 	}
 	docs := workflow.Section{}
-	cfg.Document(opts.Top.Ctx, *input, &docs)
+	err = cfg.Document(opts.Top.Ctx, *input, &docs)
+	if err != nil {
+		return err
+	}
 	markdown := toMarkdown(&docs, 1)
 	markdown = getHeader(opts) + "\n\n" + markdown
 	if opts.GenDocs.Output != "" {

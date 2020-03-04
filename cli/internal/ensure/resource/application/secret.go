@@ -35,24 +35,24 @@ var (
 
 type Secret struct {
 	// Currently, secrets cannot consist of values from multiple registries
-	RegistryName string                 `yaml:"registry" valet:"default=default"`
-	Name         string                 `yaml:"name"`
-	Namespace    string                 `yaml:"namespace" valet:"key=Namespace"`
-	Type         string                 `yaml:"type" valet:"default=Opaque"`
-	Entries      map[string]SecretValue `yaml:"entries"`
+	RegistryName string                 `json:"registry" valet:"default=default"`
+	Name         string                 `json:"name"`
+	Namespace    string                 `json:"namespace" valet:"key=Namespace"`
+	Type         string                 `json:"type" valet:"default=Opaque"`
+	Entries      map[string]SecretValue `json:"entries"`
 }
 
 type SecretValue struct {
-	EnvVar                 string                  `yaml:"envVar"`
-	File                   string                  `yaml:"file"`
-	GcloudKmsEncryptedFile *GcloudKmsEncryptedFile `yaml:"gcloudKmsEncryptedFile"`
+	EnvVar                 string                  `json:"envVar"`
+	File                   string                  `json:"file"`
+	GcloudKmsEncryptedFile *GcloudKmsEncryptedFile `json:"gcloudKmsEncryptedFile"`
 }
 
 type GcloudKmsEncryptedFile struct {
-	CiphertextFile string `yaml:"ciphertextFile"`
-	GcloudProject  string `yaml:"gcloudProject"`
-	Keyring        string `yaml:"keyring"`
-	Key            string `yaml:"key"`
+	CiphertextFile string `json:"ciphertextFile"`
+	GcloudProject  string `json:"gcloudProject"`
+	Keyring        string `json:"keyring"`
+	Key            string `json:"key"`
 }
 
 func (s *Secret) Render(ctx context.Context, input render.InputParams) (kuberesource.UnstructuredResources, error) {

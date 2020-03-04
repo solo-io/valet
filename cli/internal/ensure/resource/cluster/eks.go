@@ -11,8 +11,8 @@ import (
 var _ ClusterResource = new(EKS)
 
 type EKS struct {
-	Name   string `yaml:"name"   valet:"template,key=ClusterName"`
-	Region string `yaml:"region" valet:"template,key=AwsRegion,default=us-east-2"`
+	Name   string `json:"name"   valet:"template,key=ClusterName"`
+	Region string `json:"region" valet:"template,key=AwsRegion,default=us-east-2"`
 }
 
 func (e *EKS) Ensure(ctx context.Context, input render.InputParams) error {

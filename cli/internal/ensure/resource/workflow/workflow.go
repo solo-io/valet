@@ -9,14 +9,14 @@ import (
 )
 
 type Workflow struct {
-	Steps          []Step   `yaml:"steps"`
-	CleanupSteps   []Step   `yaml:"cleanupSteps"`
-	RequiredValues []string `yaml:"requiredValues"`
+	Docs
 
-	Values render.Values `yaml:"values"`
-	Flags  render.Flags  `yaml:"flags"`
+	Steps          []Step   `json:"steps"`
+	CleanupSteps   []Step   `json:"cleanupSteps"`
+	RequiredValues []string `json:"requiredValues"`
 
-	Docs *Docs `yaml:"docs"`
+	Values render.Values `json:"values"`
+	Flags  render.Flags  `json:"flags"`
 }
 
 func (w *Workflow) checkRequiredValues(input render.InputParams) error {
@@ -73,16 +73,18 @@ func (w *Workflow) Teardown(ctx context.Context, input render.InputParams) error
 	return nil
 }
 
-func (w *Workflow) Document(ctx context.Context, input render.InputParams, section *Section) {
-	if w.Docs != nil {
-		section.Title = w.Docs.Title
-		section.Description = w.Docs.Description
-		section.Notes = w.Docs.Notes
-	}
+func (w *Workflow) Document(ctx context.Context, input render.InputParams, section *Section) error {
+	section.Title = w.Title
+	section.Description = w.Description
+	section.Notes = w.Notes
 
 	for _, step := range w.Steps {
 		stepSection := Section{}
-		step.Document(ctx, input, &stepSection)
+		err := step.Document(ctx, input, &stepSection)
+		if err != nil {
+			return err
+		}
 		section.Sections = append(section.Sections, stepSection)
 	}
+	return nil
 }

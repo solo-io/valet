@@ -3,7 +3,6 @@ package workflow
 import (
 	"context"
 	"fmt"
-	"log"
 	"reflect"
 	"strings"
 
@@ -21,7 +20,7 @@ type Docs struct {
 	Description string `json:"description"`
 	Notes       string `json:"notes"`
 
-	Values      render.Values `yaml:"values"`
+	DocsValues render.Values `json:"docsValues"`
 }
 
 type Section struct {
@@ -30,37 +29,37 @@ type Section struct {
 }
 
 type Documented interface {
-	Document(ctx context.Context, input render.InputParams, section *Section)
+	Document(ctx context.Context, input render.InputParams, section *Section) error
 }
 
-func DocumentFirst(ctx context.Context, input render.InputParams, section *Section, resources ...Documented) {
+func DocumentFirst(ctx context.Context, input render.InputParams, section *Section, resources ...Documented) error {
 	for _, resource := range resources {
 		t := reflect.ValueOf(resource)
 		if t.IsNil() {
 			continue
 		}
-		resource.Document(ctx, input, section)
-		return
+		return resource.Document(ctx, input, section)
 	}
+	return nil
 }
 
 type Step struct {
-	Curl        *Curl                 `yaml:"curl"`
-	Condition   *Condition            `yaml:"condition"`
-	DnsEntry    *DnsEntry             `yaml:"dnsEntry"`
-	Install     *application.Ref      `yaml:"install"`
-	Uninstall   *application.Ref      `yaml:"uninstall"`
-	WorkflowRef *Ref                  `yaml:"workflow"`
-	Apply       *application.Resource `yaml:"apply"`
-	Delete      *application.Resource `yaml:"delete"`
-	Patch       *Patch                `yaml:"patch"`
-	Helm3Deploy *Helm3Deploy          `yaml:"helm3Deploy"`
-	RestartPods *RestartPods          `yaml:"restartPods"`
+	Docs
 
-	Values render.Values `yaml:"values"`
-	Flags  render.Flags  `yaml:"flags"`
+	Curl        *Curl                 `json:"curl"`
+	Condition   *Condition            `json:"condition"`
+	DnsEntry    *DnsEntry             `json:"dnsEntry"`
+	Install     *application.Ref      `json:"install"`
+	Uninstall   *application.Ref      `json:"uninstall"`
+	WorkflowRef *Ref                  `json:"workflow"`
+	Apply       *application.Resource `json:"apply"`
+	Delete      *application.Resource `json:"delete"`
+	Patch       *Patch                `json:"patch"`
+	Helm3Deploy *Helm3Deploy          `json:"helm3Deploy"`
+	RestartPods *RestartPods          `json:"restartPods"`
 
-	Docs         *Docs `yaml:"docs"`
+	Values render.Values `json:"values"`
+	Flags  render.Flags  `json:"flags"`
 }
 
 func (s *Step) Ensure(ctx context.Context, input render.InputParams) error {
@@ -76,26 +75,25 @@ func (s *Step) Teardown(ctx context.Context, input render.InputParams) error {
 	return resource.TeardownFirst(ctx, input, s.Curl, s.Condition, s.DnsEntry, s.Install, s.WorkflowRef, s.Apply, s.Patch, s.Helm3Deploy, s.RestartPods)
 }
 
-func (s *Step) Document(ctx context.Context, input render.InputParams, section *Section) {
-	if s.Docs != nil {
-		section.Title = s.Docs.Title
-		section.Description = s.Docs.Description
-		section.Notes = s.Docs.Notes
-		input = input.MergeValues(s.Docs.Values)
-	}
+func (s *Step) Document(ctx context.Context, input render.InputParams, section *Section) error {
+	section.Title = s.Title
+	section.Description = s.Description
+	section.Notes = s.Notes
+	input = input.MergeValues(s.DocsValues)
 	input = input.MergeValues(s.Values)
 
 	if s.Apply != nil {
 		if err := s.documentApplyManifests(input, section, s.Apply); err != nil {
-			log.Fatal(err)
+			return err
 		} else if err := s.documentApplySecret(input, section, s.Apply); err != nil {
-			log.Fatal(err)
+			return err
 		} else if err := s.documentApplyTemplate(input, section, s.Apply); err != nil {
-			log.Fatal(err)
+			return err
 		}
 	} else {
-		DocumentFirst(ctx, input, section, s.WorkflowRef)
+		return DocumentFirst(ctx, input, section, s.WorkflowRef)
 	}
+	return nil
 }
 
 func (s *Step) documentApplyTemplate(input render.InputParams, section *Section, resource *application.Resource) error {
@@ -107,7 +105,7 @@ func (s *Step) documentApplyTemplate(input render.InputParams, section *Section,
 	if input.Values.ContainsKey(RenderAsYamlFlag) {
 		renderAsYamlVal, err := input.Values.GetValue(RenderAsYamlFlag, input.Runner())
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		renderAsYaml = renderAsYamlVal == "true"
 	}
@@ -164,7 +162,7 @@ func (s *Step) documentApplyManifests(input render.InputParams, section *Section
 	if input.Values.ContainsKey(RenderAsYamlFlag) {
 		renderAsYamlVal, err := input.Values.GetValue(RenderAsYamlFlag, input.Runner())
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		renderAsYaml = renderAsYamlVal == "true"
 	}

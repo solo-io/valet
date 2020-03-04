@@ -20,13 +20,13 @@ var (
 )
 
 type Condition struct {
-	Type      string `yaml:"type"`
-	Name      string `yaml:"name" valet:"template"`
-	Namespace string `yaml:"namespace"`
-	Jsonpath  string `yaml:"jsonpath"`
-	Value     string `yaml:"value"`
-	Timeout   string `yaml:"timeout" valet:"template,default=120s"`
-	Interval  string `yaml:"interval" valet:"template,default=5s"`
+	Type      string `json:"type"`
+	Name      string `json:"name" valet:"template"`
+	Namespace string `json:"namespace"`
+	Jsonpath  string `json:"jsonpath"`
+	Value     string `json:"value"`
+	Timeout   string `json:"timeout" valet:"template,default=120s"`
+	Interval  string `json:"interval" valet:"template,default=5s"`
 }
 
 func (c *Condition) Ensure(ctx context.Context, input render.InputParams) error {

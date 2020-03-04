@@ -7,13 +7,13 @@ import (
 
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
+	"github.com/ghodss/yaml"
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/go-utils/osutils"
 	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 )
 
 func Config(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
@@ -32,12 +32,12 @@ func Config(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 }
 
 type ValetGlobalConfig struct {
-	Env        map[string]string        `yaml:"env"`
-	Registries map[string]ValetRegistry `yaml:"registries"`
+	Env        map[string]string        `json:"env"`
+	Registries map[string]ValetRegistry `json:"registries"`
 }
 
 type ValetRegistry struct {
-	DirectoryRegistry *render.DirectoryRegistry `yaml:"directory"`
+	DirectoryRegistry *render.DirectoryRegistry `json:"directory"`
 }
 
 func (v *ValetRegistry) GetType() string {
@@ -93,7 +93,7 @@ func LoadGlobalConfig(opts *options.Options) (*ValetGlobalConfig, error) {
 		return nil, err
 	}
 
-	if err := yaml.UnmarshalStrict(bytes, &c); err != nil {
+	if err := yaml.Unmarshal(bytes, &c); err != nil {
 		cmd.Stderr().Println("Failed to unmarshal file %s: %s", path, err.Error())
 		return nil, err
 	}

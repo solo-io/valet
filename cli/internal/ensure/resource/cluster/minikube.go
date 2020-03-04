@@ -15,10 +15,10 @@ const (
 var _ ClusterResource = new(Minikube)
 
 type Minikube struct {
-	Cpus        int    `yaml:"cpus" valet:"template,key=MinikubeCpus,default=4"`
-	Memory      int    `yaml:"memory" valet:"template,key=MinikubeMemory,default=8192"`
-	KubeVersion string `yaml:"name" valet:"template,key=KubeVersion,default=v1.13.0"`
-	VmDriver    string `yaml:"vmDriver" valet:"template,key=MinikubeVmDriver,default=virtualbox"`
+	Cpus        int    `json:"cpus" valet:"template,key=MinikubeCpus,default=4"`
+	Memory      int    `json:"memory" valet:"template,key=MinikubeMemory,default=8192"`
+	KubeVersion string `json:"name" valet:"template,key=KubeVersion,default=v1.13.0"`
+	VmDriver    string `json:"vmDriver" valet:"template,key=MinikubeVmDriver,default=virtualbox"`
 }
 
 func (m *Minikube) Ensure(ctx context.Context, input render.InputParams) error {

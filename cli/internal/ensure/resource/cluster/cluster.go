@@ -22,9 +22,9 @@ var (
 )
 
 type Cluster struct {
-	Minikube *Minikube `yaml:"minikube"`
-	GKE      *GKE      `yaml:"gke"`
-	EKS      *EKS      `yaml:"eks"`
+	Minikube *Minikube `json:"minikube"`
+	GKE      *GKE      `json:"gke"`
+	EKS      *EKS      `json:"eks"`
 }
 
 func (c *Cluster) SetContext(ctx context.Context, runner cmd.Runner) error {

@@ -31,7 +31,7 @@ type Registry interface {
 }
 
 type DirectoryRegistry struct {
-	Path string `yaml:"path"`
+	Path string `json:"path"`
 }
 
 func (l *DirectoryRegistry) resolvePath(path string) string {

@@ -3,20 +3,20 @@ package workflow
 import (
 	"context"
 
+	"github.com/ghodss/yaml"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/cluster"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
-	"gopkg.in/yaml.v2"
 )
 
 type Config struct {
-	Cluster      *cluster.Cluster `yaml:"cluster"`
-	CleanupSteps []Step           `yaml:"cleanupSteps"`
-	Steps        []Step           `yaml:"steps"`
-	Flags        render.Flags     `yaml:"flags"`
-	Values       render.Values    `yaml:"values"`
+	Docs
 
-	Docs *Docs `yaml:"docs"`
+	Cluster      *cluster.Cluster `json:"cluster"`
+	CleanupSteps []Step           `json:"cleanupSteps"`
+	Steps        []Step           `json:"steps"`
+	Flags        render.Flags     `json:"flags"`
+	Values       render.Values    `json:"values"`
 }
 
 func (c *Config) Ensure(ctx context.Context, input render.InputParams) error {
@@ -47,16 +47,18 @@ func (c *Config) Teardown(ctx context.Context, input render.InputParams) error {
 	return workflow.Teardown(ctx, input)
 }
 
-func (c *Config) Document(ctx context.Context, input render.InputParams, section *Section) {
+func (c *Config) Document(ctx context.Context, input render.InputParams, section *Section) error {
 	input = input.MergeValues(c.Values)
 	input = input.MergeFlags(c.Flags)
 	workflow := Workflow{
 		Steps:        c.Steps,
 		CleanupSteps: c.CleanupSteps,
-		Docs:         c.Docs,
 	}
+	workflow.Title = c.Title
+	workflow.Description = c.Description
+	workflow.Notes  = c.Notes
 
-	workflow.Document(ctx, input, section)
+	return workflow.Document(ctx, input, section)
 }
 
 func LoadConfig(registry, path string, input render.InputParams) (*Config, error) {
@@ -67,7 +69,7 @@ func LoadConfig(registry, path string, input render.InputParams) (*Config, error
 		return nil, err
 	}
 
-	if err := yaml.UnmarshalStrict([]byte(b), &c); err != nil {
+	if err := yaml.Unmarshal([]byte(b), &c); err != nil {
 		cmd.Stderr().Println("Failed to unmarshal file '%s': %s", path, err.Error())
 		return nil, err
 	}

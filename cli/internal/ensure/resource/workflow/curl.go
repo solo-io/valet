@@ -29,15 +29,15 @@ var (
 )
 
 type Curl struct {
-	Path                  string            `yaml:"path"`
-	Host                  string            `yaml:"host"`
-	Headers               map[string]string `yaml:"headers"`
-	StatusCode            int               `yaml:"statusCode"`
-	ResponseBody          string            `yaml:"responseBody"`
-	ResponseBodySubstring string            `yaml:"responseBodySubstring"`
-	Service               ServiceRef        `yaml:"service"`
-	Attempts              int               `yaml:"attempts" valet:"default=10"`
-	Delay                 string            `yaml:"delay" valet:"default=1s"`
+	Path                  string            `json:"path"`
+	Host                  string            `json:"host"`
+	Headers               map[string]string `json:"headers"`
+	StatusCode            int               `json:"statusCode"`
+	ResponseBody          string            `json:"responseBody"`
+	ResponseBodySubstring string            `json:"responseBodySubstring"`
+	Service               ServiceRef        `json:"service"`
+	Attempts              int               `json:"attempts" valet:"default=10"`
+	Delay                 string            `json:"delay" valet:"default=1s"`
 }
 
 func (c *Curl) Run(ctx context.Context, input render.InputParams) error {

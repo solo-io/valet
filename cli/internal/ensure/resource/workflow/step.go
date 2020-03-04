@@ -20,6 +20,8 @@ type Docs struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Notes       string `json:"notes"`
+
+	Values      render.Values `yaml:"values"`
 }
 
 type Section struct {
@@ -75,22 +77,53 @@ func (s *Step) Teardown(ctx context.Context, input render.InputParams) error {
 }
 
 func (s *Step) Document(ctx context.Context, input render.InputParams, section *Section) {
-	input = input.MergeValues(s.Values)
 	if s.Docs != nil {
 		section.Title = s.Docs.Title
 		section.Description = s.Docs.Description
 		section.Notes = s.Docs.Notes
+		input = input.MergeValues(s.Docs.Values)
 	}
+	input = input.MergeValues(s.Values)
 
 	if s.Apply != nil {
 		if err := s.documentApplyManifests(input, section, s.Apply); err != nil {
 			log.Fatal(err)
 		} else if err := s.documentApplySecret(input, section, s.Apply); err != nil {
 			log.Fatal(err)
+		} else if err := s.documentApplyTemplate(input, section, s.Apply); err != nil {
+			log.Fatal(err)
 		}
 	} else {
 		DocumentFirst(ctx, input, section, s.WorkflowRef)
 	}
+}
+
+func (s *Step) documentApplyTemplate(input render.InputParams, section *Section, resource *application.Resource) error {
+	if resource.Template == nil {
+		return nil
+	}
+
+	renderAsYaml := false
+	if input.Values.ContainsKey(RenderAsYamlFlag) {
+		renderAsYamlVal, err := input.Values.GetValue(RenderAsYamlFlag, input.Runner())
+		if err != nil {
+			log.Fatal(err)
+		}
+		renderAsYaml = renderAsYamlVal == "true"
+	}
+
+	if !renderAsYaml {
+		return nil
+	}
+
+	template, err := resource.Template.Load(input)
+	if err != nil {
+		return err
+	}
+
+	describe := "```\n" + template + "\n```"
+	section.Description = section.Description + "\n\n" + describe
+	return nil
 }
 
 func (s *Step) documentApplySecret(input render.InputParams, section *Section, resource *application.Resource) error {

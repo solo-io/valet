@@ -49,7 +49,7 @@ func (w *Workflow) Ensure(ctx context.Context, input render.InputParams) error {
 func EnsureSteps(ctx context.Context, input render.InputParams, steps []Step) error {
 	for _, step := range steps {
 		if input.Step {
-			if err := cmd.PromptPressAnyKeyToContinue(); err != nil {
+			if err := cmd.PromptPressAnyKeyToContinue(step.Title); err != nil {
 				return err
 			}
 		}

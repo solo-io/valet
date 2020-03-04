@@ -4,7 +4,6 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 )
 
@@ -18,11 +17,6 @@ func EnsureAll(ctx context.Context, input render.InputParams, resources ...Resou
 		t := reflect.ValueOf(resource)
 		if t.IsNil() {
 			continue
-		}
-		if input.Step {
-			if err := cmd.PromptPressAnyKeyToContinue(); err != nil {
-				return err
-			}
 		}
 		if err := resource.Ensure(ctx, input); err != nil {
 			return err

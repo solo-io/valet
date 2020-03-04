@@ -1,6 +1,7 @@
 package render
 
 import (
+	"github.com/Masterminds/sprig/v3"
 	"strings"
 	"text/template"
 
@@ -8,7 +9,7 @@ import (
 )
 
 func LoadTemplate(tmpl string, values Values, runner cmd.Runner) (string, error) {
-	parsed, err := template.New("").Option("missingkey=error").Parse(tmpl)
+	parsed, err := template.New("").Funcs(sprig.HermeticTxtFuncMap()).Option("missingkey=error").Parse(tmpl)
 	if err != nil {
 		return "", err
 	}

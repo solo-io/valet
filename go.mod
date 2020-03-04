@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	cloud.google.com/go v0.40.0
+	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/avast/retry-go v2.2.0+incompatible
 	github.com/aws/aws-sdk-go v1.26.5
 	github.com/ghodss/yaml v1.0.0

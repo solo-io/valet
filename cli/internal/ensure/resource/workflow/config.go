@@ -56,7 +56,6 @@ func (c *Config) Document(ctx context.Context, input render.InputParams, section
 	}
 	workflow.Title = c.Title
 	workflow.Description = c.Description
-	workflow.Notes  = c.Notes
 
 	return workflow.Document(ctx, input, section)
 }

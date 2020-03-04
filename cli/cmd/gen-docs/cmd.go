@@ -17,7 +17,7 @@ func GenDocs(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.
 		Use:   "gen-docs",
 		Short: "generates docs",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return setContext(opts)
+			return genDocs(opts)
 		},
 	}
 
@@ -28,7 +28,7 @@ func GenDocs(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.
 	return cmd
 }
 
-func setContext(opts *options.Options) error {
+func genDocs(opts *options.Options) error {
 	input, err := common.LoadInput(opts)
 	if err != nil {
 		return err
@@ -45,7 +45,7 @@ func setContext(opts *options.Options) error {
 	markdown := toMarkdown(&docs, 1)
 	markdown = getHeader(opts) + "\n\n" + markdown
 	if opts.GenDocs.Output != "" {
-		ioutil.WriteFile(opts.GenDocs.Output, []byte(markdown), os.ModePerm)
+		return ioutil.WriteFile(opts.GenDocs.Output, []byte(markdown), os.ModePerm)
 	} else {
 		fmt.Printf("%v", markdown)
 	}
@@ -66,9 +66,9 @@ func toMarkdown(section *workflow.Section, indent int) string {
 		}
 	}
 
-	body := title + "\n\n" +  section.Description
-	if section.Notes != "" {
-		body = body + "\n\n" + section.Notes
+	body := title
+	for _, paragraph := range section.Description {
+		body = body + "\n\n" + paragraph
 	}
 
 	for _, subsection := range section.Sections {

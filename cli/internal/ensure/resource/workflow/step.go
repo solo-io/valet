@@ -16,9 +16,8 @@ const (
 )
 
 type Docs struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Notes       string `json:"notes"`
+	Title       string   `json:"title"`
+	Description []string `json:"description"`
 
 	DocsValues render.Values `json:"docsValues"`
 }
@@ -78,7 +77,6 @@ func (s *Step) Teardown(ctx context.Context, input render.InputParams) error {
 func (s *Step) Document(ctx context.Context, input render.InputParams, section *Section) error {
 	section.Title = s.Title
 	section.Description = s.Description
-	section.Notes = s.Notes
 	input = input.MergeValues(s.DocsValues)
 	input = input.MergeValues(s.Values)
 
@@ -120,7 +118,7 @@ func (s *Step) documentApplyTemplate(input render.InputParams, section *Section,
 	}
 
 	describe := "```\n" + template + "\n```"
-	section.Description = section.Description + "\n\n" + describe
+	section.Description = append(section.Description, describe)
 	return nil
 }
 
@@ -141,7 +139,7 @@ func (s *Step) documentApplySecret(input render.InputParams, section *Section, r
 		}
 	}
 	describe := "```\n" + full + "\n```"
-	section.Description = section.Description + "\n\n" + describe
+	section.Description = append(section.Description, describe)
 	return nil
 }
 
@@ -183,6 +181,6 @@ func (s *Step) documentApplyManifests(input render.InputParams, section *Section
 		}
 	}
 	describe += "\n```"
-	section.Description = section.Description + "\n\n" + describe
+	section.Description = append(section.Description, describe)
 	return nil
 }

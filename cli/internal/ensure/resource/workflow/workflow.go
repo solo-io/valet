@@ -76,7 +76,6 @@ func (w *Workflow) Teardown(ctx context.Context, input render.InputParams) error
 func (w *Workflow) Document(ctx context.Context, input render.InputParams, section *Section) error {
 	section.Title = w.Title
 	section.Description = w.Description
-	section.Notes = w.Notes
 
 	for _, step := range w.Steps {
 		stepSection := Section{}

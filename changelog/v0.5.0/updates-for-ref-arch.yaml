@@ -1,0 +1,37 @@
+changelog:
+  - type: NEW_FEATURE
+    issueLink: https://github.com/solo-io/valet/issues/142
+    description: Add insecure TLS verification to the curl step to follow docs examples around Gloo server TLS.
+  - type: NEW_FEATURE
+    issueLink: https://github.com/solo-io/valet/issues/143
+    description: Support `helm3Deploy` as a new type of step, for better Helm 3 integration.
+  - type: BREAKING_CHANGE
+    issueLink: https://github.com/solo-io/valet/issues/143
+    description: Deprecated helm charts as an application resource, use the `helm3Deploy` workflow step instead.
+  - type: NEW_FEATURE
+    issueLink: https://github.com/solo-io/valet/issues/145
+    description: Support restarting pods as a type of workflow step.
+  - type: NEW_FEATURE
+    issueLink: https://github.com/solo-io/valet/issues/146
+    description: Support validating a substring match on the response to a curl.
+  - type: NEW_FEATURE
+    issueLink: https://github.com/solo-io/valet/issues/119
+    description: >
+      (Experimental) Adds the `gen-docs` command for automatically generating documentation for valet workflows. The command takes
+      an input workflow and outputs markdown documentation to stdout or optionally a file. Documentation is generated from
+      a few fields on workflows and workflow steps. The `title` field is used to produce section headings, with the sections nested
+      to mirror how the workflows are nested. The `description` field is used to produce one or more paragraphs and should be in
+      markdown format. A workflow step with just descriptions could be useful for enriching the generated documentation.
+      When steps apply certain types of resources (manifests, secrets, and templates so far), those resources are included in the
+      docs. Create a value `RenderAsYaml: "true"` to render the underlying yaml, otherwise it will be rendered as a `kubectl` command.
+      Use `docsValues` to override normal `values` when rendering the yaml, to redact some of the rendered yaml
+      for documentation purposes.
+  - type: NEW_FEATURE
+    issueLink: https://github.com/solo-io/valet/issues/147
+    description: >
+      Improve the user experience of `valet ensure --step` by using the docs titles in the prompts (and prompting before a step),
+      to give the user a clear summary of the effect of hitting a key to continue.
+  - type: BREAKING_CHANGE
+    issueLink: https://github.com/solo-io/valet/issues/148
+    resolvesIssue: false
+    description: Deprecates "registries" concept and `registryName` in yaml. It is hard to manage sprawling yaml registries, outweighing the cost of redundant yaml in different valet contexts.

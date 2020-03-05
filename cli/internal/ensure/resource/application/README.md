@@ -29,6 +29,7 @@ resources:
       entries:
         token:
           envVar: GITHUB_TOKEN
+  # NOTE: helmChart is deprecated. Use the helm3Deploy workflow step instead
   - helmChart:
       repoUrl: "https://storage.googleapis.com/sm-marketplace-helm/"
       chartName: sm-marketplace
@@ -89,6 +90,7 @@ Before the helm chart is applied, service-mesh-hub wants a github token to be pr
 create that by grabbing the token from an environment variable. 
 
 ```yaml
+  # NOTE: helmChart is deprecated. Use the helm3Deploy workflow step instead
   - helmChart:
       repoUrl: "https://storage.googleapis.com/sm-marketplace-helm/"
       chartName: sm-marketplace
@@ -168,13 +170,16 @@ resources:
 
 This reads the manifest into `stdin` and then runs `kubectl apply -f -`. 
 
-### Helm Charts
+### Helm Charts (Deprecated)
+
+**Use the `helm3Deploy` step instead.**
 
 Valet supports rendering a helm chart with custom values, deploying it, and waiting for all of the pods to become ready. 
 
 ```yaml
 name: helm-chart-example
 resources:
+  # NOTE: helmChart is deprecated. Use the helm3Deploy workflow step instead
   - helmChart:
       repoUrl: "https://storage.googleapis.com/gloo-ee-helm/"
       chartName: gloo-ee
@@ -212,6 +217,8 @@ resources:
   - template: 
       path: path/to/template.yaml
 ```
+
+#### Template Values
 
 Consider the following template file:
 
@@ -277,6 +284,37 @@ resources:
       path: path/to/template.yaml
 ```
 
+#### Template functions
+
+Templates in Valet support all [hermetic text functions](https://github.com/Masterminds/sprig/blob/3c4c60440a40b962bd9949f90a547bd24566158c/functions.go#L29) in the sprig library.  
+
+Here is an example of a template that utilizes local variables and a function call to create a Gloo-structured secret:
+
+```yaml
+{{ $secretData := printf "clientSecret: %s\n" .ClientSecret }}
+apiVersion: v1
+data:
+  oauth: {{ b64enc $secretData }}
+kind: Secret
+metadata:
+  annotations:
+    resource_kind: '*v1.Secret'
+  name: google-oauth
+  namespace: gloo-system
+type: Opaque
+```
+
+And here is a workflow that utilizes this secret template:
+
+```yaml
+steps:
+  - apply:
+      template:
+        path: oauth-secret.tmpl
+    values:
+      ClientSecret: "env:GOOGLE_CLIENT_SECRET"
+```
+
 ### Secrets
 
 Often, when deploying an application, it is necessary to populate some secrets. Valet provides a flexible approach to
@@ -317,7 +355,7 @@ the cluster to decrypt the secret, since the cluster may be created at the same 
 to save the encrypted secret in a repo for GitOps. However, valet could be used with something like SealedSecrets for 
 secret management, and rely on cluster creation and secret encryption to be handled elsewhere. 
 
-##### Advanced Configuration
+#### Advanced Configuration
 
 In order to allow for more customization of secrets, the secret entry names can now [templated](#Templates) as well. For Example:
 ```yaml

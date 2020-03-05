@@ -26,6 +26,7 @@ var (
 	}
 )
 
+// Deprecated: Registries should go away
 type Registry interface {
 	LoadFile(path string) (string, error)
 }

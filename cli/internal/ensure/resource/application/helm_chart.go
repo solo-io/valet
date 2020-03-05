@@ -18,6 +18,7 @@ var (
 	_ Renderable = new(HelmChart)
 )
 
+// Deprecated: use the `Helm3Deploy` step in workflows instead.
 type HelmChart struct {
 	RegistryName string   `json:"registryName" valet:"default=default"`
 	RepoUrl      string   `json:"repoUrl"`

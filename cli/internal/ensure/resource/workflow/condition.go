@@ -62,7 +62,7 @@ func (c *Condition) Ensure(ctx context.Context, input render.InputParams) error 
 func (c *Condition) conditionMet(ctx context.Context, input render.InputParams) bool {
 	out, err := input.Runner().Output(ctx, c.GetConditionCmd())
 	if err != nil {
-		cmd.Stderr().Println("Error checking condition")
+		cmd.Stderr().Println("Error checking condition: %v", err)
 		return false
 	}
 	if out == c.Value {

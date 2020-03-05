@@ -87,7 +87,8 @@ var _ = Describe("curl", func() {
 			Expect(err).To(BeNil())
 			runner.EXPECT().Request(ctx, gomock.Eq(req)).Return(otherResponseBody, statusCode, nil).Times(attempts)
 			err = curl.Ensure(ctx, input)
-			Expect(err).To(Equal(workflow.UnexpectedResponseBodyError(otherResponseBody)))
+			Expect(err).NotTo(BeNil())
+			Expect(err.Error()).To(Equal(workflow.UnexpectedResponseBodyError(otherResponseBody).Error()))
 		})
 
 		It("returns error for unexpected status code", func() {
@@ -96,7 +97,8 @@ var _ = Describe("curl", func() {
 			Expect(err).To(BeNil())
 			runner.EXPECT().Request(ctx, gomock.Eq(req)).Return(responseBody, otherStatusCode, nil).Times(attempts)
 			err = curl.Ensure(ctx, input)
-			Expect(err).To(Equal(workflow.UnexpectedStatusCodeError(otherStatusCode)))
+			Expect(err).NotTo(BeNil())
+			Expect(err.Error()).To(Equal(workflow.UnexpectedStatusCodeError(otherStatusCode).Error()))
 		})
 
 		It("returns error for request error", func() {

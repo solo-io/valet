@@ -67,9 +67,9 @@ var _ = Describe("condition", func() {
 		})
 
 		It("works for failed condition", func() {
-			runner.EXPECT().Output(ctx, expectedCmd).Return("", emptyErr).Times(1)
+			runner.EXPECT().Output(ctx, expectedCmd).Return("", emptyErr).AnyTimes()
 			err := condition.Ensure(ctx, input)
-			Expect(err).To(Equal(emptyErr))
+			Expect(err).To(Equal(workflow.ConditionNotMetError))
 		})
 
 		It("works for condition not met", func() {

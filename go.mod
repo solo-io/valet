@@ -7,7 +7,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/avast/retry-go v2.2.0+incompatible
 	github.com/aws/aws-sdk-go v1.26.5
-	github.com/ghodss/yaml v1.0.0
+	github.com/ghodss/yaml v1.0.1-0.20190212202910-dc05a4bc0ab4
 	github.com/golang/mock v1.3.1
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/helm/helm v2.16.1+incompatible

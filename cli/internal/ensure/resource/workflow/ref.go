@@ -57,7 +57,7 @@ func (r *Ref) loadWorkflow(input render.InputParams) (*Workflow, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := yaml.Unmarshal([]byte(b), &w); err != nil {
+	if err := yaml.UnmarshalStrict([]byte(b), &w, yaml.DisallowUnknownFields); err != nil {
 		cmd.Stderr().Println("Failed to unmarshal file: %s", err.Error())
 		return nil, err
 	}

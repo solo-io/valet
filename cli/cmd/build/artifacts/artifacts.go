@@ -17,7 +17,7 @@ func ReadArtifactsConfig(path string) (*Artifacts, error) {
 	}
 
 	var artifacts Artifacts
-	if err := yaml.Unmarshal(bytes, &artifacts); err != nil {
+	if err := yaml.UnmarshalStrict(bytes, &artifacts, yaml.DisallowUnknownFields); err != nil {
 		return nil, err
 	}
 

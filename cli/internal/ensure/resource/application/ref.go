@@ -64,7 +64,7 @@ func (a *Ref) loadApplication(input render.InputParams) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := yaml.Unmarshal([]byte(b), &app); err != nil {
+	if err := yaml.UnmarshalStrict([]byte(b), &app, yaml.DisallowUnknownFields); err != nil {
 		cmd.Stderr().Println("Failed to unmarshal file: %s", err.Error())
 		return nil, err
 	}

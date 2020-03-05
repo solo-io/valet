@@ -93,7 +93,7 @@ func LoadGlobalConfig(opts *options.Options) (*ValetGlobalConfig, error) {
 		return nil, err
 	}
 
-	if err := yaml.Unmarshal(bytes, &c); err != nil {
+	if err := yaml.UnmarshalStrict(bytes, &c, yaml.DisallowUnknownFields); err != nil {
 		cmd.Stderr().Println("Failed to unmarshal file %s: %s", path, err.Error())
 		return nil, err
 	}

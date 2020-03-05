@@ -68,7 +68,7 @@ func LoadConfig(registry, path string, input render.InputParams) (*Config, error
 		return nil, err
 	}
 
-	if err := yaml.Unmarshal([]byte(b), &c); err != nil {
+	if err := yaml.UnmarshalStrict([]byte(b), &c, yaml.DisallowUnknownFields); err != nil {
 		cmd.Stderr().Println("Failed to unmarshal file '%s': %s", path, err.Error())
 		return nil, err
 	}

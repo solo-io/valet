@@ -37,3 +37,6 @@ changelog:
     description: Deprecates "registries" concept and `registryName` in yaml. It is hard to manage sprawling yaml registries, outweighing the cost of redundant yaml in different valet contexts.
   - type: NON_USER_FACING
     description: Migrate to eris for errors. Migrate to json tags instead of yaml tags, and ghodss for (strict) yaml unmarshalling, to support extended structs.
+  - type: FIX
+    description: Fix struct tag name for kubernetes version to "version" instead of "name".
+    issueLink: https://github.com/solo-io/valet/issues/149

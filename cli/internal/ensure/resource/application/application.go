@@ -15,11 +15,11 @@ const (
 )
 
 type Application struct {
-	Name           string        `yaml:"name"`
-	Namespace      string        `yaml:"namespace" valet:"key=Namespace,default=default"`
-	Resources      []Resource    `yaml:"resources"`
-	RequiredValues []string      `yaml:"requiredValues"`
-	Values         render.Values `yaml:"values"`
+	Name           string        `json:"name"`
+	Namespace      string        `json:"namespace" valet:"key=Namespace,default=default"`
+	Resources      []Resource    `json:"resources"`
+	RequiredValues []string      `json:"requiredValues"`
+	Values         render.Values `json:"values"`
 }
 
 func (a *Application) checkRequiredValues(input render.InputParams) error {

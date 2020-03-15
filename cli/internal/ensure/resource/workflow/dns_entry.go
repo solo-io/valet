@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/solo-io/go-utils/errors"
+	errors "github.com/rotisserie/eris"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 )
@@ -24,10 +24,10 @@ var (
 )
 
 type DnsEntry struct {
-	Domain string `yaml:"domain" valet:"key=Domain"`
+	Domain string `json:"domain" valet:"key=Domain"`
 	// This is "HostedZone" in AWS / Route53 DNS
-	HostedZone string     `yaml:"hostedZone" valet:"key=HostedZone"`
-	Service    ServiceRef `yaml:"service"`
+	HostedZone string     `json:"hostedZone" valet:"key=HostedZone"`
+	Service    ServiceRef `json:"service"`
 }
 
 func (d *DnsEntry) Ensure(ctx context.Context, input render.InputParams) error {
@@ -54,9 +54,9 @@ func (d *DnsEntry) Teardown(ctx context.Context, input render.InputParams) error
 }
 
 type ServiceRef struct {
-	Name      string `yaml:"name"`
-	Namespace string `yaml:"namespace" valet:"key=Namespace"`
-	Port      string `yaml:"port" valet:"default=http"`
+	Name      string `json:"name"`
+	Namespace string `json:"namespace" valet:"key=Namespace"`
+	Port      string `json:"port" valet:"default=http"`
 }
 
 func (s *ServiceRef) getAddress(ctx context.Context, input render.InputParams) (string, error) {

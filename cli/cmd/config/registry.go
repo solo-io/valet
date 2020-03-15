@@ -4,17 +4,18 @@ import (
 	"fmt"
 
 	"github.com/solo-io/go-utils/cliutils"
-	"github.com/solo-io/go-utils/errors"
+	errors "github.com/rotisserie/eris"
 	"github.com/solo-io/valet/cli/internal"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 	"github.com/solo-io/valet/cli/options"
 	"github.com/spf13/cobra"
 )
 
+// Deprecated
 func RegistryCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "registry",
-		Short: "manage valet registries",
+		Short: "[DEPRECATED] manage valet registries",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return internal.RootAddError
 		},
@@ -28,10 +29,11 @@ func RegistryCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *co
 	return cmd
 }
 
+// Deprecated
 func ListRegistriesCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "list current valet registries",
+		Short: "[DEPRECATED] list current valet registries",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			globalConfig, err := LoadGlobalConfig(opts)
 			if err != nil {
@@ -53,10 +55,11 @@ func ListRegistriesCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFun
 	return cmd
 }
 
+// Deprecated
 func AddRegistryCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add",
-		Short: "add registry to valet",
+		Short: "[DEPRECATED] add registry to valet",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			globalConfig, err := LoadGlobalConfig(opts)
 			if err != nil {
@@ -88,10 +91,12 @@ func AddRegistryCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) 
 	cliutils.ApplyOptions(cmd, optionsFunc)
 	return cmd
 }
+
+// Deprecated
 func DeleteRegistryCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
-		Short: "delete registry from valet",
+		Short: "[DEPRECATED] delete registry from valet",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if opts.Config.RegistryName == "" {
 				return errors.Errorf("Must provide registry-name")

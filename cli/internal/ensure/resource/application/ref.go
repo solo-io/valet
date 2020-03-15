@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"gopkg.in/yaml.v2"
+	"github.com/ghodss/yaml"
 
 	"github.com/solo-io/go-utils/installutils/kuberesource"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
@@ -18,10 +18,10 @@ var (
 )
 
 type Ref struct {
-	RegistryName string        `yaml:"registry" valet:"default=default"`
-	Path         string        `yaml:"path" valet:"template"`
-	Values       render.Values `yaml:"values"`
-	Flags        render.Flags  `yaml:"flags"`
+	RegistryName string        `json:"registry" valet:"default=default"`
+	Path         string        `json:"path" valet:"template"`
+	Values       render.Values `json:"values"`
+	Flags        render.Flags  `json:"flags"`
 }
 
 func (a *Ref) Load(ctx context.Context, input render.InputParams) (*Application, error) {
@@ -64,7 +64,7 @@ func (a *Ref) loadApplication(input render.InputParams) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := yaml.UnmarshalStrict([]byte(b), &app); err != nil {
+	if err := yaml.UnmarshalStrict([]byte(b), &app, yaml.DisallowUnknownFields); err != nil {
 		cmd.Stderr().Println("Failed to unmarshal file: %s", err.Error())
 		return nil, err
 	}

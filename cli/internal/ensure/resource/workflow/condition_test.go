@@ -7,7 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/solo-io/go-utils/errors"
+	errors "github.com/rotisserie/eris"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	mock_cmd "github.com/solo-io/valet/cli/internal/ensure/cmd/mocks"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
@@ -67,9 +67,9 @@ var _ = Describe("condition", func() {
 		})
 
 		It("works for failed condition", func() {
-			runner.EXPECT().Output(ctx, expectedCmd).Return("", emptyErr).Times(1)
+			runner.EXPECT().Output(ctx, expectedCmd).Return("", emptyErr).AnyTimes()
 			err := condition.Ensure(ctx, input)
-			Expect(err).To(Equal(emptyErr))
+			Expect(err).To(Equal(workflow.ConditionNotMetError))
 		})
 
 		It("works for condition not met", func() {

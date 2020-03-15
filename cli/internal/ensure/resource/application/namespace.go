@@ -15,9 +15,9 @@ var (
 )
 
 type Namespace struct {
-	Name        string            `yaml:"name" valet:"key=Namespace"`
-	Labels      map[string]string `yaml:"labels"`
-	Annotations map[string]string `yaml:"annotations"`
+	Name        string            `json:"name" valet:"key=Namespace"`
+	Labels      map[string]string `json:"labels"`
+	Annotations map[string]string `json:"annotations"`
 }
 
 func (n *Namespace) Render(ctx context.Context, inputs render.InputParams) (kuberesource.UnstructuredResources, error) {

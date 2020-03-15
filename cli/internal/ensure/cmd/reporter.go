@@ -38,8 +38,13 @@ func (p *Printer) Println(format string, args ...interface{}) {
 	_, _ = fmt.Fprintf(p.w, "[%s] %s\n", time.Now().Format(time.RFC3339), msg)
 }
 
-func PromptPressAnyKeyToContinue() error {
-	Stdout().Println("Press any key to continue...")
+const fallbackNextStep = "Press any key to continue..."
+
+func PromptPressAnyKeyToContinue(nextStep string) error {
+	if nextStep == "" {
+		return nil
+	}
+	Stdout().Println("Next: %s. %s", nextStep, fallbackNextStep)
 	reader := bufio.NewReader(os.Stdin)
 	_, _, err := reader.ReadRune()
 	return err

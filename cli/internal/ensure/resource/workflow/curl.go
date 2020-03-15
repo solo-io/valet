@@ -10,7 +10,7 @@ import (
 	"github.com/avast/retry-go"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
-	"github.com/solo-io/go-utils/errors"
+	errors "github.com/rotisserie/eris"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
@@ -29,14 +29,15 @@ var (
 )
 
 type Curl struct {
-	Path         string            `yaml:"path"`
-	Host         string            `yaml:"host"`
-	Headers      map[string]string `yaml:"headers"`
-	StatusCode   int               `yaml:"statusCode"`
-	ResponseBody string            `yaml:"responseBody"`
-	Service      ServiceRef        `yaml:"service"`
-	Attempts     int               `yaml:"attempts" valet:"default=10"`
-	Delay        string            `yaml:"delay" valet:"default=1s"`
+	Path                  string            `json:"path"`
+	Host                  string            `json:"host"`
+	Headers               map[string]string `json:"headers"`
+	StatusCode            int               `json:"statusCode"`
+	ResponseBody          string            `json:"responseBody"`
+	ResponseBodySubstring string            `json:"responseBodySubstring"`
+	Service               ServiceRef        `json:"service"`
+	Attempts              int               `json:"attempts" valet:"default=10"`
+	Delay                 string            `json:"delay" valet:"default=1s"`
 }
 
 func (c *Curl) Run(ctx context.Context, input render.InputParams) error {
@@ -79,6 +80,10 @@ func (c *Curl) doCurl(ctx context.Context, input render.InputParams) error {
 			return UnexpectedStatusCodeError(statusCode)
 		}
 		if c.ResponseBody != "" && strings.TrimSpace(responseBody) != strings.TrimSpace(c.ResponseBody) {
+			return UnexpectedResponseBodyError(responseBody)
+		}
+
+		if c.ResponseBodySubstring != "" && !strings.Contains(strings.TrimSpace(responseBody),strings.TrimSpace(c.ResponseBodySubstring)) {
 			return UnexpectedResponseBodyError(responseBody)
 		}
 

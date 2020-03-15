@@ -3,7 +3,7 @@ package workflow
 import (
 	"context"
 
-	"gopkg.in/yaml.v2"
+	"github.com/ghodss/yaml"
 
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
@@ -11,10 +11,10 @@ import (
 
 // A Workflow Ref is a path to a file that can be deserialized into a Workflow
 type Ref struct {
-	RegistryName string        `yaml:"registry" valet:"default=default"`
-	Path         string        `yaml:"path"`
-	Values       render.Values `yaml:"values"`
-	Flags        render.Flags  `yaml:"flags"`
+	RegistryName string        `json:"registry" valet:"default=default"`
+	Path         string        `json:"path"`
+	Values       render.Values `json:"values"`
+	Flags        render.Flags  `json:"flags"`
 }
 
 func (r *Ref) Load(ctx context.Context, input render.InputParams) (*Workflow, error) {
@@ -57,7 +57,7 @@ func (r *Ref) loadWorkflow(input render.InputParams) (*Workflow, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := yaml.UnmarshalStrict([]byte(b), &w); err != nil {
+	if err := yaml.UnmarshalStrict([]byte(b), &w, yaml.DisallowUnknownFields); err != nil {
 		cmd.Stderr().Println("Failed to unmarshal file: %s", err.Error())
 		return nil, err
 	}
@@ -70,6 +70,11 @@ func (r *Ref) Ensure(ctx context.Context, input render.InputParams) error {
 		return err
 	}
 	input = input.MergeValues(r.Values)
+	if input.Step {
+		if err := cmd.PromptPressAnyKeyToContinue(workflow.Title); err != nil {
+			return err
+		}
+	}
 	cmd.Stdout().Println("Ensuring workflow %s %s", r.Path, r.Values.ToString())
 	if err := workflow.Ensure(ctx, input); err != nil {
 		return err
@@ -90,4 +95,12 @@ func (r *Ref) Teardown(ctx context.Context, input render.InputParams) error {
 	}
 	cmd.Stdout().Println("Done tearing down workflow %s", r.Path)
 	return nil
+}
+
+func (r *Ref) Document(ctx context.Context, input render.InputParams, section *Section) error {
+	workflow, err := r.Load(ctx, input)
+	if err != nil {
+		return err
+	}
+	return workflow.Document(ctx, input, section)
 }

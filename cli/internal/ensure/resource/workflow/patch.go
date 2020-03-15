@@ -3,7 +3,7 @@ package workflow
 import (
 	"context"
 
-	"github.com/solo-io/go-utils/errors"
+	errors "github.com/rotisserie/eris"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
@@ -16,14 +16,14 @@ var (
 )
 
 type Patch struct {
-	RegistryName string `yaml:"registry" valet:"default=default"`
-	Path         string `yaml:"path"`
-	PatchType    string `yaml:"patchType"`
-	Name         string `yaml:"name" valet:"template"`
-	Namespace    string `yaml:"namespace" valet:"template"`
-	KubeType     string `yaml:"kubeType"`
+	RegistryName string `json:"registry" valet:"default=default"`
+	Path         string `json:"path"`
+	PatchType    string `json:"patchType"`
+	Name         string `json:"name" valet:"template"`
+	Namespace    string `json:"namespace" valet:"template"`
+	KubeType     string `json:"kubeType"`
 
-	Values render.Values `yaml:"values"`
+	Values render.Values `json:"values"`
 }
 
 func (p *Patch) Ensure(ctx context.Context, input render.InputParams) error {

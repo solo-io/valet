@@ -5,10 +5,11 @@ import (
 )
 
 type Options struct {
-	Ensure Ensure
-	Config Config
-	Build  Build
-	Top    Top
+	Ensure  Ensure
+	Config  Config
+	Build   Build
+	Top     Top
+	GenDocs GenDocs
 }
 
 type Top struct {
@@ -30,6 +31,10 @@ type Ensure struct {
 	Step     bool
 	DryRun   bool
 	Registry string
+}
+
+type GenDocs struct {
+	Output string
 }
 
 type Build struct {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
-	"github.com/solo-io/go-utils/errors"
+	errors "github.com/rotisserie/eris"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
@@ -20,13 +20,13 @@ var (
 )
 
 type Condition struct {
-	Type      string `yaml:"type"`
-	Name      string `yaml:"name" valet:"template"`
-	Namespace string `yaml:"namespace"`
-	Jsonpath  string `yaml:"jsonpath"`
-	Value     string `yaml:"value"`
-	Timeout   string `yaml:"timeout" valet:"template,default=120s"`
-	Interval  string `yaml:"interval" valet:"template,default=5s"`
+	Type      string `json:"type"`
+	Name      string `json:"name" valet:"template"`
+	Namespace string `json:"namespace"`
+	Jsonpath  string `json:"jsonpath"`
+	Value     string `json:"value"`
+	Timeout   string `json:"timeout" valet:"template,default=120s"`
+	Interval  string `json:"interval" valet:"template,default=5s"`
 }
 
 func (c *Condition) Ensure(ctx context.Context, input render.InputParams) error {
@@ -34,8 +34,8 @@ func (c *Condition) Ensure(ctx context.Context, input render.InputParams) error 
 		return err
 	}
 	cmd.Stdout().Println("Waiting on condition: %s.%s path %s matches %s (timeout: %s)", c.Namespace, c.Name, c.Jsonpath, c.Value, c.Timeout)
-	if met, err := c.conditionMet(ctx, input); err != nil || met {
-		return err
+	if c.conditionMet(ctx, input) {
+		return nil
 	}
 	timeoutDuration, err := time.ParseDuration(c.Timeout)
 	if err != nil {
@@ -52,24 +52,24 @@ func (c *Condition) Ensure(ctx context.Context, input render.InputParams) error 
 		case <-timeout:
 			return ConditionNotMetError
 		case <-tick:
-			if met, err := c.conditionMet(ctx, input); err != nil || met {
-				return err
+			if c.conditionMet(ctx, input) {
+				return nil
 			}
 		}
 	}
 }
 
-func (c *Condition) conditionMet(ctx context.Context, input render.InputParams) (bool, error) {
+func (c *Condition) conditionMet(ctx context.Context, input render.InputParams) bool {
 	out, err := input.Runner().Output(ctx, c.GetConditionCmd())
 	if err != nil {
-		cmd.Stderr().Println("Error checking condition")
-		return false, err
+		cmd.Stderr().Println("Error checking condition: %v", err)
+		return false
 	}
 	if out == c.Value {
 		cmd.Stdout().Println("Condition met!")
-		return true, nil
+		return true
 	}
-	return false, nil
+	return false
 }
 
 func (*Condition) Teardown(ctx context.Context, input render.InputParams) error {

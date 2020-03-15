@@ -9,12 +9,14 @@ import (
 )
 
 type Workflow struct {
-	Steps          []Step   `yaml:"steps"`
-	CleanupSteps   []Step   `yaml:"cleanupSteps"`
-	RequiredValues []string `yaml:"requiredValues"`
+	Docs
 
-	Values render.Values `yaml:"values"`
-	Flags  render.Flags  `yaml:"flags"`
+	Steps          []Step   `json:"steps"`
+	CleanupSteps   []Step   `json:"cleanupSteps"`
+	RequiredValues []string `json:"requiredValues"`
+
+	Values render.Values `json:"values"`
+	Flags  render.Flags  `json:"flags"`
 }
 
 func (w *Workflow) checkRequiredValues(input render.InputParams) error {
@@ -47,7 +49,7 @@ func (w *Workflow) Ensure(ctx context.Context, input render.InputParams) error {
 func EnsureSteps(ctx context.Context, input render.InputParams, steps []Step) error {
 	for _, step := range steps {
 		if input.Step {
-			if err := cmd.PromptPressAnyKeyToContinue(); err != nil {
+			if err := cmd.PromptPressAnyKeyToContinue(step.Title); err != nil {
 				return err
 			}
 		}
@@ -67,6 +69,21 @@ func (w *Workflow) Teardown(ctx context.Context, input render.InputParams) error
 		if err := step.Teardown(ctx, input); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (w *Workflow) Document(ctx context.Context, input render.InputParams, section *Section) error {
+	section.Title = w.Title
+	section.Description = w.Description
+
+	for _, step := range w.Steps {
+		stepSection := Section{}
+		err := step.Document(ctx, input, &stepSection)
+		if err != nil {
+			return err
+		}
+		section.Sections = append(section.Sections, stepSection)
 	}
 	return nil
 }

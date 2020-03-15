@@ -1,6 +1,6 @@
 package internal
 
-import "github.com/solo-io/go-utils/errors"
+import errors "github.com/rotisserie/eris"
 
 var (
 	RootAddError = errors.Errorf("please select a subcommand")

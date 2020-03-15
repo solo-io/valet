@@ -13,9 +13,9 @@ var (
 )
 
 type Template struct {
-	RegistryName string        `yaml:"registry" valet:"default=default"`
-	Path         string        `yaml:"path"`
-	Values       render.Values `yaml:"values"`
+	RegistryName string        `json:"registry" valet:"default=default"`
+	Path         string        `json:"path"`
+	Values       render.Values `json:"values"`
 }
 
 func (t *Template) Load(input render.InputParams) (string, error) {

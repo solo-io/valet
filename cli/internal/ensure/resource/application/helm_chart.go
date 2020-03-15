@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/solo-io/go-utils/errors"
+	errors "github.com/rotisserie/eris"
 	"github.com/solo-io/go-utils/installutils/helmchart"
 	"github.com/solo-io/go-utils/installutils/kuberesource"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
@@ -18,21 +18,22 @@ var (
 	_ Renderable = new(HelmChart)
 )
 
+// Deprecated: use the `Helm3Deploy` step in workflows instead.
 type HelmChart struct {
-	RegistryName string   `yaml:"registryName" valet:"default=default"`
-	RepoUrl      string   `yaml:"repoUrl"`
-	ChartName    string   `yaml:"chartName"`
-	RepoName     string   `yaml:"repoName"`
-	Version      string   `yaml:"version" valet:"key=Version"`
-	Namespace    string   `yaml:"namespace" valet:"key=Namespace"`
-	ValuesFiles  []string `yaml:"valuesFiles"`
+	RegistryName string   `json:"registryName" valet:"default=default"`
+	RepoUrl      string   `json:"repoUrl"`
+	ChartName    string   `json:"chartName"`
+	RepoName     string   `json:"repoName"`
+	Version      string   `json:"version" valet:"key=Version"`
+	Namespace    string   `json:"namespace" valet:"key=Namespace"`
+	ValuesFiles  []string `json:"valuesFiles"`
 	/*
 		These values allow you to perform values operations before setting them as helm values.
 		You can use any operations and keywords that general `values` support.
 		More information on `valet` values can be found at https://github.com/solo-io/valet/tree/master/cli/internal/ensure/resource/render
 
 	*/
-	Set render.Values `yaml:"set"`
+	Set render.Values `json:"set"`
 }
 
 func (h *HelmChart) addHelmRepo(ctx context.Context, input render.InputParams) error {

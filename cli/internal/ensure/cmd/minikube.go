@@ -3,8 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"strings"
 
-	"github.com/solo-io/go-utils/errors"
+	errors "github.com/rotisserie/eris"
 )
 
 type Minikube struct {
@@ -46,6 +47,13 @@ func (m *Minikube) Cpus(cpus int) *Minikube {
 
 func (m *Minikube) KubeVersion(kubeVersion string) *Minikube {
 	return m.With(fmt.Sprintf("--kubernetes-version=%s", kubeVersion))
+}
+
+func (m *Minikube) FeatureGates(featureGates []string) *Minikube {
+	if len(featureGates) == 0 {
+		return m
+	}
+	return m.With(fmt.Sprintf("--feature-gates='%s'", strings.Join(featureGates, ",")))
 }
 
 func (m *Minikube) IP(ctx context.Context, runner Runner) (string, error) {

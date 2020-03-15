@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/solo-io/go-utils/errors"
+	errors "github.com/rotisserie/eris"
 	"github.com/solo-io/go-utils/osutils"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
@@ -26,12 +26,13 @@ var (
 	}
 )
 
+// Deprecated: Registries should go away
 type Registry interface {
 	LoadFile(path string) (string, error)
 }
 
 type DirectoryRegistry struct {
-	Path string `yaml:"path"`
+	Path string `json:"path"`
 }
 
 func (l *DirectoryRegistry) resolvePath(path string) string {

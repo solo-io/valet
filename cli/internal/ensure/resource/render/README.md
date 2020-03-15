@@ -62,7 +62,7 @@ Valet takes advantage of a go concept called struct tags. These are used when ev
 accessed similarly to `json` tags.
 ```go
 type ExampleResource struct {
-	InnerValue string `yaml:"innerValue" valet:"key=Value"`
+	InnerValue string `json:"innerValue" valet:"key=Value"`
 }
 ```
 

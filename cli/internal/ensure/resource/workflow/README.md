@@ -101,6 +101,27 @@ the domain doesn't end with the hosted zone (minus the trailing "."), the AWS AP
 
 Valet uses a TTL of 30 seconds and these DNS may need to be manually cleaned up when finished. 
 
+### Helm3 Deploys
+
+In 0.5.0, Valet introduces the Helm3 Deploy step in a workflow. This is intended to replace the `helmChart` 
+application resource type. 
+
+The following config is an example of a workflow to deploy an application with `helm3Deploy`:
+
+```yaml
+steps:
+- helm3Deploy:
+    releaseName: gloo
+    namespace: gloo-system
+    releaseUri: "https://storage.googleapis.com/gloo-ee-helm/charts/gloo-ee-1.2.6.tgz"
+    set:
+      "license_key": "env:LICENSE_KEY"
+    valuesFiles:
+      - custom-values.yaml
+```
+
+This is implemented using Helm3 as a library, and does not require Helm installed locally. 
+
 ### Patches
 
 Typically it is desirable to deploy the correct resource first in a declarative way, rather than rely on deploying 
@@ -198,3 +219,18 @@ Workflows may reference other workflows, loaded via a path just like application
         ApplicationName: istio-demo
 ```
 
+### Restarting Pods
+
+A workflow may have a step that requires restarting a pod, for instance to restart a proxy after 
+updating it's bootstrap configuration. To restart a pods, select a namespace and optional a label 
+selector: 
+
+```yaml
+steps:
+- restartPods:
+    namespace: gloo-system
+    labels:
+      - "gloo=gateway-proxy"
+```
+
+If the namespace isn't specified, Valet will look for a namespace in the `Namespace` value. 

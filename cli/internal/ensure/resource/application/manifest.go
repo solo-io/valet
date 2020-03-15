@@ -14,8 +14,8 @@ var (
 )
 
 type Manifest struct {
-	RegistryName string `yaml:"registry" valet:"default=default"`
-	Path         string `yaml:"path" valet:"key=Path"`
+	RegistryName string `json:"registry" valet:"default=default"`
+	Path         string `json:"path" valet:"key=Path"`
 }
 
 func (m *Manifest) Render(ctx context.Context, input render.InputParams) (kuberesource.UnstructuredResources, error) {

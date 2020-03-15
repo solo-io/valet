@@ -6,7 +6,7 @@ import (
 	"github.com/solo-io/valet/cli/internal/ensure/resource"
 	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
 
-	"github.com/solo-io/go-utils/errors"
+	errors "github.com/rotisserie/eris"
 	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
@@ -22,9 +22,9 @@ var (
 )
 
 type Cluster struct {
-	Minikube *Minikube `yaml:"minikube"`
-	GKE      *GKE      `yaml:"gke"`
-	EKS      *EKS      `yaml:"eks"`
+	Minikube *Minikube `json:"minikube"`
+	GKE      *GKE      `json:"gke"`
+	EKS      *EKS      `json:"eks"`
 }
 
 func (c *Cluster) SetContext(ctx context.Context, runner cmd.Runner) error {

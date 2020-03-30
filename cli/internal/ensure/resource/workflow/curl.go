@@ -3,6 +3,7 @@ package workflow
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -33,6 +34,8 @@ type Curl struct {
 	Host                  string            `json:"host"`
 	Headers               map[string]string `json:"headers"`
 	StatusCode            int               `json:"statusCode"`
+	Method                string            `json:"method" valet:"default=GET"`
+	RequestBody           string            `json:"body"`
 	ResponseBody          string            `json:"responseBody"`
 	ResponseBodySubstring string            `json:"responseBodySubstring"`
 	Service               ServiceRef        `json:"service"`
@@ -99,7 +102,11 @@ func (c *Curl) GetUrl(ip string) string {
 
 func (c *Curl) GetHttpRequest(ip string) (*http.Request, error) {
 	url := c.GetUrl(ip)
-	req, err := http.NewRequest("GET", url, nil)
+	var body io.Reader
+	if c.RequestBody != "" {
+		body = strings.NewReader(c.RequestBody)
+	}
+	req, err := http.NewRequest(c.Method, url, body)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +114,6 @@ func (c *Curl) GetHttpRequest(ip string) (*http.Request, error) {
 	for k, v := range c.Headers {
 		req.Header[k] = []string{v}
 	}
-
 	if c.Host != "" {
 		req.Host = c.Host
 	}

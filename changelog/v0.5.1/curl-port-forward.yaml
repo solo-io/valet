@@ -1,0 +1,4 @@
+changelog:
+  - type: NEW_FEATURE
+    issueLink: https://github.com/solo-io/valet/issues/154
+    description: Support curls that are wrapped with a Kubernetes port-forward.

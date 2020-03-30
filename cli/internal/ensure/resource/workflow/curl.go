@@ -38,7 +38,8 @@ type Curl struct {
 	RequestBody           string            `json:"body"`
 	ResponseBody          string            `json:"responseBody"`
 	ResponseBodySubstring string            `json:"responseBodySubstring"`
-	Service               ServiceRef        `json:"service"`
+	Service               *ServiceRef       `json:"service"`
+	PortForward           *PortForward      `json:"portForward"`
 	Attempts              int               `json:"attempts" valet:"default=10"`
 	Delay                 string            `json:"delay" valet:"default=1s"`
 }
@@ -62,16 +63,34 @@ func (c *Curl) Teardown(ctx context.Context, input render.InputParams) error {
 }
 
 func (c *Curl) doCurl(ctx context.Context, input render.InputParams) error {
-	ip, err := c.Service.getAddress(ctx, input)
+	delay, err := time.ParseDuration(c.Delay)
 	if err != nil {
 		return err
 	}
-	delay, err := time.ParseDuration(c.Delay)
-	fullUrl := c.GetUrl(ip)
+	fullUrl, err := c.GetUrl(ctx, input)
+	if err != nil {
+		return err
+	}
+
+	var portForwardCmd *cmd.CommandStreamHandler
+	if c.PortForward != nil {
+		handler, err := c.PortForward.Initiate(ctx, input)
+		if err != nil {
+			return err
+		}
+		portForwardCmd = handler
+
+		go func() {
+			_ = handler.StreamHelper(nil)
+		}()
+
+		cmd.Stdout().Println("Initiated port forward")
+	}
+
 	cmd.Stdout().Println("Curling %s: {host: %s, headers: %v, expectedStatus: %d}", fullUrl, c.Host, c.Headers, c.StatusCode)
 
-	return retry.Do(func() error {
-		req, err := c.GetHttpRequest(ip)
+	curlErr := retry.Do(func() error {
+		req, err := c.GetHttpRequest(fullUrl)
 		if err != nil {
 			return err
 		}
@@ -86,22 +105,34 @@ func (c *Curl) doCurl(ctx context.Context, input render.InputParams) error {
 			return UnexpectedResponseBodyError(responseBody)
 		}
 
-		if c.ResponseBodySubstring != "" && !strings.Contains(strings.TrimSpace(responseBody),strings.TrimSpace(c.ResponseBodySubstring)) {
+		if c.ResponseBodySubstring != "" && !strings.Contains(strings.TrimSpace(responseBody), strings.TrimSpace(c.ResponseBodySubstring)) {
 			return UnexpectedResponseBodyError(responseBody)
 		}
 
 		cmd.Stdout().Println("Curl successful")
 		return nil
 	}, retry.Delay(delay), retry.Attempts(uint(c.Attempts)), retry.DelayType(retry.FixedDelay), retry.LastErrorOnly(true))
-
+	
+	if portForwardCmd != nil {
+		_ = portForwardCmd.Process.Process.Kill()
+	}
+	return curlErr
 }
 
-func (c *Curl) GetUrl(ip string) string {
-	return fmt.Sprintf("%s://%s%s", c.Service.Port, ip, c.Path)
+func (c *Curl) GetUrl(ctx context.Context, input render.InputParams) (string, error) {
+	if c.Service != nil {
+		ipAndPort, err := c.Service.getAddress(ctx, input)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("%s://%s%s", c.Service.Port, ipAndPort, c.Path), nil
+	} else if c.PortForward != nil {
+		return fmt.Sprintf("http://localhost:%d%s", c.PortForward.Port, c.Path), nil
+	}
+	return "", errors.Errorf("Must specify either service or portForward")
 }
 
-func (c *Curl) GetHttpRequest(ip string) (*http.Request, error) {
-	url := c.GetUrl(ip)
+func (c *Curl) GetHttpRequest(url string) (*http.Request, error) {
 	var body io.Reader
 	if c.RequestBody != "" {
 		body = strings.NewReader(c.RequestBody)
@@ -118,4 +149,17 @@ func (c *Curl) GetHttpRequest(ip string) (*http.Request, error) {
 		req.Host = c.Host
 	}
 	return req, nil
+}
+
+type PortForward struct {
+	Namespace      string `json:"namespace"`
+	DeploymentName string `json:"deploymentName"`
+	Port           int    `json:"port"`
+}
+
+func (p *PortForward) Initiate(ctx context.Context, input render.InputParams) (*cmd.CommandStreamHandler, error) {
+	port := fmt.Sprintf("%d", p.Port)
+	deployment := fmt.Sprintf("deploy/%s", p.DeploymentName)
+	kubectl := cmd.New().Kubectl().With("port-forward").Namespace(p.Namespace).With(deployment, port).Cmd()
+	return input.Runner().Stream(ctx, kubectl)
 }

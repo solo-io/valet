@@ -77,6 +77,7 @@ type CommandStreamHandler struct {
 	WaitFunc func() error
 	Stdout   io.Reader
 	Stderr   io.Reader
+	Process  *exec.Cmd
 }
 
 func (c *CommandStreamHandler) StreamHelper(inputErr error) error {
@@ -119,6 +120,7 @@ func (r *commandRunner) Stream(ctx context.Context, c *Command) (*CommandStreamH
 		},
 		Stdout: outReader,
 		Stderr: errReader,
+		Process: cmd,
 	}, nil
 }
 

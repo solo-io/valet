@@ -63,7 +63,7 @@ var _ = Describe("curl", func() {
 			StatusCode:   statusCode,
 			ResponseBody: responseBody,
 			Headers:      headers,
-			Service: workflow.ServiceRef{
+			Service: &workflow.ServiceRef{
 				Name:      serviceName,
 				Namespace: serviceNamespace,
 				Port:      servicePort,

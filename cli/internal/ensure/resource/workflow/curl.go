@@ -112,7 +112,7 @@ func (c *Curl) doCurl(ctx context.Context, input render.InputParams) error {
 		cmd.Stdout().Println("Curl successful")
 		return nil
 	}, retry.Delay(delay), retry.Attempts(uint(c.Attempts)), retry.DelayType(retry.FixedDelay), retry.LastErrorOnly(true))
-	
+
 	if portForwardCmd != nil {
 		_ = portForwardCmd.Process.Process.Kill()
 	}

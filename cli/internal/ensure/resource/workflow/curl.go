@@ -18,6 +18,8 @@ import (
 const (
 	DefaultCurlDelay    = "1s"
 	DefaultCurlAttempts = 10
+	DefaultMethod = "GET"
+	DefaultPortForwardPort = 8080
 )
 
 var (
@@ -152,9 +154,9 @@ func (c *Curl) GetHttpRequest(url string) (*http.Request, error) {
 }
 
 type PortForward struct {
-	Namespace      string `json:"namespace"`
+	Namespace      string `json:"namespace" valet:"key=Namespace"`
 	DeploymentName string `json:"deploymentName"`
-	Port           int    `json:"port"`
+	Port           int    `json:"port" valet:"default=8080"`
 }
 
 func (p *PortForward) Initiate(ctx context.Context, input render.InputParams) (*cmd.CommandStreamHandler, error) {

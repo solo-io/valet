@@ -2,6 +2,7 @@ package workflow_test
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -63,7 +64,7 @@ var _ = Describe("curl", func() {
 			StatusCode:   statusCode,
 			ResponseBody: responseBody,
 			Headers:      headers,
-			Service: workflow.ServiceRef{
+			Service: &workflow.ServiceRef{
 				Name:      serviceName,
 				Namespace: serviceNamespace,
 				Port:      servicePort,
@@ -72,9 +73,11 @@ var _ = Describe("curl", func() {
 			Delay:    delay,
 		}
 
+		fullUrl := fmt.Sprintf("%s://%s%s", servicePort, ip, path)
+
 		It("works for expected curl", func() {
 			ingressClient.EXPECT().GetIngressHost(serviceName, serviceNamespace, servicePort).Return(ip, nil).Times(1)
-			req, err := curl.GetHttpRequest(ip)
+			req, err := curl.GetHttpRequest(fullUrl)
 			Expect(err).To(BeNil())
 			runner.EXPECT().Request(ctx, gomock.Eq(req)).Return(responseBody, statusCode, nil)
 			err = curl.Ensure(ctx, input)
@@ -83,7 +86,7 @@ var _ = Describe("curl", func() {
 
 		It("returns error for unexpected response body", func() {
 			ingressClient.EXPECT().GetIngressHost(serviceName, serviceNamespace, servicePort).Return(ip, nil).Times(1)
-			req, err := curl.GetHttpRequest(ip)
+			req, err := curl.GetHttpRequest(fullUrl)
 			Expect(err).To(BeNil())
 			runner.EXPECT().Request(ctx, gomock.Eq(req)).Return(otherResponseBody, statusCode, nil).Times(attempts)
 			err = curl.Ensure(ctx, input)
@@ -93,7 +96,7 @@ var _ = Describe("curl", func() {
 
 		It("returns error for unexpected status code", func() {
 			ingressClient.EXPECT().GetIngressHost(serviceName, serviceNamespace, servicePort).Return(ip, nil).Times(1)
-			req, err := curl.GetHttpRequest(ip)
+			req, err := curl.GetHttpRequest(fullUrl)
 			Expect(err).To(BeNil())
 			runner.EXPECT().Request(ctx, gomock.Eq(req)).Return(responseBody, otherStatusCode, nil).Times(attempts)
 			err = curl.Ensure(ctx, input)
@@ -103,7 +106,7 @@ var _ = Describe("curl", func() {
 
 		It("returns error for request error", func() {
 			ingressClient.EXPECT().GetIngressHost(serviceName, serviceNamespace, servicePort).Return(ip, nil).Times(1)
-			req, err := curl.GetHttpRequest(ip)
+			req, err := curl.GetHttpRequest(fullUrl)
 			Expect(err).To(BeNil())
 			runner.EXPECT().Request(ctx, gomock.Eq(req)).Return(responseBody, statusCode, emptyErr).Times(attempts)
 			err = curl.Ensure(ctx, input)
@@ -118,16 +121,23 @@ var _ = Describe("curl", func() {
 	})
 
 	Context("curl default rendering", func() {
-		curl := workflow.Curl{}
+		curl := workflow.Curl{
+			Service: &workflow.ServiceRef{},
+			PortForward: &workflow.PortForward{},
+		}
 
 		It("works", func() {
 			err := input.RenderFields(&curl)
 			Expect(err).To(BeNil())
-			err = input.RenderFields(&curl.Service)
+			err = input.RenderFields(curl.Service)
+			Expect(err).To(BeNil())
+			err = input.RenderFields(curl.PortForward)
 			Expect(err).To(BeNil())
 			Expect(curl.Attempts).To(Equal(workflow.DefaultCurlAttempts))
 			Expect(curl.Delay).To(Equal(workflow.DefaultCurlDelay))
+			Expect(curl.Method).To(Equal(workflow.DefaultMethod))
 			Expect(curl.Service.Port).To(Equal(workflow.DefaultServicePort))
+			Expect(curl.PortForward.Port).To(Equal(workflow.DefaultPortForwardPort))
 		})
 	})
 

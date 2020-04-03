@@ -1,4 +1,4 @@
-package step
+package kubectl
 
 import (
 	"fmt"
@@ -6,6 +6,8 @@ import (
 	"github.com/solo-io/valet/pkg/cmd"
 	"github.com/solo-io/valet/pkg/render"
 )
+
+var _ api.Step = new(Apply)
 
 type Apply struct {
 	Path string `json:"path"`

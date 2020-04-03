@@ -9,8 +9,8 @@ import (
 	"github.com/solo-io/valet/pkg/cmd"
 	mock_cmd "github.com/solo-io/valet/pkg/cmd/mocks"
 	mock_render "github.com/solo-io/valet/pkg/render/mocks"
-	"github.com/solo-io/valet/pkg/step"
 	"github.com/solo-io/valet/pkg/step/helm"
+	"github.com/solo-io/valet/pkg/step/kubectl"
 	"github.com/solo-io/valet/pkg/workflow"
 
 	. "github.com/onsi/ginkgo"
@@ -58,7 +58,7 @@ var _ = Describe("workflow", func() {
 		)
 		var (
 			expectedCmd = cmd.New().Kubectl().With("apply", "-f", path).Cmd()
-			apply       = step.Apply{
+			apply       = kubectl.Apply{
 				Path: path,
 			}
 			step     = workflow.Step{Apply: &apply}

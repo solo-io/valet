@@ -3,16 +3,16 @@ package workflow
 import (
 	"github.com/solo-io/valet/pkg/api"
 	"github.com/solo-io/valet/pkg/render"
-	"github.com/solo-io/valet/pkg/step"
 	"github.com/solo-io/valet/pkg/step/helm"
+	"github.com/solo-io/valet/pkg/step/kubectl"
 	"reflect"
 )
 
 // A workflow.Step is a container for an api.Step implementation.
-// Exactly one of the member fields should be non-nil.
+// Exactly one of the member pointers should be non-nil.
 // This makes it easy to serialize and deserialize a workflow as yaml
 type Step struct {
-	Apply            *step.Apply            `json:"apply"`
+	Apply            *kubectl.Apply         `json:"apply"`
 	InstallHelmChart *helm.InstallHelmChart `json:"installHelmChart"`
 
 	Values render.Values `json:"values"`
@@ -32,10 +32,8 @@ func (k *Step) Get() api.Step {
 			}
 		}
 	}
-
 	if val == nil {
 		return nil
 	}
-
 	return val.(api.Step)
 }

@@ -33,7 +33,7 @@ type Curl struct {
 	Path                  string            `json:"path"`
 	Host                  string            `json:"host"`
 	Headers               map[string]string `json:"headers"`
-	StatusCode            int               `json:"statusCode"`
+	StatusCode            int               `json:"statusCode" valet:"default=200"`
 	Method                string            `json:"method" valet:"default=GET"`
 	RequestBody           string            `json:"body"`
 	ResponseBody          string            `json:"responseBody"`
@@ -51,8 +51,25 @@ func (c *Curl) Run(ctx *api.WorkflowContext, values render.Values) error {
 	return c.doCurl(ctx, values)
 }
 
-func (c *Curl) GetDescription() string {
-	return fmt.Sprintf("%v", c)
+func (c *Curl) GetDescription(ctx *api.WorkflowContext, values render.Values) (string, error) {
+	if err := values.RenderFields(c, ctx.Runner); err != nil {
+		return "", err
+	}
+	url, err := c.GetUrl(ctx, values)
+	if err != nil {
+		return "", err
+	}
+	str := fmt.Sprintf("Issuing http request\n%s %s", c.Method, url)
+	if c.RequestBody != "" {
+		str += fmt.Sprintf("\nBody: %s", c.RequestBody)
+	}
+	str += fmt.Sprintf("\nExpected status: %d", c.StatusCode)
+	if c.ResponseBody != "" {
+		str += fmt.Sprintf("\nExpected response: %s", c.ResponseBody)
+	} else if c.ResponseBodySubstring != "" {
+		str += fmt.Sprintf("\nExpected response substring: %s", c.ResponseBodySubstring)
+	}
+	return str, nil
 }
 
 func (c *Curl) GetDocs(ctx *api.WorkflowContext, options api.DocsOptions) (string, error) {
@@ -84,8 +101,6 @@ func (c *Curl) doCurl(ctx *api.WorkflowContext, values render.Values) error {
 		cmd.Stdout().Println("Initiated port forward")
 	}
 
-	cmd.Stdout().Println("Curling %s: {host: %s, headers: %v, expectedStatus: %d}", fullUrl, c.Host, c.Headers, c.StatusCode)
-
 	curlErr := retry.Do(func() error {
 		req, err := c.GetHttpRequest(fullUrl)
 		if err != nil {
@@ -111,7 +126,7 @@ func (c *Curl) doCurl(ctx *api.WorkflowContext, values render.Values) error {
 	}, retry.Delay(delay), retry.Attempts(uint(c.Attempts)), retry.DelayType(retry.FixedDelay), retry.LastErrorOnly(true))
 
 	if portForwardCmd != nil {
-		_ = portForwardCmd.Process.Process.Kill()
+		_ = ctx.Runner.Kill(portForwardCmd.Process.Process)
 	}
 	return curlErr
 }

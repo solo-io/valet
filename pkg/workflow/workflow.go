@@ -3,16 +3,22 @@ package workflow
 import (
 	"github.com/solo-io/valet/pkg/api"
 	"github.com/solo-io/valet/pkg/cmd"
+	"github.com/solo-io/valet/pkg/render"
 )
 
 type Workflow struct {
-	Steps []Step `json:"steps"`
+	Steps  []*Step        `json:"steps"`
+	Values render.Values `json:"values"`
 }
 
 func (w *Workflow) Run(ctx *api.WorkflowContext) error {
 	for _, step := range w.Steps {
 		knownStep := step.Get()
-		cmd.Stdout().Println(knownStep.GetDescription())
+		description, err := knownStep.GetDescription(ctx, w.Values)
+		if err != nil {
+			return err
+		}
+		cmd.Stdout().Println(description)
 		if err := knownStep.Run(ctx, step.Values); err != nil {
 			return err
 		}

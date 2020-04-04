@@ -2,6 +2,7 @@ package helm
 
 import (
 	"fmt"
+	"github.com/rotisserie/eris"
 	"github.com/solo-io/go-utils/installutils/helminstall"
 	"github.com/solo-io/valet/pkg/api"
 	"github.com/solo-io/valet/pkg/render"
@@ -23,7 +24,7 @@ type InstallHelmChart struct {
 	WaitForPods bool          `json:"waitForPods"`
 }
 
-func (i *InstallHelmChart) GetDescription() string {
+func (i *InstallHelmChart) GetDescription(_ *api.WorkflowContext, _ render.Values) (string, error) {
 	str := fmt.Sprintf("Deploying helm chart with release name %s into namespace %s using chart uri %s", i.ReleaseName, i.Namespace, i.ReleaseUri)
 	if len(i.ValuesFiles) == 0 && len(i.Set) == 0 {
 		str = str + " using default values"
@@ -37,7 +38,7 @@ func (i *InstallHelmChart) GetDescription() string {
 	if i.WaitForPods {
 		str = str + " and waiting for the pods to be ready"
 	}
-	return str
+	return str, nil
 }
 
 func (i *InstallHelmChart) Run(ctx *api.WorkflowContext, values render.Values) error {
@@ -57,7 +58,9 @@ func (i *InstallHelmChart) Run(ctx *api.WorkflowContext, values render.Values) e
 		ExtraValues:      extraVals,
 	}
 	if err := ctx.HelmClient.Install(&conf); err != nil {
-		return err
+		if !eris.Is(err, helminstall.ReleaseAlreadyInstalledErr(i.ReleaseName, i.Namespace)) {
+			return err
+		}
 	}
 	if !i.WaitForPods {
 		return nil

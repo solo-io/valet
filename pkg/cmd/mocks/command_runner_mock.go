@@ -8,6 +8,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	cmd "github.com/solo-io/valet/pkg/cmd"
 	http "net/http"
+	os "os"
 	reflect "reflect"
 )
 
@@ -32,6 +33,20 @@ func NewMockRunner(ctrl *gomock.Controller) *MockRunner {
 // EXPECT returns an object that allows the caller to indicate expected use
 func (m *MockRunner) EXPECT() *MockRunnerMockRecorder {
 	return m.recorder
+}
+
+// Kill mocks base method
+func (m *MockRunner) Kill(arg0 *os.Process) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Kill", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Kill indicates an expected call of Kill
+func (mr *MockRunnerMockRecorder) Kill(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Kill", reflect.TypeOf((*MockRunner)(nil).Kill), arg0)
 }
 
 // Output mocks base method

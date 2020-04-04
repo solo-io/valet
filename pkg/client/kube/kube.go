@@ -143,7 +143,6 @@ func minikubeIp(clusterName string) (string, error) {
 
 
 func (k *kubeClient) WaitUntilPodsRunning(namespace string) error {
-	cmd.Stdout().Println("Waiting for pods in namespace %s", namespace)
 	kubeClient, err := kube.KubeClient()
 	if err != nil {
 		return err

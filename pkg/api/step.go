@@ -9,7 +9,7 @@ import (
 )
 
 type Step interface {
-	GetDescription() string
+	GetDescription(ctx *WorkflowContext, values render.Values) (string, error)
 	Run(ctx *WorkflowContext, values render.Values) error
 	GetDocs(ctx *WorkflowContext, options DocsOptions) (string, error)
 }

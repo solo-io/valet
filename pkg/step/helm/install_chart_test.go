@@ -69,7 +69,7 @@ var _ = Describe("install_chart", func() {
 		})
 
 		It("has the right description", func() {
-			Expect(getInstallChartStep().GetDescription()).Should(Equal("Deploying helm chart with release name release into namespace release-ns using chart uri release-helm-chart.tgz using default values"))
+			Expect(getInstallChartStep().GetDescription(nil, nil)).Should(Equal("Deploying helm chart with release name release into namespace release-ns using chart uri release-helm-chart.tgz using default values"))
 		})
 	})
 

@@ -13,9 +13,9 @@ type Apply struct {
 	Path string `json:"path"`
 }
 
-func (a *Apply) GetDescription() string {
+func (a *Apply) GetDescription(_ *api.WorkflowContext, _ render.Values) (string, error) {
 	stringCmd := a.GetCmd().ToString()
-	return fmt.Sprintf("Running command: %s", stringCmd)
+	return fmt.Sprintf("Running command: %s", stringCmd), nil
 }
 
 func (a *Apply) GetCmd() *cmd.Command {

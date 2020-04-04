@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -43,12 +44,17 @@ type Runner interface {
 	Output(c *Command) (string, error)
 	Stream(c *Command) (*CommandStreamHandler, error)
 	Request(req *http.Request) (string, int, error)
+	Kill(process *os.Process) error
 }
 
 type commandRunner struct{}
 
 func DefaultCommandRunner() Runner {
 	return &commandRunner{}
+}
+
+func (r *commandRunner) Kill(process *os.Process) error {
+	return process.Kill()
 }
 
 func (r *commandRunner) Run(c *Command) error {

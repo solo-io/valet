@@ -2,6 +2,7 @@ package gloo_petclinic_test
 
 import (
 	"context"
+	"github.com/ghodss/yaml"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/go-utils/testutils"
@@ -12,6 +13,8 @@ import (
 	"github.com/solo-io/valet/pkg/step/kubectl"
 	"github.com/solo-io/valet/pkg/step/validation"
 	"github.com/solo-io/valet/pkg/workflow"
+	"io/ioutil"
+	"os"
 	"testing"
 )
 
@@ -27,57 +30,92 @@ func TestPetclinic(t *testing.T) {
 
 var _ = Describe("petclinic", func() {
 
-	installGloo := &workflow.Step{
-		InstallHelmChart: &helm.InstallHelmChart{
-			ReleaseName: "gloo",
-			ReleaseUri:  "https://storage.googleapis.com/solo-public-helm/charts/gloo-1.3.17.tgz",
-			Namespace:   "gloo-system",
-			WaitForPods: true,
-		},
-	}
-
-	gatewayProxy := &validation.ServiceRef{
-		Namespace: "gloo-system",
-		Name:      "gateway-proxy",
-	}
-
-	createAwsSecret := &workflow.Step{
-		CreateSecret: &kubectl.CreateSecret{
-			Namespace: "gloo-system",
-			Name:      "aws-creds",
-			Type:      "generic",
-			Entries: map[string]kubectl.SecretValue{
-				"aws_access_key_id":     {EnvVar: "AWS_ACCESS_KEY_ID"},
-				"aws_secret_access_key": {EnvVar: "AWS_SECRET_ACCESS_KEY"},
+	installGloo := func() *workflow.Step {
+		return &workflow.Step{
+			InstallHelmChart: &helm.InstallHelmChart{
+				ReleaseName: "gloo",
+				ReleaseUri:  "https://storage.googleapis.com/solo-public-helm/charts/gloo-1.3.17.tgz",
+				Namespace:   "gloo-system",
+				WaitForPods: true,
 			},
-		},
+		}
 	}
 
-	initialCurl := &workflow.Step{
-		Curl: &validation.Curl{
-			Service:    gatewayProxy,
-			Path:       "/",
-			StatusCode: 200,
-		},
+	gatewayProxy := func() *validation.ServiceRef {
+		return &validation.ServiceRef{
+			Namespace: "gloo-system",
+			Name:      "gateway-proxy",
+		}
 	}
 
-	curlVetsForUpdate := &workflow.Step{
-		Curl: &validation.Curl{
-			Service:               gatewayProxy,
-			Path:                  "/vets",
-			StatusCode:            200,
-			ResponseBodySubstring: "Boston",
-		},
+	createAwsSecret := func() *workflow.Step {
+		return &workflow.Step{
+			CreateSecret: &kubectl.CreateSecret{
+				Namespace: "gloo-system",
+				Name:      "aws-creds",
+				Type:      "generic",
+				Entries: map[string]kubectl.SecretValue{
+					"aws_access_key_id":     {EnvVar: "AWS_ACCESS_KEY_ID"},
+					"aws_secret_access_key": {EnvVar: "AWS_SECRET_ACCESS_KEY"},
+				},
+			},
+		}
 	}
 
-	curlContactPageForFix := &workflow.Step{
-		Curl: &validation.Curl{
-			Service:               gatewayProxy,
-			Path:                  "/contact.html",
-			StatusCode:            200,
-			ResponseBodySubstring: "Enter your email",
-			Attempts:              30,
-		},
+	initialCurl := func() *workflow.Step {
+		return &workflow.Step{
+			Curl: &validation.Curl{
+				Service:    gatewayProxy(),
+				Path:       "/",
+				StatusCode: 200,
+			},
+		}
+	}
+
+	curlVetsForUpdate := func() *workflow.Step {
+		return &workflow.Step{
+			Curl: &validation.Curl{
+				Service:               gatewayProxy(),
+				Path:                  "/vets",
+				StatusCode:            200,
+				ResponseBodySubstring: "Boston",
+			},
+		}
+	}
+
+	curlContactPageForFix := func() *workflow.Step {
+		return &workflow.Step{
+			Curl: &validation.Curl{
+				Service:               gatewayProxy(),
+				Path:                  "/contact.html",
+				StatusCode:            200,
+				ResponseBodySubstring: "Enter your email",
+				Attempts:              30,
+			},
+		}
+	}
+
+	getPetclinic := func() *workflow.Workflow {
+		return &workflow.Workflow{
+			Steps: []*workflow.Step{
+				installGloo(),
+				// Part 1: Deploy the monolith
+				workflow.Apply("petclinic.yaml"),
+				workflow.WaitForPods("default"),
+				workflow.Apply("vs-1.yaml"),
+				initialCurl(),
+				// Part 2: Extend with a new microservice
+				workflow.Apply("petclinic-vets.yaml"),
+				workflow.WaitForPods("default"),
+				workflow.Apply("vs-2.yaml"),
+				curlVetsForUpdate(),
+				// Phase 3: AWS
+				createAwsSecret(),
+				workflow.Apply("upstream-aws.yaml"),
+				workflow.Apply("vs-3.yaml"),
+				curlContactPageForFix(),
+			},
+		}
 	}
 
 	It("runs", func() {
@@ -85,28 +123,19 @@ var _ = Describe("petclinic", func() {
 		Expect(err).To(BeNil())
 		err = common.LoadEnv(globalConfig)
 		Expect(err).To(BeNil())
-		petclinic := &workflow.Workflow{
-			Steps: []*workflow.Step{
-				installGloo,
-				// Part 1: Deploy the monolith
-				workflow.Apply("https://raw.githubusercontent.com/sololabs/demos/b523571c66057a5591bce22ad896729f1fee662b/petclinic_demo/petclinic.yaml"),
-				workflow.Apply("https://raw.githubusercontent.com/sololabs/demos/b523571c66057a5591bce22ad896729f1fee662b/petclinic_demo/petclinic-db.yaml"),
-				workflow.WaitForPods("default"),
-				workflow.Apply("resources/petclinic/vs-1.yaml"),
-				initialCurl,
-				// Part 2: Extend with a new microservice
-				workflow.Apply("https://raw.githubusercontent.com/sololabs/demos/b523571c66057a5591bce22ad896729f1fee662b/petclinic_demo/petclinic-vets.yaml"),
-				workflow.WaitForPods("default"),
-				workflow.Apply("resources/petclinic/vs-2.yaml"),
-				curlVetsForUpdate,
-				// Phase 3: AWS
-				createAwsSecret,
-				workflow.Apply("resources/petclinic/upstream-aws.yaml"),
-				workflow.Apply("resources/petclinic/vs-3.yaml"),
-				curlContactPageForFix,
-			},
-		}
-		err = petclinic.Run(workflow.DefaultContext(context.TODO()))
+		err = getPetclinic().Run(workflow.DefaultContext(context.TODO()))
 		Expect(err).To(BeNil())
+	})
+
+	It("can output yaml", func() {
+		petclinic := getPetclinic()
+		bytes, err := yaml.Marshal(petclinic)
+		Expect(err).To(BeNil())
+		err = ioutil.WriteFile("workflow.yaml", bytes, os.ModePerm)
+		Expect(err).To(BeNil())
+		deserialized := &workflow.Workflow{}
+		err = yaml.UnmarshalStrict(bytes, deserialized, yaml.DisallowUnknownFields)
+		Expect(err).To(BeNil())
+		Expect(deserialized).To(Equal(petclinic))
 	})
 })

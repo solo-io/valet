@@ -10,7 +10,7 @@ import (
 var _ api.Step = new(Apply)
 
 type Apply struct {
-	Path string `json:"path"`
+	Path string `json:"path,omitempty"`
 }
 
 func (a *Apply) GetDescription(_ *api.WorkflowContext, _ render.Values) (string, error) {

@@ -1,0 +1,52 @@
+steps:
+- installHelmChart:
+    namespace: gloo-system
+    releaseName: gloo
+    releaseUri: https://storage.googleapis.com/solo-public-helm/charts/gloo-1.3.17.tgz
+    waitForPods: true
+- apply:
+    path: petclinic.yaml
+- waitForPods:
+    namespace: default
+- apply:
+    path: vs-1.yaml
+- curl:
+    path: /
+    service:
+      name: gateway-proxy
+      namespace: gloo-system
+    statusCode: 200
+- apply:
+    path: petclinic-vets.yaml
+- waitForPods:
+    namespace: default
+- apply:
+    path: vs-2.yaml
+- curl:
+    path: /vets
+    responseBodySubstring: Boston
+    service:
+      name: gateway-proxy
+      namespace: gloo-system
+    statusCode: 200
+- createSecret:
+    entries:
+      aws_access_key_id:
+        envVar: AWS_ACCESS_KEY_ID
+      aws_secret_access_key:
+        envVar: AWS_SECRET_ACCESS_KEY
+    name: aws-creds
+    namespace: gloo-system
+    typ: generic
+- apply:
+    path: upstream-aws.yaml
+- apply:
+    path: vs-3.yaml
+- curl:
+    attempts: 30
+    path: /contact.html
+    responseBodySubstring: Enter your email
+    service:
+      name: gateway-proxy
+      namespace: gloo-system
+    statusCode: 200

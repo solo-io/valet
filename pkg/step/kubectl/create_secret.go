@@ -36,23 +36,23 @@ var (
 
 type CreateSecret struct {
 	// Currently, secrets cannot consist of values from multiple registries
-	Name         string                 `json:"name"`
-	Namespace    string                 `json:"namespace" valet:"key=Namespace"`
-	Type         string                 `json:"type" valet:"default=Opaque"`
-	Entries      map[string]SecretValue `json:"entries"`
+	Name         string                 `json:"name,omitempty"`
+	Namespace    string                 `json:"namespace,omitempty" valet:"key=Namespace"`
+	Type         string                 `json:"typ,omitemptye" valet:"default=Opaque"`
+	Entries      map[string]SecretValue `json:"entries,omitempty"`
 }
 
 type SecretValue struct {
-	EnvVar                 string                  `json:"envVar"`
-	File                   string                  `json:"file"`
-	GcloudKmsEncryptedFile *GcloudKmsEncryptedFile `json:"gcloudKmsEncryptedFile"`
+	EnvVar                 string                  `json:"envVar,omitempty"`
+	File                   string                  `json:"file,omitempty"`
+	GcloudKmsEncryptedFile *GcloudKmsEncryptedFile `json:"gcloudKmsEncryptedFile,omitempty"`
 }
 
 type GcloudKmsEncryptedFile struct {
-	CiphertextFile string `json:"ciphertextFile"`
-	GcloudProject  string `json:"gcloudProject"`
-	Keyring        string `json:"keyring"`
-	Key            string `json:"key"`
+	CiphertextFile string `json:"ciphertextFile,omitempty"`
+	GcloudProject  string `json:"gcloudProject,omitempty"`
+	Keyring        string `json:"keyring,omitempty"`
+	Key            string `json:"key,omitempty"`
 }
 
 func (s *CreateSecret) Run(ctx *api.WorkflowContext, values render.Values) error {

@@ -11,17 +11,17 @@ import (
 var _ api.Step = new(InstallHelmChart)
 
 type InstallHelmChart struct {
-	ReleaseName string   `json:"releaseName"`
-	ReleaseUri  string   `json:"releaseUri"`
-	Namespace   string   `json:"namespace"`
-	ValuesFiles []string `json:"valuesFiles"`
+	ReleaseName string   `json:"releaseName,omitempty"`
+	ReleaseUri  string   `json:"releaseUri,omitempty"`
+	Namespace   string   `json:"namespace,omitempty"`
+	ValuesFiles []string `json:"valuesFiles,omitempty"`
 	/*
 		These values allow you to perform values operations before setting them as helm values.
 		You can use any operations and keywords that general `values` support.
 		More information on `valet` values can be found at TODO
 	*/
-	Set         render.Values `json:"set"`
-	WaitForPods bool          `json:"waitForPods"`
+	Set         render.Values `json:"set,omitempty"`
+	WaitForPods bool          `json:"waitForPods,omitempty"`
 }
 
 func (i *InstallHelmChart) GetDescription(_ *api.WorkflowContext, _ render.Values) (string, error) {

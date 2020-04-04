@@ -30,18 +30,18 @@ var (
 )
 
 type Curl struct {
-	Path                  string            `json:"path"`
-	Host                  string            `json:"host"`
-	Headers               map[string]string `json:"headers"`
-	StatusCode            int               `json:"statusCode" valet:"default=200"`
-	Method                string            `json:"method" valet:"default=GET"`
-	RequestBody           string            `json:"body"`
-	ResponseBody          string            `json:"responseBody"`
-	ResponseBodySubstring string            `json:"responseBodySubstring"`
-	Service               *ServiceRef       `json:"service"`
-	PortForward           *PortForward      `json:"portForward"`
-	Attempts              int               `json:"attempts" valet:"default=10"`
-	Delay                 string            `json:"delay" valet:"default=1s"`
+	Path                  string            `json:"path,omitempty"`
+	Host                  string            `json:"host,omitempty"`
+	Headers               map[string]string `json:"headers,omitempty"`
+	StatusCode            int               `json:"statusCode,omitempty" valet:"default=200"`
+	Method                string            `json:"method,omitempty" valet:"default=GET"`
+	RequestBody           string            `json:"body,omitempty"`
+	ResponseBody          string            `json:"responseBody,omitempty"`
+	ResponseBodySubstring string            `json:"responseBodySubstring,omitempty"`
+	Service               *ServiceRef       `json:"service,omitempty"`
+	PortForward           *PortForward      `json:"portForward,omitempty"`
+	Attempts              int               `json:"attempts,omitempty" valet:"default=10"`
+	Delay                 string            `json:"delay,omitempty" valet:"default=1s"`
 }
 
 func (c *Curl) Run(ctx *api.WorkflowContext, values render.Values) error {
@@ -164,9 +164,9 @@ func (c *Curl) GetHttpRequest(url string) (*http.Request, error) {
 }
 
 type PortForward struct {
-	Namespace      string `json:"namespace" valet:"key=Namespace"`
-	DeploymentName string `json:"deploymentName"`
-	Port           int    `json:"port" valet:"default=8080"`
+	Namespace      string `json:"namespace,omitempty" valet:"key=Namespace"`
+	DeploymentName string `json:"deploymentName,omitempty"`
+	Port           int    `json:"port,omitempty" valet:"default=8080"`
 }
 
 func (p *PortForward) Initiate(ctx *api.WorkflowContext, values render.Values) (*cmd.CommandStreamHandler, error) {
@@ -177,9 +177,9 @@ func (p *PortForward) Initiate(ctx *api.WorkflowContext, values render.Values) (
 }
 
 type ServiceRef struct {
-	Name      string `json:"name"`
-	Namespace string `json:"namespace" valet:"key=Namespace"`
-	Port      string `json:"port" valet:"default=http"`
+	Name      string `json:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty" valet:"key=Namespace"`
+	Port      string `json:"port,omitempty" valet:"default=http"`
 }
 
 func (s *ServiceRef) getAddress(ctx *api.WorkflowContext, values render.Values) (string, error) {

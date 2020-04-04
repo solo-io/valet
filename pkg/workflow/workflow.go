@@ -7,8 +7,8 @@ import (
 )
 
 type Workflow struct {
-	Steps  []*Step        `json:"steps"`
-	Values render.Values `json:"values"`
+	Steps  []*Step       `json:"steps,omitempty"`
+	Values render.Values `json:"values,omitempty"`
 }
 
 func (w *Workflow) Run(ctx *api.WorkflowContext) error {

@@ -7,7 +7,7 @@ import (
 )
 
 type WaitForPods struct {
-	Namespace string `json:"namespace"`
+	Namespace string `json:"namespace,omitempty"`
 }
 
 func (w *WaitForPods) GetDescription(_ *api.WorkflowContext, _ render.Values) (string, error) {

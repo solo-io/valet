@@ -13,14 +13,14 @@ import (
 // Exactly one of the member pointers should be non-nil.
 // This makes it easy to serialize and deserialize a workflow as yaml
 type Step struct {
-	Apply            *kubectl.Apply         `json:"apply"`
-	CreateSecret     *kubectl.CreateSecret  `json:"createSecret"`
-	InstallHelmChart *helm.InstallHelmChart `json:"installHelmChart"`
+	Apply            *kubectl.Apply         `json:"apply,omitempty"`
+	CreateSecret     *kubectl.CreateSecret  `json:"createSecret,omitempty"`
+	InstallHelmChart *helm.InstallHelmChart `json:"installHelmChart,omitempty"`
 
-	Curl        *validation.Curl `json:"curl"`
-	WaitForPods *validation.WaitForPods `json:"waitForPods"`
+	Curl        *validation.Curl `json:"curl,omitempty"`
+	WaitForPods *validation.WaitForPods `json:"waitForPods,omitempty"`
 
-	Values render.Values `json:"values"`
+	Values render.Values `json:"values,omitempty"`
 }
 
 // Return the actual pointer to an api.Step implementation.

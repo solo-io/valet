@@ -86,16 +86,6 @@ var _ = Describe("condition", func() {
 
 	Context("condition template rendering", func() {
 
-		condition := &check.Condition{
-			Name:      "{{ .Name }}",
-			Namespace: namespace,
-			Type:      kubeType,
-			Jsonpath:  jsonPath,
-			Value:     value,
-			Timeout:   "{{ .Timeout }}",
-			Interval:  "{{ .Interval }}",
-		}
-
 		const (
 			nameKey     = "Name"
 			timeoutKey  = "Timeout"
@@ -104,6 +94,7 @@ var _ = Describe("condition", func() {
 
 		var (
 			values render.Values
+			condition *check.Condition
 		)
 
 		BeforeEach(func() {
@@ -111,6 +102,15 @@ var _ = Describe("condition", func() {
 			values[nameKey] = name
 			values[timeoutKey] = timeout
 			values[intervalKey] = interval
+			condition = &check.Condition{
+				Name:      "{{ .Name }}",
+				Namespace: namespace,
+				Type:      kubeType,
+				Jsonpath:  jsonPath,
+				Value:     value,
+				Timeout:   "{{ .Timeout }}",
+				Interval:  "{{ .Interval }}",
+			}
 		})
 
 		It("works", func() {

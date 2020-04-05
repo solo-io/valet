@@ -1,12 +1,5 @@
 FROM golang:1.13.6
 
-RUN apt-get update && \
-    wget -q https://github.com/gohugoio/hugo/releases/download/v0.57.2/hugo_0.57.2_Linux-64bit.tar.gz && \
-    tar xzf hugo_0.57.2_Linux-64bit.tar.gz && \
-    mkdir -p /builder/bin && \
-    mv hugo /builder/bin && \
-    rm hugo_0.57.2_Linux-64bit.tar.gz
-
 RUN apt-get -y update && \
     apt-get -y install \
         apt-transport-https \

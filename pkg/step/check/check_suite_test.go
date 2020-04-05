@@ -11,7 +11,7 @@ import (
 
 var T *testing.T
 
-func TestValidationSteps(t *testing.T) {
+func TestCheckSteps(t *testing.T) {
 	RegisterFailHandler(Fail)
 	testutils.RegisterPreFailHandler(
 		func() {
@@ -19,5 +19,5 @@ func TestValidationSteps(t *testing.T) {
 		})
 	testutils.RegisterCommonFailHandlers()
 	T = t
-	RunSpecs(t, "Validation Step Suite")
+	RunSpecs(t, "Check Step Suite")
 }

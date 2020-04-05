@@ -1,5 +1,17 @@
 # Valet
 
+Valet makes it easy to define a **workflow**, consisting of a set of steps that deploy, configure, and test applications
+on Kubernetes. 
+
+## Use Cases
+
+Valet workflows can be written in Go for **end-to-end product testing**:
+
+```go
+
+```
+
+
 Valet is a tool for Kubernetes operators and developers, focused on solving three related use cases:
 * How do I write automated end-to-end tests for Kubernetes applications?
 * How do I maintain documentation for workflows related to using my application on Kubernetes?

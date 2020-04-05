@@ -2,6 +2,8 @@ package config
 
 import (
 	"github.com/solo-io/valet/pkg/cmd"
+	"github.com/solo-io/valet/pkg/render"
+	"github.com/solo-io/valet/pkg/workflow"
 	"strings"
 
 	errors "github.com/rotisserie/eris"
@@ -11,7 +13,7 @@ import (
 )
 
 func SetCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
-	cmd := &cobra.Command{
+	setCmd := &cobra.Command{
 		Use:   "set",
 		Short: "set one or more config values (foo=bar)",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -19,8 +21,8 @@ func SetCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 		},
 	}
 
-	cliutils.ApplyOptions(cmd, optionsFunc)
-	return cmd
+	cliutils.ApplyOptions(setCmd, optionsFunc)
+	return setCmd
 }
 
 func setConfig(opts *options.Options, args []string) error {
@@ -28,7 +30,17 @@ func setConfig(opts *options.Options, args []string) error {
 		return errors.Errorf("Must provide at least one argument, i.e. 'foo=bar' (without single quotes)")
 	}
 
-	config, err := LoadGlobalConfig(opts)
+	globalConfigPath := opts.Config.GlobalConfigPath
+	if globalConfigPath == "" {
+		defaultPath, err := workflow.GetDefaultGlobalConfigPath()
+		if err != nil {
+			return err
+		}
+		globalConfigPath = defaultPath
+	}
+	fileStore := render.NewFileStore()
+
+	config, err := workflow.LoadGlobalConfig(globalConfigPath, fileStore)
 	if err != nil {
 		return err
 	}
@@ -45,7 +57,7 @@ func setConfig(opts *options.Options, args []string) error {
 		config.Env[splitArg[0]] = splitArg[1]
 	}
 
-	err = StoreGlobalConfig(opts, config)
+	err = fileStore.SaveYaml(globalConfigPath, config)
 	if err != nil {
 		return err
 	}

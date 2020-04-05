@@ -46,3 +46,45 @@ func (mr *MockFileStoreMockRecorder) Load(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Load", reflect.TypeOf((*MockFileStore)(nil).Load), arg0)
 }
+
+// LoadYaml mocks base method
+func (m *MockFileStore) LoadYaml(arg0 string, arg1 interface{}) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LoadYaml", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// LoadYaml indicates an expected call of LoadYaml
+func (mr *MockFileStoreMockRecorder) LoadYaml(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadYaml", reflect.TypeOf((*MockFileStore)(nil).LoadYaml), arg0, arg1)
+}
+
+// Save mocks base method
+func (m *MockFileStore) Save(arg0, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Save", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Save indicates an expected call of Save
+func (mr *MockFileStoreMockRecorder) Save(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockFileStore)(nil).Save), arg0, arg1)
+}
+
+// SaveYaml mocks base method
+func (m *MockFileStore) SaveYaml(arg0 string, arg1 interface{}) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveYaml", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveYaml indicates an expected call of SaveYaml
+func (mr *MockFileStoreMockRecorder) SaveYaml(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveYaml", reflect.TypeOf((*MockFileStore)(nil).SaveYaml), arg0, arg1)
+}

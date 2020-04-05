@@ -6,13 +6,10 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/go-utils/testutils"
-	"github.com/solo-io/valet/cli/cmd/common"
-	"github.com/solo-io/valet/cli/cmd/config"
-	"github.com/solo-io/valet/cli/options"
 	"github.com/solo-io/valet/pkg/docs"
+	"github.com/solo-io/valet/pkg/step/check"
 	"github.com/solo-io/valet/pkg/step/helm"
 	"github.com/solo-io/valet/pkg/step/kubectl"
-	"github.com/solo-io/valet/pkg/step/validation"
 	"github.com/solo-io/valet/pkg/workflow"
 	"io/ioutil"
 	"os"
@@ -30,6 +27,8 @@ func TestPetclinic(t *testing.T) {
 }
 
 var _ = Describe("petclinic", func() {
+
+	ctx := workflow.DefaultContext(context.TODO())
 
 	installGloo := func() *workflow.Step {
 		return &workflow.Step{
@@ -120,11 +119,11 @@ var _ = Describe("petclinic", func() {
 	}
 
 	It("runs", func() {
-		globalConfig, err := config.LoadGlobalConfig(&options.Options{})
+		globalConfig, err := workflow.LoadDefaultGlobalConfig(ctx.FileStore)
 		Expect(err).To(BeNil())
-		err = common.LoadEnv(globalConfig)
+		err = workflow.LoadEnv(globalConfig)
 		Expect(err).To(BeNil())
-		err = getPetclinic().Run(workflow.DefaultContext(context.TODO()))
+		err = getPetclinic().Run(ctx)
 		Expect(err).To(BeNil())
 	})
 

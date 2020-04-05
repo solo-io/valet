@@ -19,6 +19,8 @@ type FileStore interface {
 	Load(path string) (string, error)
 	LoadYaml(path string, i interface{}) error
 	Save(path, contents string) error
+	SaveYaml(path string, i interface{}) error
+	Exists(path string) (bool, error)
 }
 
 func NewFileStore() *fileStore {
@@ -29,8 +31,20 @@ var _ FileStore = new(fileStore)
 
 type fileStore struct {}
 
+func (f *fileStore) Exists(path string) (bool, error) {
+	panic("implement me")
+}
+
 func (f *fileStore) Save(path, contents string) error {
 	return ioutil.WriteFile(path, []byte(contents), os.ModePerm)
+}
+
+func (f *fileStore) SaveYaml(path string, i interface{}) error {
+	b, err := yaml.Marshal(i)
+	if err != nil {
+		return err
+	}
+	return f.Save(path, string(b))
 }
 
 func (f *fileStore) Load(path string) (string, error) {
@@ -38,11 +52,11 @@ func (f *fileStore) Load(path string) (string, error) {
 }
 
 func (f *fileStore) LoadYaml(path string, deserialized interface{}) error {
-	bytes, err := f.loadBytes(path)
+	b, err := f.loadBytes(path)
 	if err != nil {
 		return err
 	}
-	return yaml.UnmarshalStrict(bytes, deserialized, yaml.DisallowUnknownFields)
+	return yaml.UnmarshalStrict(b, deserialized, yaml.DisallowUnknownFields)
 }
 
 func (f *fileStore) loadFile(path string) (string, error) {

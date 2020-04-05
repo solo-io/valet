@@ -3,9 +3,9 @@ package workflow
 import (
 	"github.com/solo-io/valet/pkg/api"
 	"github.com/solo-io/valet/pkg/render"
+	"github.com/solo-io/valet/pkg/step/check"
 	"github.com/solo-io/valet/pkg/step/helm"
 	"github.com/solo-io/valet/pkg/step/kubectl"
-	"github.com/solo-io/valet/pkg/step/validation"
 	"reflect"
 )
 
@@ -26,10 +26,10 @@ type Step struct {
 }
 
 // Return the actual pointer to an api.Step implementation.
-func (k *Step) Get() api.Step {
+func (s *Step) Get() api.Step {
 	var val interface{}
-	structVal := reflect.ValueOf(k).Elem()
-	structType := reflect.TypeOf(k).Elem()
+	structVal := reflect.ValueOf(s).Elem()
+	structType := reflect.TypeOf(s).Elem()
 	for i := 0; i < structType.NumField(); i++ {
 		fieldValue := structVal.Field(i)
 		if fieldValue.Kind() == reflect.Ptr {
@@ -48,15 +48,6 @@ func (k *Step) Get() api.Step {
 func (s *Step) WithId(id string) *Step {
 	s.Id = id
 	return s
-}
-
-func ApplyWithId(id, path string) *Step {
-	return &Step{
-		Id: id,
-		Apply: &kubectl.Apply{
-			Path: path,
-		},
-	}
 }
 
 func Apply(path string) *Step {

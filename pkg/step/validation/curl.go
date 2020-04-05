@@ -72,7 +72,7 @@ func (c *Curl) GetDescription(ctx *api.WorkflowContext, values render.Values) (s
 	return str, nil
 }
 
-func (c *Curl) GetDocs(ctx *api.WorkflowContext, options api.DocsOptions) (string, error) {
+func (c *Curl) GetDocs(ctx *api.WorkflowContext, values render.Values, flags render.Flags) (string, error) {
 	panic("implement me")
 }
 

@@ -7,6 +7,10 @@ import (
 	"github.com/solo-io/valet/pkg/render"
 )
 
+const (
+	DocsFlagYamlOnly = "YamlOnly"
+)
+
 var _ api.Step = new(Apply)
 
 type Apply struct {
@@ -26,6 +30,13 @@ func (a *Apply) Run(ctx *api.WorkflowContext, values render.Values) error {
 	return ctx.Runner.Run(a.GetCmd())
 }
 
-func (a *Apply) GetDocs(ctx *api.WorkflowContext, options api.DocsOptions) (string, error) {
-	panic("implement me")
+func (a *Apply) GetDocs(ctx *api.WorkflowContext, values render.Values, flags render.Flags) (string, error) {
+	if flags.Contains(DocsFlagYamlOnly) {
+		contents, err := ctx.FileStore.Load(a.Path)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("```yaml\n%s\n```", contents), nil
+	}
+	return fmt.Sprintf("```\nkubectl apply -f %s\n```", a.Path), nil
 }

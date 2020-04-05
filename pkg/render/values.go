@@ -243,8 +243,21 @@ func getTagValue(fieldTags []string, tag string) string {
 	return ""
 }
 
+// Returns a copy of v with all of the values from otherValues overriding the original in v
+func (v Values) MergeValues(otherValues Values) Values {
+	output := v.DeepCopy()
+	for key, val := range otherValues {
+		output[key] = val
+	}
+	return output
+}
+
 type Flags []string
 
 func (f Flags) ToString() string {
 	return fmt.Sprintf("[%s]", strings.Join(f, ", "))
+}
+
+func (f Flags) Contains(flag string) bool {
+	return stringutils.ContainsString(flag, f)
 }

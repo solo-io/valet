@@ -6,10 +6,13 @@ steps:
     waitForPods: true
 - apply:
     path: petclinic.yaml
-- waitForPods:
+  id: deploy-monolith
+- id: wait-1
+  waitForPods:
     namespace: default
 - apply:
     path: vs-1.yaml
+  id: vs-1
 - curl:
     path: /
     service:
@@ -18,10 +21,13 @@ steps:
     statusCode: 200
 - apply:
     path: petclinic-vets.yaml
-- waitForPods:
+  id: deploy-vets
+- id: wait-2
+  waitForPods:
     namespace: default
 - apply:
     path: vs-2.yaml
+  id: vs-2
 - curl:
     path: /vets
     responseBodySubstring: Boston
@@ -38,10 +44,13 @@ steps:
     name: aws-creds
     namespace: gloo-system
     typ: generic
+  id: aws-creds
 - apply:
     path: upstream-aws.yaml
+  id: upstream-aws
 - apply:
     path: vs-3.yaml
+  id: vs-3
 - curl:
     attempts: 30
     path: /contact.html

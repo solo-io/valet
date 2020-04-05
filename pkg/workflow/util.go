@@ -13,7 +13,7 @@ func DefaultContext(ctx context.Context) *api.WorkflowContext {
 	return &api.WorkflowContext{
 		Ctx:        ctx,
 		Runner:     cmd.DefaultCommandRunner(),
-		FileStore:  render.NewfileStore(),
+		FileStore:  render.NewFileStore(),
 		HelmClient: helm.NewClient(),
 		KubeClient: kube.NewClient(),
 	}

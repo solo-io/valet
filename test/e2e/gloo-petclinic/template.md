@@ -13,11 +13,15 @@ Let's deploy the petclinic monolith.
 We can run the following commands to deploy the application to Kubernetes. 
 These yaml files contain the Kubernetes deployment and service definitions for the application.
 
-```
-kubectl apply -f petclinic.yaml
-```
+{{%valet 
+workflow: workflow.yaml
+step: deploy-monolith
+%}}
 
-Wait until the pods in namespace 'default' are ready. Use `kubectl get pods -n default` to check the status.
+{{%valet 
+workflow: workflow.yaml
+step: wait-1
+%}}
 
 ### Create a route in Gloo
 
@@ -28,26 +32,12 @@ Because Gloo is running with **upstream discovery** enabled, and is **watching**
 To expose the application through Gloo, we will create a route from Gloo's gateway proxy to the petclinic upstream by 
 writing a `VirtualService` CRD, with a route that references the petclinic `Upstream` CRD. 
 
-```yaml
-apiVersion: gateway.solo.io/v1
-kind: VirtualService
-metadata:
-  name: petclinic
-  namespace: gloo-system
-spec:
-  virtualHost:
-    domains:
-      # We can use the domain "*" to match on any domain, avoiding the need for a host / host header when testing the route.
-      - "*"
-    routes:
-      - matchers:
-          - prefix: /
-        routeAction:
-          single:
-            upstream:
-              name: default-petclinic-8080
-              namespace: gloo-system
-```
+{{%valet 
+workflow: workflow.yaml
+step: vs-1
+flags:
+  - YamlOnly
+%}}
 
 Notice that we're referencing the `Upstream` CRD, so we are using the `gloo-system` namespace. Also notice that we're 
 using the domain `*` to represent our virtual host. This makes it easier to test, since we can issue http requests 
@@ -55,9 +45,10 @@ directly to the IP address and port of the proxy listener, rather than set up DN
 
 You can apply this config with the following command:
 
-```
-kubectl apply -f vs-1.yaml
-```
+{{%valet 
+workflow: workflow.yaml
+step: vs-1
+%}}
 
 Gloo's `gateway` component is watching for changes to `VirtualService` CRDs and should immediately output an updated
 `Proxy` CRD. And the `gloo` component should immediately detect the updated `Proxy` CRD, translate it to Envoy 
@@ -86,50 +77,35 @@ Gloo so that requests for the `/vets` path will be routed to the new microservic
 
 We can use this command to deploy the microservice to Kubernetes.
 
-```
-kubectl apply -f petclinic-vets.yaml
-```
+{{%valet 
+workflow: workflow.yaml
+step: deploy-vets
+%}}
 
-Wait until the pods in namespace 'default' are ready. Use `kubectl get pods -n default` to check the status.
+{{%valet 
+workflow: workflow.yaml
+step: wait-2
+%}}
 
 ### Deploy the new route to Gloo
 
 Like before, as soon as the vets service was deployed, the upstream was discovered and an `Upstream` resource was written.  
 Now we can add a route so that requests to the vets page go to this upstream:
 
-```yaml
-apiVersion: gateway.solo.io/v1
-kind: VirtualService
-metadata:
-  name: petclinic
-  namespace: gloo-system
-spec:
-  virtualHost:
-    domains:
-      - "*"
-    routes:
-      - matchers:
-          - prefix: /vets
-        routeAction:
-          single:
-            upstream:
-              name: default-petclinic-vets-8080
-              namespace: gloo-system
-      - matchers:
-          - prefix: /
-        routeAction:
-          single:
-            upstream:
-              name: default-petclinic-8080
-              namespace: gloo-system
-```
+{{%valet 
+workflow: workflow.yaml
+step: vs-2
+flags:
+  - YamlOnly
+%}}
 
 We'll add the new route to the beginning of the routes list, so it matches first. Any request that doesn't match the `/vets` 
 URI will continue to be routed to our monolith. 
 
-```
-kubectl apply -f vs-2.yaml
-```
+{{%valet 
+workflow: workflow.yaml
+step: vs-2
+%}}
 
 ### Test the new route
 
@@ -149,33 +125,28 @@ We'll store those credentials in a kubernetes secret.
 Assuming you have the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables defined, 
 you can use the following command.
 
-```
-kubectl create secret generic aws-creds -n gloo-system --from-literal=aws_access_key_id=$AWS_ACCESS_KEY_ID --from-literal=aws_secret_access_key=$AWS_SECRET_ACCESS_KEY
-```
+{{%valet 
+workflow: workflow.yaml
+step: aws-creds
+%}}
 
 ### Create a Gloo upstream for AWS
 
 Now we need to create an upstream in Gloo, representing a routing destination in AWS and referencing the credentials.
 
-```yaml
-apiVersion: gloo.solo.io/v1
-kind: Upstream
-metadata:
-  name: aws
-  namespace: gloo-system
-spec:
-  aws:
-    region: us-east-1
-    secretRef:
-      name: aws-creds
-      namespace: gloo-system
-```
+{{%valet 
+workflow: workflow.yaml
+step: upstream-aws
+flags:
+  - YamlOnly
+%}}
 
 We can apply it to the cluster with the following command: 
 
-```
-kubectl apply -f upstream-aws.yaml
-```
+{{%valet 
+workflow: workflow.yaml
+step: upstream-aws
+%}}
 
 As soon as this is written, the **discovery** component will see the new upstream and run **function discovery** 
 to enrich it with specific lambdas that are available for routing. One of those is called `contact-form:3`, and this 
@@ -187,49 +158,19 @@ Now that we have modeled the AWS lambda destination, we can route to it.
 Let's update the virtual service with a new route so that requests to the contact page are now forwarded to a lambda. 
 The json response from AWS will contain a field with html; we specify to transform the response, so that html is returned from Envoy.
 
-```yaml
-apiVersion: gateway.solo.io/v1
-kind: VirtualService
-metadata:
-  name: petclinic
-  namespace: gloo-system
-spec:
-  virtualHost:
-    domains:
-      - "*"
-    routes:
-      - matchers:
-          - prefix: /contact
-        routeAction:
-          single:
-            destinationSpec:
-              aws:
-                logicalName: contact-form:3
-                responseTransformation: true
-            upstream:
-              name: aws
-              namespace: gloo-system
-      - matchers:
-          - prefix: /vets
-        routeAction:
-          single:
-            upstream:
-              name: default-petclinic-vets-8080
-              namespace: gloo-system
-      - matchers:
-          - prefix: /
-        routeAction:
-          single:
-            upstream:
-              name: default-petclinic-8080
-              namespace: gloo-system
-```
+{{%valet 
+workflow: workflow.yaml
+step: vs-3
+flags:
+  - YamlOnly
+%}}
 
 We can apply it to the cluster with the following command: 
 
-```
-kubectl apply -f vs-3.yaml
-```
+{{%valet 
+workflow: workflow.yaml
+step: vs-3
+%}}
 
 ### Test the new route
 

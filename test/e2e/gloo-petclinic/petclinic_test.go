@@ -9,6 +9,7 @@ import (
 	"github.com/solo-io/valet/cli/cmd/common"
 	"github.com/solo-io/valet/cli/cmd/config"
 	"github.com/solo-io/valet/cli/options"
+	"github.com/solo-io/valet/pkg/docs"
 	"github.com/solo-io/valet/pkg/step/helm"
 	"github.com/solo-io/valet/pkg/step/kubectl"
 	"github.com/solo-io/valet/pkg/step/validation"
@@ -100,25 +101,25 @@ var _ = Describe("petclinic", func() {
 			Steps: []*workflow.Step{
 				installGloo(),
 				// Part 1: Deploy the monolith
-				workflow.Apply("petclinic.yaml"),
-				workflow.WaitForPods("default"),
-				workflow.Apply("vs-1.yaml"),
+				workflow.Apply("petclinic.yaml").WithId("deploy-monolith"),
+				workflow.WaitForPods("default").WithId("wait-1"),
+				workflow.Apply("vs-1.yaml").WithId("vs-1"),
 				initialCurl(),
 				// Part 2: Extend with a new microservice
-				workflow.Apply("petclinic-vets.yaml"),
-				workflow.WaitForPods("default"),
-				workflow.Apply("vs-2.yaml"),
+				workflow.Apply("petclinic-vets.yaml").WithId("deploy-vets"),
+				workflow.WaitForPods("default").WithId("wait-2"),
+				workflow.Apply("vs-2.yaml").WithId("vs-2"),
 				curlVetsForUpdate(),
 				// Phase 3: AWS
-				createAwsSecret(),
-				workflow.Apply("upstream-aws.yaml"),
-				workflow.Apply("vs-3.yaml"),
+				createAwsSecret().WithId("aws-creds"),
+				workflow.Apply("upstream-aws.yaml").WithId("upstream-aws"),
+				workflow.Apply("vs-3.yaml").WithId("vs-3"),
 				curlContactPageForFix(),
 			},
 		}
 	}
 
-	It("runs", func() {
+	PIt("runs", func() {
 		globalConfig, err := config.LoadGlobalConfig(&options.Options{})
 		Expect(err).To(BeNil())
 		err = common.LoadEnv(globalConfig)
@@ -127,7 +128,7 @@ var _ = Describe("petclinic", func() {
 		Expect(err).To(BeNil())
 	})
 
-	It("can output yaml", func() {
+	It("can serialize as and deserialize from yaml", func() {
 		petclinic := getPetclinic()
 		bytes, err := yaml.Marshal(petclinic)
 		Expect(err).To(BeNil())
@@ -137,5 +138,10 @@ var _ = Describe("petclinic", func() {
 		err = yaml.UnmarshalStrict(bytes, deserialized, yaml.DisallowUnknownFields)
 		Expect(err).To(BeNil())
 		Expect(deserialized).To(Equal(petclinic))
+	})
+
+	It("can produce docs", func() {
+		err := docs.ProcessDoc(workflow.DefaultContext(context.TODO()), "template.md", "README.md")
+		Expect(err).To(BeNil())
 	})
 })

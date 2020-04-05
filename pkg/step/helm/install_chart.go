@@ -68,6 +68,6 @@ func (i *InstallHelmChart) Run(ctx *api.WorkflowContext, values render.Values) e
 	return ctx.KubeClient.WaitUntilPodsRunning(i.Namespace)
 }
 
-func (i *InstallHelmChart) GetDocs(ctx *api.WorkflowContext, options api.DocsOptions) (string, error) {
+func (i *InstallHelmChart) GetDocs(ctx *api.WorkflowContext, values render.Values, flags render.Flags) (string, error) {
 	panic("implement me")
 }

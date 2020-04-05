@@ -1,6 +1,7 @@
 package kubectl
 
 import (
+	"fmt"
 	"github.com/solo-io/go-utils/installutils/helmchart"
 	"github.com/solo-io/valet/pkg/api"
 	"github.com/solo-io/valet/pkg/cmd"
@@ -151,6 +152,16 @@ func (s *CreateSecret) GetDescription(ctx *api.WorkflowContext, values render.Va
 	return "Creating secret", nil
 }
 
-func (s *CreateSecret) GetDocs(ctx *api.WorkflowContext, options api.DocsOptions) (string, error) {
-	panic("implement me")
+func (s *CreateSecret) GetDocs(ctx *api.WorkflowContext, values render.Values, flags render.Flags) (string, error) {
+	str := fmt.Sprintf("kubectl create secret %s %s -n %s", s.Type, s.Name, s.Namespace)
+	for k, v := range s.Entries {
+		if v.EnvVar != "" {
+			str = fmt.Sprintf("%s --from-literal=%s=$%s", str, k, v.EnvVar)
+		} else if v.File != "" {
+			str = fmt.Sprintf("%s --from-file=%s=%s", str, k, v.File)
+		} else {
+			return "", errors.Errorf("secret value not supported in docs: %v", v)
+		}
+	}
+	return fmt.Sprintf("```\n%s\n```", str), nil
 }

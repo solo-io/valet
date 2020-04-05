@@ -21,6 +21,8 @@ type Step struct {
 	WaitForPods *validation.WaitForPods `json:"waitForPods,omitempty"`
 
 	Values render.Values `json:"values,omitempty"`
+	// Optional, used for identifying a specific step in a docs ref
+	Id string `json:"id,omitempty"`
 }
 
 // Return the actual pointer to an api.Step implementation.
@@ -41,6 +43,20 @@ func (k *Step) Get() api.Step {
 		return nil
 	}
 	return val.(api.Step)
+}
+
+func (s *Step) WithId(id string) *Step {
+	s.Id = id
+	return s
+}
+
+func ApplyWithId(id, path string) *Step {
+	return &Step{
+		Id: id,
+		Apply: &kubectl.Apply{
+			Path: path,
+		},
+	}
 }
 
 func Apply(path string) *Step {

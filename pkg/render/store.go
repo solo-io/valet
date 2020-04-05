@@ -3,8 +3,10 @@ package render
 import (
 	"bytes"
 	"fmt"
+	"github.com/ghodss/yaml"
 	"github.com/solo-io/go-utils/osutils"
 	"github.com/solo-io/valet/pkg/cmd"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -15,9 +17,11 @@ import (
 
 type FileStore interface {
 	Load(path string) (string, error)
+	LoadYaml(path string, i interface{}) error
+	Save(path, contents string) error
 }
 
-func NewfileStore() *fileStore {
+func NewFileStore() *fileStore {
 	return &fileStore{}
 }
 
@@ -25,8 +29,20 @@ var _ FileStore = new(fileStore)
 
 type fileStore struct {}
 
+func (f *fileStore) Save(path, contents string) error {
+	return ioutil.WriteFile(path, []byte(contents), os.ModePerm)
+}
+
 func (f *fileStore) Load(path string) (string, error) {
 	return f.loadFile(path)
+}
+
+func (f *fileStore) LoadYaml(path string, deserialized interface{}) error {
+	bytes, err := f.loadBytes(path)
+	if err != nil {
+		return err
+	}
+	return yaml.UnmarshalStrict(bytes, deserialized, yaml.DisallowUnknownFields)
 }
 
 func (f *fileStore) loadFile(path string) (string, error) {

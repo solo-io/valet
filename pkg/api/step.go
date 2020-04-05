@@ -11,7 +11,7 @@ import (
 type Step interface {
 	GetDescription(ctx *WorkflowContext, values render.Values) (string, error)
 	Run(ctx *WorkflowContext, values render.Values) error
-	GetDocs(ctx *WorkflowContext, options DocsOptions) (string, error)
+	GetDocs(ctx *WorkflowContext, values render.Values, flags render.Flags) (string, error)
 }
 
 type WorkflowContext struct {
@@ -23,5 +23,3 @@ type WorkflowContext struct {
 	HelmClient helm.Client
 	KubeClient kube.Client
 }
-
-type DocsOptions map[string]string

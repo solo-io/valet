@@ -150,7 +150,7 @@ Assuming you have the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environmen
 you can use the following command.
 
 ```
-kubectl create secret generic aws-creds -n gloo-system --from-literal=aws_secret_access_key=$AWS_SECRET_ACCESS_KEY --from-literal=aws_access_key_id=$AWS_ACCESS_KEY_ID
+kubectl create secret generic aws-creds -n gloo-system --from-literal=aws_access_key_id=$AWS_ACCESS_KEY_ID --from-literal=aws_secret_access_key=$AWS_SECRET_ACCESS_KEY
 ```
 
 ### Create a Gloo upstream for AWS

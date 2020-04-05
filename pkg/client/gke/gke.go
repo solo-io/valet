@@ -1,10 +1,8 @@
-package client
+package gke
 
 import (
-	"fmt"
-
 	container "cloud.google.com/go/container/apiv1"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
+	"fmt"
 	container2 "google.golang.org/genproto/googleapis/container/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -22,71 +20,64 @@ type CreateOptions struct {
 	KubeVersion      string `json:"version" valet:"template,key=KubeVersion,default=1.13.0"`
 }
 
-type GkeClient interface {
+type Client interface {
 	Create(ctx context.Context, name, project, zone string, opts *CreateOptions) error
 	Destroy(ctx context.Context, name, project, zone string) error
 	IsRunning(ctx context.Context, name, project, zone string) (bool, error)
 }
 
-var _ GkeClient = new(gkeClient)
+var _ Client = new(client)
 
-type gkeClient struct {
-	client *container.ClusterManagerClient
+type client struct {
+	clusterClient *container.ClusterManagerClient
 }
 
-func NewGkeClient(ctx context.Context) (*gkeClient, error) {
-	client, err := getClusterManagerClient(ctx)
+func NewClient(ctx context.Context) (*client, error) {
+	clusterClient, err := getClusterManagerClient(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &gkeClient{
-		client: client,
+	return &client{
+		clusterClient: clusterClient,
 	}, nil
 }
 
 func getClusterManagerClient(ctx context.Context) (*container.ClusterManagerClient, error) {
 	ts, err := google.DefaultTokenSource(ctx, iam.CloudPlatformScope)
 	if err != nil {
-		cmd.Stderr().Println("Error locating token: %s", err.Error())
 		return nil, err
 	}
 
-	client, err := container.NewClusterManagerClient(ctx, option.WithTokenSource(ts))
+	clusterClient, err := container.NewClusterManagerClient(ctx, option.WithTokenSource(ts))
 	if err != nil {
-		cmd.Stderr().Println("Error creating cluster manager client: %s", err.Error())
 		return nil, err
 	}
-	return client, nil
+	return clusterClient, nil
 }
 
-func (c *gkeClient) IsRunning(ctx context.Context, name, project, zone string) (bool, error) {
+func (c *client) IsRunning(ctx context.Context, name, project, zone string) (bool, error) {
 	cluster, err := c.getCluster(ctx, name, project, zone)
 	if err != nil {
-		cmd.Stderr().Println("Error checking status of cluster %s: %s", getClusterIdentifier(name, project, zone), err.Error())
 		return false, err
 	} else if cluster == nil {
 		return false, nil
 	}
-	cmd.Stdout().Println("Found cluster %s", cluster.GetName())
 	return cluster.GetStatus() == container2.Cluster_RUNNING, nil
 }
 
-func (c *gkeClient) getCluster(ctx context.Context, name, project, zone string) (*container2.Cluster, error) {
-	cluster, err := c.client.GetCluster(ctx, &container2.GetClusterRequest{Name: getClusterIdentifier(name, project, zone)})
+func (c *client) getCluster(ctx context.Context, name, project, zone string) (*container2.Cluster, error) {
+	cluster, err := c.clusterClient.GetCluster(ctx, &container2.GetClusterRequest{Name: getClusterIdentifier(name, project, zone)})
 	if err != nil {
 		st, ok := status.FromError(err)
 		if ok && st.Code() == codes.NotFound {
-			cmd.Stdout().Println("Cluster %s not found", name)
 			return nil, nil
 		}
-		cmd.Stderr().Println("Error getting cluster %s: %s", name, err.Error())
 		return nil, err
 	}
 	return cluster, nil
 }
 
-func (c *gkeClient) Create(ctx context.Context, name, project, zone string, opts *CreateOptions) error {
-	cmd.Stdout().Println("Creating cluster %s", name)
+func (c *client) Create(ctx context.Context, name, project, zone string, opts *CreateOptions) error {
 	nodePool := container2.NodePool{
 		Name:             "pool-1",
 		InitialNodeCount: int32(opts.InitialNodeCount),
@@ -114,53 +105,35 @@ func (c *gkeClient) Create(ctx context.Context, name, project, zone string, opts
 		Parent:  getParent(project, zone),
 		Cluster: &clusterToCreate,
 	}
-	operation, err := c.client.CreateCluster(ctx, &req)
+	operation, err := c.clusterClient.CreateCluster(ctx, &req)
 	if err != nil {
-		cmd.Stderr().Println("Error creating cluster %s: %s", name, err.Error())
 		return err
 	}
-	cmd.Stdout().Println("Create cluster operation started (%v)", operation)
-	err = c.waitForOperation(ctx, getOperationIdentifier(project, zone, operation.Name))
-	if err != nil {
-		cmd.Stderr().Println("Error waiting for cluster creation: %s", err.Error())
-	}
-	return err
+	return c.waitForOperation(ctx, getOperationIdentifier(project, zone, operation.Name))
 }
 
-func (c *gkeClient) Destroy(ctx context.Context, name, project, zone string) error {
-	cmd.Stdout().Println("Deleting cluster %s", name)
+func (c *client) Destroy(ctx context.Context, name, project, zone string) error {
 	req := container2.DeleteClusterRequest{
 		Name: getClusterIdentifier(name, project, zone),
 	}
-	operation, err := c.client.DeleteCluster(ctx, &req)
+	operation, err := c.clusterClient.DeleteCluster(ctx, &req)
 	if err != nil {
-		cmd.Stderr().Println("Error deleting cluster %s: %s", name, err.Error())
 		return err
 	}
-	cmd.Stdout().Println("Delete cluster operation started (%v)", operation)
-	err = c.waitForOperation(ctx, getOperationIdentifier(project, zone, operation.Name))
-	if err != nil {
-		cmd.Stderr().Println("Error waiting for cluster to be deleted: %s", err.Error())
-	}
-	return err
+	return c.waitForOperation(ctx, getOperationIdentifier(project, zone, operation.Name))
 }
 
-func (c *gkeClient) waitForOperation(ctx context.Context, operationId string) error {
+func (c *client) waitForOperation(ctx context.Context, operationId string) error {
 	ticker := time.NewTicker(5 * time.Second)
 	getOp := container2.GetOperationRequest{
 		Name: operationId,
 	}
 	for range ticker.C {
-		operation, err := c.client.GetOperation(ctx, &getOp)
+		operation, err := c.clusterClient.GetOperation(ctx, &getOp)
 		if err != nil {
-			cmd.Stdout().Print("\n")
-			cmd.Stderr().Println("Error monitoring operation: %s", err.Error())
 			return err
 		}
-		cmd.Stdout().Print(".")
 		if operation.Status == container2.Operation_DONE {
-			cmd.Stdout().Print("\n")
-			cmd.Stdout().Println("Operation done!")
 			return nil
 		}
 	}

@@ -32,7 +32,12 @@ var _ FileStore = new(fileStore)
 type fileStore struct {}
 
 func (f *fileStore) Exists(path string) (bool, error) {
-	panic("implement me")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (f *fileStore) Save(path, contents string) error {

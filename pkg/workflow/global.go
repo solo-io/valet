@@ -32,7 +32,9 @@ func GetDefaultGlobalConfigPath() (string, error) {
 
 func LoadGlobalConfig(path string, store render.FileStore) (*api.ValetGlobalConfig, error) {
 	var c api.ValetGlobalConfig
-	if _, err := os.Stat(path); os.IsNotExist(err) {
+	if exists, err := store.Exists(path); err != nil {
+		return nil, err
+	} else if !exists {
 		return &c, nil
 	}
 	err := store.LoadYaml(path, &c)

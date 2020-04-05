@@ -7,7 +7,6 @@ import (
 	"github.com/solo-io/valet/pkg/render"
 	"github.com/solo-io/valet/pkg/workflow"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 func Config(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
@@ -23,11 +22,11 @@ func Config(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.C
 				}
 				globalConfigPath = defaultPath
 			}
-
-			if _, err := os.Stat(globalConfigPath); os.IsNotExist(err) {
-				return nil
+			fileStore := render.NewFileStore()
+			if exists, err := fileStore.Exists(globalConfigPath); err != nil || !exists {
+				return err
 			}
-			contents, err := render.NewFileStore().Load(globalConfigPath)
+			contents, err := fileStore.Load(globalConfigPath)
 			if err != nil {
 				return err
 			}

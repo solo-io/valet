@@ -1,27 +1,27 @@
-package client
+package artifact
 
 import (
 	"context"
+	"github.com/solo-io/valet/pkg/cmd"
 	"io"
 	"net/http"
 	"os"
 
 	"github.com/google/go-github/github"
 	errors "github.com/rotisserie/eris"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
-type ArtifactDownloader interface {
+type Downloader interface {
 	Download(ctx context.Context, remotePath, localPath string) error
 }
 
 var (
-	_ ArtifactDownloader = new(githubArtifactDownloader)
+	_ Downloader = new(githubArtifactDownloader)
 
 	CouldNotFindAssetError = errors.Errorf("Could not find asset")
 )
 
-func NewGithubArtifactDownloader(client *github.Client, repoName, tag string) *githubArtifactDownloader {
+func NewGithubDownloader(client *github.Client, repoName, tag string) *githubArtifactDownloader {
 	return &githubArtifactDownloader{
 		client:   client,
 		repoName: repoName,
@@ -128,14 +128,14 @@ func downloadFile(filepath, url string) error {
 	return err
 }
 
-func NewUrlArtifactDownloader() *urlArtifactDownloader {
+func NewUrlDownloader() *urlArtifactDownloader {
 	return &urlArtifactDownloader{}
 }
 
 type urlArtifactDownloader struct {
 }
 
-var _ ArtifactDownloader = new(urlArtifactDownloader)
+var _ Downloader = new(urlArtifactDownloader)
 
 func (d *urlArtifactDownloader) Download(ctx context.Context, remotePath, localPath string) error {
 	cmd.Stdout().Println("Downloading file %s to %s", remotePath, localPath)

@@ -1,24 +1,24 @@
-package client
+package aws
 
 import (
 	"context"
+	"github.com/solo-io/valet/pkg/cmd"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/route53"
 	errors "github.com/rotisserie/eris"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
 )
 
-//go:generate mockgen -destination ./mocks/aws_dns_client_mock.go github.com/solo-io/valet/cli/internal/ensure/client AwsDnsClient
+//go:generate mockgen -destination ./mocks/dns_client_mock.go github.com/solo-io/valet/pkg/client/aws DnsClient
 
 var (
-	_ AwsDnsClient = new(awsDnsClient)
+	_ DnsClient = new(awsDnsClient)
 
 	HostedZoneNotFoundError = errors.Errorf("Hosted zone not found")
 )
 
-type AwsDnsClient interface {
+type DnsClient interface {
 	CreateMapping(ctx context.Context, hostedZoneName, domain, ip string) error
 }
 

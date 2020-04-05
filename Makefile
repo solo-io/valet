@@ -8,13 +8,11 @@ PACKAGE_PATH:=github.com/solo-io/valet
 SOURCES := $(shell find . -name "*.go" | grep -v test.go | grep -v '\.\#*')
 RELEASE := "true"
 ifeq ($(TAGGED_VERSION),)
-	# TAGGED_VERSION := $(shell git describe --tags)
-	# This doesn't work in CI, need to find another way...
-	TAGGED_VERSION := vdev
+	TAGGED_VERSION := $(shell git describe --tags --dirty)
 	RELEASE := "false"
 endif
 VERSION ?= $(shell echo $(TAGGED_VERSION) | cut -c 2-)
-LDFLAGS := "-X github.com/solo-io/valet/cli/version.Version=$(VERSION)"
+LDFLAGS := "-X github.com/solo-io/valet/pkg/version.Version=$(VERSION)"
 
 #----------------------------------------------------------------------------------
 # Repo setup

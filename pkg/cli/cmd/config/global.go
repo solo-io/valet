@@ -1,50 +1,40 @@
 package config
 
 import (
+	"fmt"
+	"github.com/solo-io/valet/pkg/cmd"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/solo-io/valet/cli/internal/ensure/resource/render"
-
 	"github.com/ghodss/yaml"
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/go-utils/osutils"
-	"github.com/solo-io/valet/cli/internal"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"github.com/solo-io/valet/cli/options"
+	"github.com/solo-io/valet/pkg/cli/options"
 	"github.com/spf13/cobra"
 )
 
 func Config(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
-	cmd := &cobra.Command{
+	configCmd := &cobra.Command{
 		Use:   "config",
 		Short: "manage global config for valet",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return internal.RootAddError
+			bytes, err := loadGlobalConfigContents(opts)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("%s\n", string(bytes))
+			return nil
 		},
 	}
 
-	cliutils.ApplyOptions(cmd, optionsFunc)
-	cmd.AddCommand(SetCmd(opts))
-	cmd.AddCommand(RegistryCmd(opts))
-	return cmd
+	cliutils.ApplyOptions(configCmd, optionsFunc)
+	configCmd.AddCommand(SetCmd(opts))
+	return configCmd
 }
 
 type ValetGlobalConfig struct {
-	Env        map[string]string        `json:"env"`
-	Registries map[string]ValetRegistry `json:"registries"`
-}
-
-type ValetRegistry struct {
-	DirectoryRegistry *render.DirectoryRegistry `json:"directory"`
-}
-
-func (v *ValetRegistry) GetType() string {
-	if v.DirectoryRegistry != nil {
-		return "Directory"
-	}
-	return "Unknown"
+	Env map[string]string `json:"env"`
 }
 
 func GetValetConfigDir() (string, error) {
@@ -74,7 +64,23 @@ func GetGlobalConfigPath(opts *options.Options) (string, error) {
 }
 
 func LoadGlobalConfig(opts *options.Options) (*ValetGlobalConfig, error) {
+	bytes, err := loadGlobalConfigContents(opts)
+	if err != nil {
+		return nil, err
+	}
 	var c ValetGlobalConfig
+	if bytes == nil {
+		return &c, nil
+	}
+	if err := yaml.UnmarshalStrict(bytes, &c, yaml.DisallowUnknownFields); err != nil {
+		cmd.Stderr().Println("Failed to unmarshal global config: %s", err.Error())
+		return nil, err
+	}
+
+	return &c, nil
+}
+
+func loadGlobalConfigContents(opts *options.Options) ([]byte, error) {
 	path, err := GetGlobalConfigPath(opts)
 	if err != nil {
 		cmd.Stderr().Println("Could not determine global config path")
@@ -83,7 +89,7 @@ func LoadGlobalConfig(opts *options.Options) (*ValetGlobalConfig, error) {
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		cmd.Stdout().Println("No global config exists")
-		return &c, nil
+		return nil, nil
 	}
 
 	osClient := osutils.NewOsClient()
@@ -92,13 +98,7 @@ func LoadGlobalConfig(opts *options.Options) (*ValetGlobalConfig, error) {
 		cmd.Stderr().Println("Could not read file %s: %s", path, err.Error())
 		return nil, err
 	}
-
-	if err := yaml.UnmarshalStrict(bytes, &c, yaml.DisallowUnknownFields); err != nil {
-		cmd.Stderr().Println("Failed to unmarshal file %s: %s", path, err.Error())
-		return nil, err
-	}
-
-	return &c, nil
+	return bytes, nil
 }
 
 func StoreGlobalConfig(opts *options.Options, config *ValetGlobalConfig) error {

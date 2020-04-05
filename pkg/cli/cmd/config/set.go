@@ -1,12 +1,12 @@
 package config
 
 import (
+	"github.com/solo-io/valet/pkg/cmd"
 	"strings"
 
-	"github.com/solo-io/go-utils/cliutils"
 	errors "github.com/rotisserie/eris"
-	"github.com/solo-io/valet/cli/internal/ensure/cmd"
-	"github.com/solo-io/valet/cli/options"
+	"github.com/solo-io/go-utils/cliutils"
+	"github.com/solo-io/valet/pkg/cli/options"
 	"github.com/spf13/cobra"
 )
 

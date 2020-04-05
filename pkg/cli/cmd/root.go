@@ -2,14 +2,10 @@ package cmd
 
 import (
 	"context"
-	gen_docs "github.com/solo-io/valet/cli/cmd/gen-docs"
-
-	"github.com/solo-io/valet/cli/cmd/build"
-	"github.com/solo-io/valet/cli/cmd/config"
-	"github.com/solo-io/valet/cli/cmd/ensure"
-	set_context "github.com/solo-io/valet/cli/cmd/set-context"
-	"github.com/solo-io/valet/cli/cmd/teardown"
-	"github.com/solo-io/valet/cli/options"
+	"github.com/solo-io/valet/pkg/cli/cmd/config"
+	gen_docs "github.com/solo-io/valet/pkg/cli/cmd/gen-docs"
+	"github.com/solo-io/valet/pkg/cli/cmd/run"
+	"github.com/solo-io/valet/pkg/cli/options"
 
 	"github.com/solo-io/go-utils/cliutils"
 
@@ -20,7 +16,7 @@ func App(version string, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 
 	app := &cobra.Command{
 		Use:     "valet",
-		Short:   "CLI for ensuring kubernetes clusters, applications, and workflows",
+		Short:   "CLI for running valet workflows",
 		Version: version,
 	}
 
@@ -41,11 +37,8 @@ func ValetCli(version string) *cobra.Command {
 		app.SuggestionsMinimumDistance = 1
 		app.PersistentFlags().StringVarP(&opts.Config.GlobalConfigPath, "global-config-path", "", "", "alternate location for global config (default $HOME/.valet/global.yaml)")
 		app.AddCommand(
-			ensure.Ensure(opts),
-			teardown.Teardown(opts),
+			run.Run(opts),
 			config.Config(opts),
-			build.Build(opts),
-			set_context.SetContext(opts),
 			gen_docs.GenDocs(opts),
 		)
 	}

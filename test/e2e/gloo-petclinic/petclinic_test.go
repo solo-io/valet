@@ -119,7 +119,7 @@ var _ = Describe("petclinic", func() {
 		}
 	}
 
-	PIt("runs", func() {
+	It("runs", func() {
 		globalConfig, err := config.LoadGlobalConfig(&options.Options{})
 		Expect(err).To(BeNil())
 		err = common.LoadEnv(globalConfig)

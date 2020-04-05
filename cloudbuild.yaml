@@ -1,28 +1,26 @@
 steps:
-  - name: 'quay.io/solo-io/valet:0.1.7'
-    args: ['--version']
-    id: 'valet-load-container'
-    waitFor: ['-']
+  # clones project so it can be setup & tested
+  # All steps after this must set working directory to use the cloned project source
+
+  # $COMMIT_SHA is a default gcloud env var, to run via cloudbuild submit use:
+  # gcloud builds submit --substitutions COMMIT_SHA=<commit sha>,REPO_NAME=solo-io/valet ./
+  - name: 'gcr.io/$PROJECT_ID/prepare-go-workspace:0.3.0'
+    args:
+      - "--repo-name"
+      - "$REPO_NAME"
+      - "--repo-sha"
+      - "$COMMIT_SHA"
+      - "--repo-output-dir"
+      - "."
+    env:
+      - 'GIT_SSH_CONFIG=FALSE'
+    id: 'prepare-workspace'
+
   - name: gcr.io/cloud-builders/gsutil
     entrypoint: 'bash'
     args: ['-c', 'mkdir -p /go/pkg && cd /go/pkg && gsutil cat gs://$PROJECT_ID-cache/valet/valet-mod.tar.gz | tar -xzf -']
-    volumes: &vol
-      - name: 'gopath'
-        path: '/go/pkg'
+    dir: &dir '/workspace/valet'
     id: 'untar-mod-cache'
-    waitFor: ['-']
-  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
-    volumes: *vol
-    entrypoint: 'helm'
-    args: ['init']
-    id: 'helm-init'
-    waitFor: ['-']
-  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
-    volumes: *vol
-    entrypoint: 'go'
-    args: ['test', './...']
-    waitFor: ['helm-init']
-    id: 'test'
 
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
@@ -33,17 +31,19 @@ steps:
     waitFor: ['-']
     id: 'docker-login'
 
-  - name: 'quay.io/solo-io/valet:0.1.7'
+  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
+    dir: *dir
     args: ['build']
+    id: 'build'
+    waitFor: ['prepare-workspace']
+
+  - name: 'gcr.io/$PROJECT_ID/go-mod-ginkgo:0.2.0'
+    dir: *dir
     env:
-      - 'DOCKER_CONFIG=/workspace/docker-config'
-      - 'GOPATH=/workspace/gopath'
-      - 'HELM_HOME=/root/.helm'
-      - 'TAGGED_VERSION=$TAG_NAME'
-      - 'COMMIT_SHA=$COMMIT_SHA'
-    volumes: *vol
-    id: 'valet-build'
-    waitFor: ['docker-login', 'valet-load-container', 'test']
+      - 'BUILD_ID=$BUILD_ID'
+    args: ['-r', '-p', '-failFast', '-randomizeSuites', '-randomizeAllSpecs', '-skipPackage=./test']
+    waitFor: ['build']
+    id: 'test'
 
 secrets:
   - kmsKeyName: projects/solo-public/locations/global/keyRings/build/cryptoKeys/build-key

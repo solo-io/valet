@@ -3,7 +3,9 @@ package workflow
 import (
 	"github.com/solo-io/valet/pkg/api"
 	"github.com/solo-io/valet/pkg/render"
+	"github.com/solo-io/valet/pkg/step/aws"
 	"github.com/solo-io/valet/pkg/step/check"
+	"github.com/solo-io/valet/pkg/step/cluster"
 	"github.com/solo-io/valet/pkg/step/helm"
 	"github.com/solo-io/valet/pkg/step/kubectl"
 	"reflect"
@@ -13,13 +15,16 @@ import (
 // Exactly one of the member pointers should be non-nil.
 // This makes it easy to serialize and deserialize a workflow as yaml
 type Step struct {
+	DnsEntry         *aws.DnsEntry          `json:"dnsEntry,omitempty"`
+	Condition        *check.Condition       `json:"condition,omitempty"`
+	Curl             *check.Curl            `json:"curl,omitempty"`
+	WaitForPods      *check.WaitForPods     `json:"waitForPods,omitempty"`
+	EnsureCluster    *cluster.EnsureCluster `json:"ensureCluster,omitempty"`
 	Apply            *kubectl.Apply         `json:"apply,omitempty"`
 	CreateSecret     *kubectl.CreateSecret  `json:"createSecret,omitempty"`
+	Patch            *kubectl.Patch         `json:"patch,omitempty"`
 	InstallHelmChart *helm.InstallHelmChart `json:"installHelmChart,omitempty"`
-
-	Curl        *check.Curl        `json:"curl,omitempty"`
-	WaitForPods *check.WaitForPods `json:"waitForPods,omitempty"`
-
+	
 	Values render.Values `json:"values,omitempty"`
 	// Optional, used for identifying a specific step in a docs ref
 	Id string `json:"id,omitempty"`

@@ -24,7 +24,7 @@ type Step struct {
 	CreateSecret     *kubectl.CreateSecret  `json:"createSecret,omitempty"`
 	Patch            *kubectl.Patch         `json:"patch,omitempty"`
 	InstallHelmChart *helm.InstallHelmChart `json:"installHelmChart,omitempty"`
-	
+
 	Values render.Values `json:"values,omitempty"`
 	// Optional, used for identifying a specific step in a docs ref
 	Id string `json:"id,omitempty"`

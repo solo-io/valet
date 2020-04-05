@@ -1,0 +1,12 @@
+changelog:
+  - type: BREAKING_CHANGE
+    issueLink: https://github.com/solo-io/valet/issues/156
+    description: |
+      Rewrote valet api, removing "applications" and "resources" in favor of just workflows and steps.
+
+      Docs can now include templated valet references, to include contents of a workflow step in the rendered docs.
+
+      Emphasis was added during the rewrite on go usability. `tests/e2e` has a fully-working example of the Gloo
+      petclinic demo workflow to show how a demo workflow can be written as a concise, idiomatic golang test;
+      as a yaml workflow that can be easily distributed and run with the command line tool; and as document that
+      was rendered from a template, that references the same underlying valet workflow. 

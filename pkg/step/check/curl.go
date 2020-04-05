@@ -14,9 +14,9 @@ import (
 )
 
 const (
-	DefaultCurlDelay    = "1s"
-	DefaultCurlAttempts = 10
-	DefaultMethod = "GET"
+	DefaultCurlDelay       = "1s"
+	DefaultCurlAttempts    = 10
+	DefaultMethod          = "GET"
 	DefaultPortForwardPort = 8080
 )
 
@@ -149,7 +149,7 @@ func (c *Curl) doCurl(ctx *api.WorkflowContext, values render.Values) error {
 
 func (c *Curl) GetUrl(ctx *api.WorkflowContext, values render.Values) (string, error) {
 	if c.Service != nil {
-		ipAndPort, err := c.Service.getAddress(ctx, values)
+		ipAndPort, err := c.Service.GetAddress(ctx, values)
 		if err != nil {
 			return "", err
 		}
@@ -198,15 +198,15 @@ type ServiceRef struct {
 	Port      string `json:"port,omitempty" valet:"default=http"`
 }
 
-func (s *ServiceRef) getAddress(ctx *api.WorkflowContext, values render.Values) (string, error) {
+func (s *ServiceRef) GetAddress(ctx *api.WorkflowContext, values render.Values) (string, error) {
 	if err := values.RenderFields(s, ctx.Runner); err != nil {
 		return "", err
 	}
 	return ctx.KubeClient.GetIngressAddress(s.Name, s.Namespace, s.Port)
 }
 
-func (s *ServiceRef) getIp(ctx *api.WorkflowContext, values render.Values) (string, error) {
-	url, err := s.getAddress(ctx, values)
+func (s *ServiceRef) GetIp(ctx *api.WorkflowContext, values render.Values) (string, error) {
+	url, err := s.GetAddress(ctx, values)
 	if err != nil {
 		return "", err
 	}

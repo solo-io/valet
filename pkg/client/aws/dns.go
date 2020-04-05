@@ -38,7 +38,7 @@ type awsDnsClient struct {
 	svc *route53.Route53
 }
 
-func (c *awsDnsClient) getHostedZone(ctx context.Context, name string) (*route53.HostedZone, error) {
+func (c *awsDnsClient) getHostedZone(name string) (*route53.HostedZone, error) {
 	cmd.Stdout().Println("Getting hosted zone id")
 	listHostedZonesInput := route53.ListHostedZonesInput{}
 	output, err := c.svc.ListHostedZones(&listHostedZonesInput)
@@ -58,7 +58,7 @@ func (c *awsDnsClient) getHostedZone(ctx context.Context, name string) (*route53
 }
 
 func (c *awsDnsClient) CreateMapping(ctx context.Context, hostedZoneName, domain, ip string) error {
-	hostedZone, err := c.getHostedZone(ctx, hostedZoneName)
+	hostedZone, err := c.getHostedZone(hostedZoneName)
 	if err != nil {
 		return err
 	}

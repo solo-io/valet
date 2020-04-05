@@ -33,17 +33,17 @@ func (m *MockIngressClient) EXPECT() *MockIngressClientMockRecorder {
 	return m.recorder
 }
 
-// GetIngressHost mocks base method
+// GetIngressAddress mocks base method
 func (m *MockIngressClient) GetIngressHost(arg0, arg1, arg2 string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetIngressHost", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "GetIngressAddress", arg0, arg1, arg2)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetIngressHost indicates an expected call of GetIngressHost
+// GetIngressAddress indicates an expected call of GetIngressAddress
 func (mr *MockIngressClientMockRecorder) GetIngressHost(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIngressHost", reflect.TypeOf((*MockIngressClient)(nil).GetIngressHost), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIngressAddress", reflect.TypeOf((*MockIngressClient)(nil).GetIngressHost), arg0, arg1, arg2)
 }

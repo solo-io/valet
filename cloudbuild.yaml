@@ -41,7 +41,7 @@ steps:
     dir: *dir
     env:
       - 'BUILD_ID=$BUILD_ID'
-    args: ['-r', '-p', '-failFast', '-randomizeSuites', '-randomizeAllSpecs', '-skipPackage=./test']
+    args: ['-r', '-p', '-failFast', '-randomizeSuites', '-randomizeAllSpecs', '-skipPackage=./test,./cli']
     waitFor: ['build']
     id: 'test'
 

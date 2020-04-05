@@ -17,8 +17,8 @@ type Step struct {
 	CreateSecret     *kubectl.CreateSecret  `json:"createSecret,omitempty"`
 	InstallHelmChart *helm.InstallHelmChart `json:"installHelmChart,omitempty"`
 
-	Curl        *validation.Curl `json:"curl,omitempty"`
-	WaitForPods *validation.WaitForPods `json:"waitForPods,omitempty"`
+	Curl        *check.Curl        `json:"curl,omitempty"`
+	WaitForPods *check.WaitForPods `json:"waitForPods,omitempty"`
 
 	Values render.Values `json:"values,omitempty"`
 	// Optional, used for identifying a specific step in a docs ref
@@ -69,7 +69,7 @@ func Apply(path string) *Step {
 
 func WaitForPods(namespace string) *Step {
 	return &Step{
-		WaitForPods: &validation.WaitForPods{
+		WaitForPods: &check.WaitForPods{
 			Namespace: namespace,
 		},
 	}

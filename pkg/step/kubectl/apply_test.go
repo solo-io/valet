@@ -47,6 +47,8 @@ var _ = Describe("apply", func() {
 	})
 
 	It("returns the right description", func() {
-		Expect(apply.GetDescription()).To(Equal("Running command: kubectl apply -f test-path"))
+		desc, err := apply.GetDescription(nil, nil)
+		Expect(err).To(BeNil())
+		Expect(desc).To(Equal("Running command: kubectl apply -f test-path"))
 	})
 })

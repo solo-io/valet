@@ -1,4 +1,4 @@
-package validation
+package check
 
 import (
 	"fmt"
@@ -29,6 +29,22 @@ var (
 	}
 )
 
+// Use Curl to simulate testing an endpoint with an HTTP request using curl.
+//
+// If service is provided, then the URL to send the request to will be determined
+// by getting the address to a service exposed in the current Kube context.
+//
+// If portForward is provided, then the curl will be wrapped in a port-forward, exposing
+// some deployment and port to localhost. The request will be send to a localhost address.
+//
+// Only one of service or portForward should be provided.
+//
+// The request can be customized with the path, host, headers, and requestBody fields.
+//
+// The response can be validated with the statusCode, responseBody, and responseBodySubstring fields.
+//
+// Curl will by default try 10 times if the validation criteria isn't met for any reason, with a delay
+// of 1 second between attempt. Customize these with the attempts and delay fields.
 type Curl struct {
 	Path                  string            `json:"path,omitempty"`
 	Host                  string            `json:"host,omitempty"`
@@ -186,7 +202,7 @@ func (s *ServiceRef) getAddress(ctx *api.WorkflowContext, values render.Values) 
 	if err := values.RenderFields(s, ctx.Runner); err != nil {
 		return "", err
 	}
-	return ctx.KubeClient.GetIngressHost(s.Name, s.Namespace, s.Port)
+	return ctx.KubeClient.GetIngressAddress(s.Name, s.Namespace, s.Port)
 }
 
 func (s *ServiceRef) getIp(ctx *api.WorkflowContext, values render.Values) (string, error) {

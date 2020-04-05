@@ -42,8 +42,8 @@ var _ = Describe("petclinic", func() {
 		}
 	}
 
-	gatewayProxy := func() *validation.ServiceRef {
-		return &validation.ServiceRef{
+	gatewayProxy := func() *check.ServiceRef {
+		return &check.ServiceRef{
 			Namespace: "gloo-system",
 			Name:      "gateway-proxy",
 		}
@@ -65,7 +65,7 @@ var _ = Describe("petclinic", func() {
 
 	initialCurl := func() *workflow.Step {
 		return &workflow.Step{
-			Curl: &validation.Curl{
+			Curl: &check.Curl{
 				Service:    gatewayProxy(),
 				Path:       "/",
 				StatusCode: 200,
@@ -75,7 +75,7 @@ var _ = Describe("petclinic", func() {
 
 	curlVetsForUpdate := func() *workflow.Step {
 		return &workflow.Step{
-			Curl: &validation.Curl{
+			Curl: &check.Curl{
 				Service:               gatewayProxy(),
 				Path:                  "/vets",
 				StatusCode:            200,
@@ -86,7 +86,7 @@ var _ = Describe("petclinic", func() {
 
 	curlContactPageForFix := func() *workflow.Step {
 		return &workflow.Step{
-			Curl: &validation.Curl{
+			Curl: &check.Curl{
 				Service:               gatewayProxy(),
 				Path:                  "/contact.html",
 				StatusCode:            200,

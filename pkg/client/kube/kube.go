@@ -25,11 +25,16 @@ const (
 	LocalClusterName = "minikube"
 )
 
+// A simple client for Valet's interactions with Kubernetes via client API
 type Client interface {
+	// Wait until all of the pods in the provided namespace are ready (or completed successfully)
 	WaitUntilPodsRunning(namespace string) error
-	GetIngressHost(name, namespace, proxyPort string) (string, error)
+	// Get the address of the service, trying to account for different service types (i.e. LoadBalancer) and
+	// Kubernetes flavors (i.e. Minikube)
+	GetIngressAddress(name, namespace, proxyPort string) (string, error)
 }
 
+// Create a default kube client
 func NewClient() *kubeClient {
 	return &kubeClient{}
 }
@@ -41,7 +46,7 @@ var (
 	TimedOutWaitingForPodsError = errors.Errorf("Timed out waiting for pods to come online")
 )
 
-func (k *kubeClient) GetIngressHost(name, namespace, proxyPort string) (string, error) {
+func (k *kubeClient) GetIngressAddress(name, namespace, proxyPort string) (string, error) {
 	restCfg, err := kubeutils.GetConfig("", "")
 	if err != nil {
 		return "", errors.Wrapf(err, "getting kube rest config")
@@ -192,7 +197,7 @@ func (k *kubeClient) WaitUntilPodsRunning(namespace string) error {
 	}
 }
 
-func NamespaceIsActive(namespace string) (bool, error) {
+func (k *kubeClient) NamespaceIsActive(namespace string) (bool, error) {
 	kubeClient, err := kube.KubeClient()
 	if err != nil {
 		return false, err
@@ -211,7 +216,7 @@ func NamespaceIsActive(namespace string) (bool, error) {
 	return true, nil
 }
 
-func PodsReadyAndVersionsMatch(namespace, selector, version string) (bool, error) {
+func (k *kubeClient) PodsReadyAndVersionsMatch(namespace, selector, version string) (bool, error) {
 	kubeClient, err := kube.KubeClient()
 	if err != nil {
 		return false, err

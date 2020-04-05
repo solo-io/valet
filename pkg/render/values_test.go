@@ -44,7 +44,7 @@ var _ = Describe("Values", func() {
 			otherValues := input.DeepCopy()
 			otherValues[render.NamespaceKey] = "other-namespace"
 			output := input.MergeValues(otherValues)
-			Expect(output).Should(Equal(values))
+			Expect(output[render.NamespaceKey]).To(Equal("other-namespace"))
 		})
 
 	})

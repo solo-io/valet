@@ -1,4 +1,4 @@
-package gloo_rate_limiting_test
+package rate_limiting_test
 
 import (
 	"context"
@@ -59,13 +59,13 @@ var _ = Describe("Rate limit", func() {
 		}
 	}
 
-	initialCurl := func() *workflow.Step {
+	basicCurl := func(status int, response string) *workflow.Step {
 		return &workflow.Step{
 			Curl: &check.Curl{
 				Service:      gatewayProxy(),
 				Path:         "/sample-route-1",
-				StatusCode:   200,
-				ResponseBody: `[{"id":1,"name":"Dog","status":"available"},{"id":2,"name":"Cat","status":"pending"}]`,
+				StatusCode:   status,
+				ResponseBody: response,
 			},
 		}
 	}
@@ -78,16 +78,6 @@ var _ = Describe("Rate limit", func() {
 				KubeType:  "settings",
 				PatchType: "merge",
 				Path:      path,
-			},
-		}
-	}
-
-	rateLimitedCurl := func() *workflow.Step {
-		return &workflow.Step{
-			Curl: &check.Curl{
-				Service:    gatewayProxy(),
-				Path:       "/sample-route-1",
-				StatusCode: 429,
 			},
 		}
 	}
@@ -134,11 +124,11 @@ var _ = Describe("Rate limit", func() {
 				workflow.Apply("petstore.yaml"),
 				workflow.WaitForPods("default"),
 				workflow.Apply("vs-petstore-1.yaml"),
-				initialCurl(),
+				basicCurl(200, `[{"id":1,"name":"Dog","status":"available"},{"id":2,"name":"Cat","status":"pending"}]`),
 				// Part 2: Set up initial RL
 				patchSettings("settings-patch-1.yaml"),
 				workflow.Apply("vs-petstore-2.yaml"),
-				rateLimitedCurl(),
+				basicCurl(429, ""),
 				// Part 3: Set up complex rules with priority
 				patchSettings("settings-patch-2.yaml"),
 				workflow.Apply("vs-petstore-3.yaml"),
@@ -147,6 +137,7 @@ var _ = Describe("Rate limit", func() {
 				curlWithHeaders(200, "Whatsapp", "411"),
 				// Part 4: Add JWT filter to set headers from JWT claims
 				workflow.Apply("vs-petstore-4.yaml"),
+				basicCurl(401, "Jwt is missing"),
 				curlWithToken(429, token1),
 				curlWithToken(429, token2),
 				curlWithToken(200, token3),

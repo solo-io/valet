@@ -1,4 +1,4 @@
-package gloo_petclinic_test
+package petclinic_test
 
 import (
 	"context"

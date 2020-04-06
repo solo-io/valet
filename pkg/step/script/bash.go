@@ -9,8 +9,8 @@ import (
 )
 
 type Bash struct {
-	Inline string `yaml:"inline"`
-	Path   string `yaml:"path"`
+	Inline string `json:"inline,omitempty"`
+	Path   string `json:"path,omitempty"`
 }
 
 func (b *Bash) GetDescription(ctx *api.WorkflowContext, values render.Values) (string, error) {

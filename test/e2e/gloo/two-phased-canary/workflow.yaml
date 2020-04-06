@@ -1,4 +1,4 @@
-steps:
+setup:
 - installHelmChart:
     namespace: gloo-system
     releaseName: gloo
@@ -8,6 +8,11 @@ steps:
     valuesFiles:
     - values.yaml
     waitForPods: true
+- bash:
+    inline: kubectl delete virtualservices.gateway.solo.io -n gloo-system --all
+- bash:
+    inline: glooctl check
+steps:
 - apply:
     path: echo.yaml
   id: deploy-echo

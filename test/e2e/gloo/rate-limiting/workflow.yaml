@@ -1,4 +1,4 @@
-steps:
+setup:
 - installHelmChart:
     namespace: gloo-system
     releaseName: gloo
@@ -6,6 +6,11 @@ steps:
     set:
       license_key: env:LICENSE_KEY
     waitForPods: true
+- bash:
+    inline: kubectl delete virtualservices.gateway.solo.io -n gloo-system --all
+- bash:
+    inline: glooctl check
+steps:
 - apply:
     path: petstore.yaml
 - waitForPods:

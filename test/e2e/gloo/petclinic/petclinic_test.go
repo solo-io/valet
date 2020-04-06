@@ -10,6 +10,7 @@ import (
 	"github.com/solo-io/valet/pkg/step/check"
 	"github.com/solo-io/valet/pkg/step/helm"
 	"github.com/solo-io/valet/pkg/step/kubectl"
+	"github.com/solo-io/valet/pkg/step/script"
 	"github.com/solo-io/valet/pkg/workflow"
 	"io/ioutil"
 	"os"
@@ -95,10 +96,19 @@ var _ = Describe("petclinic", func() {
 		}
 	}
 
+	glooctlCheck := func() *workflow.Step {
+		return &workflow.Step{
+			Bash: &script.Bash{
+				Inline: "glooctl check",
+			},
+		}
+	}
+
 	getPetclinic := func() *workflow.Workflow {
 		return &workflow.Workflow{
 			Steps: []*workflow.Step{
 				installGloo(),
+				glooctlCheck(),
 				// Part 1: Deploy the monolith
 				workflow.Apply("petclinic.yaml").WithId("deploy-monolith"),
 				workflow.WaitForPods("default").WithId("wait-1"),

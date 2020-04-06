@@ -7,6 +7,7 @@ package mock_helm
 import (
 	gomock "github.com/golang/mock/gomock"
 	helminstall "github.com/solo-io/go-utils/installutils/helminstall"
+	release "helm.sh/helm/v3/pkg/release"
 	reflect "reflect"
 )
 
@@ -31,6 +32,21 @@ func NewMockClient(ctrl *gomock.Controller) *MockClient {
 // EXPECT returns an object that allows the caller to indicate expected use
 func (m *MockClient) EXPECT() *MockClientMockRecorder {
 	return m.recorder
+}
+
+// GetRelease mocks base method
+func (m *MockClient) GetRelease(arg0, arg1 string) (*release.Release, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRelease", arg0, arg1)
+	ret0, _ := ret[0].(*release.Release)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRelease indicates an expected call of GetRelease
+func (mr *MockClientMockRecorder) GetRelease(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRelease", reflect.TypeOf((*MockClient)(nil).GetRelease), arg0, arg1)
 }
 
 // Install mocks base method

@@ -8,6 +8,7 @@ import (
 	"github.com/solo-io/valet/pkg/step/cluster"
 	"github.com/solo-io/valet/pkg/step/helm"
 	"github.com/solo-io/valet/pkg/step/kubectl"
+	"github.com/solo-io/valet/pkg/step/script"
 	"reflect"
 )
 
@@ -25,6 +26,7 @@ type Step struct {
 	Delete           *kubectl.Delete        `json:"delete,omitempty"`
 	Patch            *kubectl.Patch         `json:"patch,omitempty"`
 	InstallHelmChart *helm.InstallHelmChart `json:"installHelmChart,omitempty"`
+	Bash             *script.Bash           `json:"bash,omitempty"`
 
 	Values render.Values `json:"values,omitempty"`
 	// Optional, used for identifying a specific step in a docs ref

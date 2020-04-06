@@ -24,6 +24,7 @@ require (
 	google.golang.org/genproto v0.0.0-20191028173616-919d9bdd9fe6
 	google.golang.org/grpc v1.24.0
 	gopkg.in/yaml.v2 v2.2.4
+	helm.sh/helm/v3 v3.0.0
 	k8s.io/api v0.0.0-20191121015604-11707872ac1c
 	k8s.io/apimachinery v0.0.0-20191121015412-41065c7a8c2a
 	k8s.io/client-go v0.0.0-20191016111102-bec269661e48

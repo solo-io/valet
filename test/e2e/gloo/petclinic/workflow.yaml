@@ -4,6 +4,9 @@ steps:
     releaseName: gloo
     releaseUri: https://storage.googleapis.com/solo-public-helm/charts/gloo-1.3.17.tgz
     waitForPods: true
+- bash:
+    Inline: glooctl check
+    Path: ""
 - apply:
     path: petclinic.yaml
   id: deploy-monolith

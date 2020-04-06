@@ -22,6 +22,7 @@ type Step struct {
 	EnsureCluster    *cluster.EnsureCluster `json:"ensureCluster,omitempty"`
 	Apply            *kubectl.Apply         `json:"apply,omitempty"`
 	CreateSecret     *kubectl.CreateSecret  `json:"createSecret,omitempty"`
+	Delete           *kubectl.Delete        `json:"delete,omitempty"`
 	Patch            *kubectl.Patch         `json:"patch,omitempty"`
 	InstallHelmChart *helm.InstallHelmChart `json:"installHelmChart,omitempty"`
 
@@ -58,6 +59,14 @@ func (s *Step) WithId(id string) *Step {
 func Apply(path string) *Step {
 	return &Step{
 		Apply: &kubectl.Apply{
+			Path: path,
+		},
+	}
+}
+
+func Delete(path string) *Step {
+	return &Step{
+		Delete: &kubectl.Delete{
 			Path: path,
 		},
 	}

@@ -1,0 +1,39 @@
+apiVersion: gateway.solo.io/v1
+kind: VirtualService
+metadata:
+  name: http
+  namespace: valet-test-server
+spec:
+  virtualHost:
+    domains:
+      - "valet-test.com"
+    routes:
+      - matchers:
+          - prefix: /hello
+        routeAction:
+          single:
+            upstream:
+              name: valet-test-server-valet-test-server-80
+              namespace: gloo-system
+---
+apiVersion: gateway.solo.io/v1
+kind: VirtualService
+metadata:
+  name: https
+  namespace: valet-test-server
+spec:
+  sslConfig:
+    secretRef:
+      name: valet-test.com
+      namespace: valet-test-server
+  virtualHost:
+    domains:
+      - "valet-test.com"
+    routes:
+      - matchers:
+          - prefix: /hello
+        routeAction:
+          single:
+            upstream:
+              name: valet-test-server-valet-test-server-443-fixed
+              namespace: gloo-system

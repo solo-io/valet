@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -9,32 +10,48 @@ import (
 	"net/http"
 )
 
-func HelloServer(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte("This is an example server.\n"))
-	// fmt.Fprintf(w, "This is an example server.\n")
-	// io.WriteString(w, "This is an example server.\n")
-}
-
 func main() {
 	certFile := os.Getenv("CERT_FILE")
 	if certFile == "" {
-		certFile = "localhost.crt"
+		certFile = "valet-test.com.crt"
 	}
 	keyFile := os.Getenv("KEY_FILE")
 	if keyFile == "" {
-		keyFile = "localhost.key"
+		keyFile = "valet-test.com.key"
 	}
 
-	http.HandleFunc("/hello", HelloServer)
+
+	httpHandler := HttpHandler{}
+	httpsHandler := HttpsHandler{}
+
 	go func() {
-		err := http.ListenAndServeTLS(":8443", certFile, keyFile, nil)
+		err := http.ListenAndServeTLS(":8443", certFile, keyFile, &httpsHandler)
 		if err != nil {
 			log.Fatal("ListenAndServeTLS: ", err)
 		}
 	}()
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8080", &httpHandler)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
+}
+
+type HttpHandler struct {
+
+}
+
+func (h *HttpHandler) ServeHTTP(w http.ResponseWriter, request *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
+	response := fmt.Sprintf("This is an example http server.\n\n%v\n", request)
+	w.Write([]byte(response))
+}
+
+type HttpsHandler struct {
+
+}
+
+func (h *HttpsHandler) ServeHTTP(w http.ResponseWriter, request *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
+	response := fmt.Sprintf("This is an example https server.\n\n%v\n", request)
+	w.Write([]byte(response))
 }

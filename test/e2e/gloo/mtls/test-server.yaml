@@ -21,7 +21,7 @@ spec:
         version: v1
     spec:
       containers:
-        - image: "quay.io/solo-io/valet-test-server:0.5.0-25-gd200331-dirty"
+        - image: "quay.io/solo-io/valet-test-server:0.5.0-26-ga282188-dirty"
           imagePullPolicy: Always
           name: valet-test-server
           ports:

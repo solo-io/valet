@@ -116,3 +116,36 @@ steps:
       name: gateway-proxy
       namespace: gloo-system
     statusCode: 429
+- apply:
+    path: vs-petstore-5.yaml
+- curl:
+    headers:
+      User-Agent: scammer
+    path: /sample-route-1
+    responseBody: 'ModSecurity: intervention occured'
+    service:
+      name: gateway-proxy
+      namespace: gloo-system
+    statusCode: 403
+- curl:
+    headers:
+      x-token: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzb2xvLmlvIiwic3ViIjoiMTIzNDU2Nzg5MCIsInR5cGUiOiJTTVMiLCJudW1iZXIiOiIyMDAifQ.quxs99EylhY2Eod3Ns-NkGRAVbM3riZLQLaCHvPPcpeTn7fEmcATPL82rZvUENLX6nsj_FXetd5dpvAJwPTCTRFhnEmVlK6J9i46nNqlA2JAFwXTww4WlrrpoD6p1fGoq5cGqzqdNBrfK-uee1w5N-c5de3waLAQXK7W6_x-L-0ovAqb0wz4i-fIcTKHGELpReGCh762rrj_iMuwaZMg3SJmIfSbGB7SFfdCcY1kE8fTdwZayoxzG1EzeNFTHd7D-h1Y_odafi_PGn5zwkpU4NkBqTcPx2TbZCS5QPG9VjSgWIi5cWW1tQiPyuv7UOmjgmgZFbXXG-Uf_SBpPZdUhg
+    path: /sample-route-1
+    service:
+      name: gateway-proxy
+      namespace: gloo-system
+    statusCode: 200
+- apply:
+    path: allow-jwt.yaml
+- apply:
+    path: auth-config.yaml
+- apply:
+    path: vs-petstore-6.yaml
+- curl:
+    headers:
+      x-token: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzb2xvLmlvIiwic3ViIjoiMTIzNDU2Nzg5MCIsInR5cGUiOiJTTVMiLCJudW1iZXIiOiIyMDAifQ.quxs99EylhY2Eod3Ns-NkGRAVbM3riZLQLaCHvPPcpeTn7fEmcATPL82rZvUENLX6nsj_FXetd5dpvAJwPTCTRFhnEmVlK6J9i46nNqlA2JAFwXTww4WlrrpoD6p1fGoq5cGqzqdNBrfK-uee1w5N-c5de3waLAQXK7W6_x-L-0ovAqb0wz4i-fIcTKHGELpReGCh762rrj_iMuwaZMg3SJmIfSbGB7SFfdCcY1kE8fTdwZayoxzG1EzeNFTHd7D-h1Y_odafi_PGn5zwkpU4NkBqTcPx2TbZCS5QPG9VjSgWIi5cWW1tQiPyuv7UOmjgmgZFbXXG-Uf_SBpPZdUhg
+    path: /sample-route-1
+    service:
+      name: gateway-proxy
+      namespace: gloo-system
+    statusCode: 403

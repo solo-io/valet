@@ -22,6 +22,7 @@ type Step struct {
 	WaitForPods      *check.WaitForPods     `json:"waitForPods,omitempty"`
 	EnsureCluster    *cluster.EnsureCluster `json:"ensureCluster,omitempty"`
 	Apply            *kubectl.Apply         `json:"apply,omitempty"`
+	ApplyTemplate    *kubectl.ApplyTemplate `json:"applyTemplate,omitempty"`
 	CreateSecret     *kubectl.CreateSecret  `json:"createSecret,omitempty"`
 	Delete           *kubectl.Delete        `json:"delete,omitempty"`
 	Patch            *kubectl.Patch         `json:"patch,omitempty"`
@@ -58,9 +59,26 @@ func (s *Step) WithId(id string) *Step {
 	return s
 }
 
+
+func (s *Step) WithValue(k, v string) *Step {
+	if s.Values == nil {
+		s.Values = make(map[string]string)
+	}
+	s.Values[k] = v
+	return s
+}
+
 func Apply(path string) *Step {
 	return &Step{
 		Apply: &kubectl.Apply{
+			Path: path,
+		},
+	}
+}
+
+func ApplyTemplate(path string) *Step {
+	return &Step{
+		ApplyTemplate: &kubectl.ApplyTemplate{
 			Path: path,
 		},
 	}
@@ -81,3 +99,4 @@ func WaitForPods(namespace string) *Step {
 		},
 	}
 }
+

@@ -1,0 +1,8 @@
+gloo:
+  accessLogger:
+    enabled: true
+  gatewayProxies:
+    gatewayProxy:
+      readConfig: true
+settings:
+  disableProxyGarbageCollection: true

@@ -16,12 +16,17 @@ func (w *Workflow) Setup(ctx *api.WorkflowContext) error {
 	cmd.Stdout().Println("Setting up workflow")
 	for _, step := range w.SetupSteps {
 		knownStep := step.Get()
-		description, err := knownStep.GetDescription(ctx, w.Values)
+		values := w.Values
+		if values == nil && step.Values != nil {
+			values = make(map[string]string)
+		}
+		values = values.MergeValues(step.Values)
+		description, err := knownStep.GetDescription(ctx, values)
 		if err != nil {
 			return err
 		}
 		cmd.Stdout().Println(description)
-		if err := knownStep.Run(ctx, step.Values); err != nil {
+		if err := knownStep.Run(ctx, values); err != nil {
 			return err
 		}
 	}
@@ -33,12 +38,17 @@ func (w *Workflow) Run(ctx *api.WorkflowContext) error {
 	cmd.Stdout().Println("Running workflow")
 	for _, step := range w.Steps {
 		knownStep := step.Get()
-		description, err := knownStep.GetDescription(ctx, w.Values)
+		values := w.Values
+		if values == nil && step.Values != nil {
+			values = make(map[string]string)
+		}
+		values = values.MergeValues(step.Values)
+		description, err := knownStep.GetDescription(ctx, values)
 		if err != nil {
 			return err
 		}
 		cmd.Stdout().Println(description)
-		if err := knownStep.Run(ctx, step.Values); err != nil {
+		if err := knownStep.Run(ctx, values); err != nil {
 			return err
 		}
 	}

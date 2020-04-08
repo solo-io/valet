@@ -57,6 +57,12 @@ func curlWithToken(status int, token string) *workflow.Step {
 	}
 }
 
+func otherCurlWithToken(status int, token string) *workflow.Step {
+	step := curlWithToken(status, token)
+	step.Curl.Path = "/sample-route-2"
+	return step
+}
+
 func curlForEventualRateLimit(status int, token string) *workflow.Step {
 	step := curlWithToken(status, token)
 	step.Curl.Attempts = 100
@@ -111,6 +117,13 @@ func GetWorkflow() *workflow.Workflow {
 			workflow.Apply("auth-config.yaml"),
 			workflow.Apply("vs-petstore-6.yaml"),
 			curlWithToken(403, token4),
+			curlWithToken(429, token1),
+			curlWithToken(429, token2),
+			curlWithToken(200, token3),
+			// Part 7: Move rate limit to route level
+			workflow.Apply("vs-petstore-7.yaml"),
+			curlWithToken(429, token1),
+			otherCurlWithToken(200, token1),
 		},
 	}
 }

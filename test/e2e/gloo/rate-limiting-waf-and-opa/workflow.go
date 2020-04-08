@@ -118,9 +118,7 @@ func GetWorkflow() *workflow.Workflow {
 			workflow.Apply("vs-petstore-6.yaml"),
 			curlWithToken(403, token4),
 			curlWithToken(429, token1),
-			curlWithToken(429, token2),
-			curlWithToken(200, token3),
-			// Part 7: Move rate limit to route level
+			// Part 7: Move rate limit to route level and add non-rate-limited route
 			workflow.Apply("vs-petstore-7.yaml"),
 			curlWithToken(429, token1),
 			otherCurlWithToken(200, token1),

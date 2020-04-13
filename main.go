@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	"github.com/solo-io/valet/cli/cmd"
-	"github.com/solo-io/valet/cli/version"
+	"github.com/solo-io/valet/pkg/cli/cmd"
+	"github.com/solo-io/valet/pkg/version"
 )
 
 func main() {

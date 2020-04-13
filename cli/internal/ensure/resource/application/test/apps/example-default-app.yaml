@@ -1,8 +1,0 @@
-# This example can be loaded when running from the "application" directory and using the default registry (working directory)
-# ref:
-#   path: test/apps/example-registry-app.yaml
-
-name: example-app
-resources:
-  - manifest:
-      path: test/files/manifests/petclinic.yaml

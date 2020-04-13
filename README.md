@@ -1,139 +1,195 @@
 # Valet
 
-Valet is a tool for Kubernetes operators and developers, focused on solving three related use cases:
-* How do I write automated end-to-end tests for Kubernetes applications?
-* How do I maintain documentation for workflows related to using my application on Kubernetes?
-* How do I automatically deploy many applications and ensure the state of an entire dev or production Kubernetes cluster?
+Valet makes it easy to define a **workflow**, consisting of a set of steps that deploy, configure, and test applications
+on Kubernetes. Valet enables you to use the same exact workflow definitions for testing, demos, and documentation.
 
-With Valet, you can write a single config and use valet to run it as an end to end test, 
-or wire up to GitOps to automatically deploy the configuration against a real cluster. In the future, a markdown 
-generator may be added to autogenerate user-friendly guides for every valet application and workflow. 
+Valet workflows are typically stored in code or yaml in a git repository. Valet workflows may have secrets and templates 
+that are populated at runtime using `Values`, which can be defined from environment variables, files, user input, or other 
+sources. Locally, you may add variables to your global valet config that will be loaded into the environment at runtime. 
 
-## Installing and Running
+It is easy to write a new type of step, and more step types will be introduced over time as needs arise. 
 
-The easiest way to use Valet is to run from source:
-* `git clone https://github.com/solo-io/valet && cd valet`
-* `make build TAGGED_VERSION=$(git describe --tags)`
+## Use Cases
 
-Now move `_output/valet` to somewhere in your bin, or create an alias: `alias valet="$(pwd)/_output/valet"`
+Valet has a few intended use cases:
+* Simplify writing automation in Go that simulate real Kubernetes workflows for deploying, configuring, and testing products
+* Simplify setting up and distributing complex product demos
+* Improving the quality of - and preventing regressions in - documented user workflows
 
-To get a jump start with some known configuration, clone the valet-config repo:
-* `git clone https://github.com/solo-io/valet-config && cd valet-config`
-* `valet ensure -f clusters/demos/petclinic-minikube.yaml`
+### Writing workflows in Go
 
-## Applications
+Valet workflows can be written in Go to automate workflows and end-to-end tests. Here is an example of a workflow 
+that starts with installing a helm chart, deploying a few manifests, and testing a service with curl: 
 
-Valet provides a simple declarative API for **applications**, which consist of a list of resources such as 
-**manifests**, **helm charts**, **templates**, **secrets**, **namespaces**, and other **applications**. 
-Given a set of user **values** (key-value pairs that help with rendering), and **flags** (to toggle on optional resources),
-an application can be rendered and ensured on a cluster. 
-
-Once an application is defined, it can be deployed automatically against the current Kube context 
-using `valet ensure application -f path/to/application`. Valet is idempotent, so running ensure several times in a 
-row should not affect the health of the application. 
-
-Applications can be rendered without applying by passing the `dry-run` flag. 
-
-Click [here](cli/internal/ensure/resource/application/README.md) for more details on the applications API. 
-
-## Workflows
-
-Valet also provides an API for **workflows**, which consist of a set of steps such as **installing or uninstalling applications**, 
-**applying or deleting manifests**, applying **patches**, validating the health of an application with **curl commands** and **conditions**, 
-setting up **dns entries**, or running other **workflows**.
-
-Like applications, workflows in valet are rendered with a set of user **values** and **flags** that determine how 
-the resources are rendered and which optional resources/steps are used. 
-
-Once a workflow is defined, it can be executed automatically using `valet ensure -f path/to/workflow.yaml`. Like applications, 
-workflows are intended to be idempotent so that they can be ensured regardless of the starting state of the cluster. 
-
-Click [here](cli/internal/ensure/resource/workflow/README.md) for more details on the workflow API. 
-
-## Clusters
-
-When running `valet ensure -f path/to/workflow.yaml`, the file can contain a `cluster` section to first point the local 
-Kube context to a specific cluster before executing the workflow. If the cluster doesn't exist, Valet will create it. 
-Valet currently supports **Minikube**, **EKS**, and **GKE** Kubernetes clusters. 
-
-If a cluster is not specified in the call to ensure, the workflow will be executed against the current Kube context. 
-
-Click [here](cli/internal/ensure/resource/cluster/README.md) for more details on the workflow API. 
-
-## Running Valet in CI 
-
-Valet publishes a container on release to the `quay.io/solo-io/valet` Docker repo, with all the dependencies
-pre-loaded. This makes it easy to invoke in a CI system, such as Google Cloud Build 
-(see cloudbuild.yaml for complete example):
-
-```yaml
-steps:
-  - name: 'quay.io/solo-io/valet:0.1.5'
-    args: ['ensure', '-f', 'cli/internal/ensure/test/fixtures/all.yaml', '--gke-cluster-name', 'valet-$SHORT_SHA']
-    id: 'valet-ensure-valet'
-    env:
-      - 'HELM_HOME=/root/.helm'
-    secretEnv: ['GITHUB_TOKEN', 'LICENSE_KEY', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY']
-    waitFor: ['valet-build', 'valet-ensure-cluster']
+```go
+installGloo := &workflow.Step{
+        InstallHelmChart: &helm.InstallHelmChart{
+            ReleaseName: "gloo",
+            ReleaseUri:  "https://storage.googleapis.com/solo-public-helm/charts/gloo-1.3.17.tgz",
+            Namespace:   "gloo-system",
+            WaitForPods: true,
+        },
+    }
+}
+initialCurl := &workflow.Step{
+    Curl: &check.Curl{
+        Service:    gatewayProxy(),
+        Path:       "/",
+        StatusCode: 200,
+    },
+}
+workflow := &workflow.Workflow{
+    Steps: []*workflow.Step{
+        installGloo,
+        // Part 1: Deploy the monolith
+        workflow.Apply("petclinic.yaml"),
+        workflow.WaitForPods("default"),
+        workflow.Apply("vs-1.yaml"),
+        initialCurl,
+        // ...
+    },
+}
+err := workflow.Run(workflow.DefaultContext(), nil)
+// Utilizing gomega for test assertions
+Expect(err).To(BeNil())
 ```
 
-### GitOps
+A more complete example is available [here](test/e2e/gloo-petclinic/petclinic_test.go).
 
-Valet helps with setting up a GitOps story for your cluster config. One option is managing the valet config in a repo, 
-and then running `valet ensure` in CI to ensure the config. 
+### Automating and distributing demo workflows
 
-In some cases, it may be preferable to store the rendered applications rather than the valet config in a GitOps repo. 
-Valet supports a `dry-run` flag for this reason, and is designed to be flexible but not strongly opinionated about how 
-to assemble applications and workflows. It may be preferable to use some of the great tools from the community, including
-**Helm**, **Kustomize**, or weave **Flux** for synchronizing resources on a cluster; even then, Valet could be a useful
-additional tool to help with automation and documentation. 
+Valet workflows can be written in or serialized to yaml. The workflow above is available in yaml form 
+[here](test/e2e/gloo-petclinic/workflow.yaml).
 
+Use the `valet` command line tool to run a yaml workflow (`valet run -f workflow.yaml`).
 
+### Improving workflow documentation
 
-## Teardown
+The `valet` command line tool includes a `gen-docs` command that can read a template (markdown) file and output 
+a markdown file with the templates replaced by content from valet workflows. 
 
-When you are done using a config, Valet can clean it up with `valet teardown -f path/to/config.yaml`. 
-This can be useful if the cluster gets into a bad state, or if it is no longer useful. **If the config
-contains a cluster definition, the cluster will be destroyed.**
+Here is an example of a docs template:
+```
+{{%valet 
+workflow: workflow.yaml
+step: deploy-monolith
+%}}
+```
 
-For tearing down specific applications, run `valet teardown application -f path/to/application.yaml`.  
+`valet gen-docs ...` will replace that with documentation from the step that is referenced. In this example, the 
+replacement is:
+```
+kubectl apply -f petclinic.yaml
+```
 
-## Config
+This helps write workflows that match your automated tests, by using the workflow as the source of truth. Docs 
+can also include flags that may result in a different output. For instance, we could have written this into the template
+instead:
+```
+{{%valet 
+workflow: workflow.yaml
+step: deploy-monolith
+flags:
+  - YamlOnly
+%}}
+```
+
+When generating docs for a step that applies a manifest, the `YamlOnly` flag tells the renderer to just show the
+raw yaml, rather than the kubectl command. 
+
+For a complete example, check out the template [here](test/e2e/gloo-petclinic/template.md), which was rendered into 
+[this](test/e2e/gloo-petclinic/README.md)
+
+## Values
+
+A **Value** in valet is a key value pair which can be defined in quite a few ways, and is accessible during more parts 
+of a valet configuration to aid in customization.
+
+### Explanation
+
+**Values** are a map (string -> string) that most commonly contains values that are string constants, as demonstrated below:
+
+```yaml
+values:
+  VirtualServiceName: smh
+  Namespace: sm-marketplace
+  UpstreamName: sm-marketplace-smm-apiserver-8080
+  UpstreamNamespace: gloo-system
+```
+
+Conventionally, `values` are written in CamelCase, as demonstrated here. 
+
+An application may specify certain `values` are **required**, to help validate an input when trying to render an application.
+
+`Values` work in order of precedence.
+
+1) user values passed in via CLI or via file.
+2) default values on the workflow/application. 
+3) localized values to a resource.
+
+### Value prefixes
+
+As shown above, `values` can be a simple set of (string -> string), but valet allows for much more customization. 
+
+```yaml
+values:
+  EnvExample: "env:EXAMPLE_ONE" # This populates the value by reading this environment variable
+  CmdExample: "cmd:minikube ip" # This populates the value by running this command
+  KeyExample: "key:EnvExample" # This creates a value that is an alias for another key
+  TemplateExample: "template:{{ .KeyExample }}" # This creates a value by executing a go template using the other values
+  FileExample: "file:$HOME/a/file/on/my/{{ .FileName }}" # This executes the template, expands the env, and then gets the content of the file 
+``` 
+
+These are the 5 special keywords that can be prefixed to `values` to get special behavior from valet.
+They are the following:
+
+* `env:`
+    * this prefix tells valet to expand the value by looking it up as an environment variable
+* `cmd:`
+    * this prefix tells valet to execute the cmd and place stdout in place of the value
+* `key:`
+    * this prefix tells valet to replace this value with that of another one, identified by the key provided
+* `template:`
+    * this prefix tells valet to template out the string using the other `values` as inputs
+* `file:`
+    * this prefix is a combination of the others, with additional capability. It will expand env vars, template the value, 
+    and then retrieve the contents of the file which is pointed to. That file contents will then be used as the value.
+    * files in this context have one limitation compared to file refs in the rest of valet. Any file path here
+    has to be relative to the root directory in which valet is run. This is issue is being tracked
+    [here](https://github.com/solo-io/valet/issues/122)
+
+### Tags
+
+Workflow steps are represented as structs in Go, and some struct fields have special valet tags:
+```go
+type ExampleResource struct {
+	InnerValue string `json:"innerValue" valet:"key=Value"`
+}
+```
+
+Prior to execution, a workflow is rendered, including updating the value of struct fields based on their tags and 
+the runtime values available. The available tags are:
+
+* default
+    * this tag sets a default value
+* key
+    * this tag sets the value of the field by getting the value in `values` using the provided key
+* template
+    * This tag specifies that the value of this struct should be templated using the available `values`
+
+These tags are executed in the order listed above. If there is no value in the field, then the default gets added.
+If there is still no default value, and there is a key present, a value is looked up for that key. After that the string
+is templated. This has the potential for nested templating, but that is not recommended as other struct fields may break
+if passed templates.
+
+## Global Config
 
 In order to save a variable that will always get loaded into the environment when valet runs, run:
 `valet config set FOO=bar`. 
 
 This writes out this value to a global config file in `$HOME/.valet/global.yaml`. This file can be edited 
-directly. 
+directly. To use a different global config location, set `--global-config-path`. 
 
-It is important to provide a few common environment variables to simplify usage of valet, especially with Solo products:
-* `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`: These are necessary for valet to update Route53 DNS, and
-are also used in the standard Gloo application and demos. 
-* `GOOGLE_APPLICATION_CREDENTIALS`: This is necessary to manage Kubernetes clusters in Google Cloud
-* `LICENSE_KEY`: This is necessary for installing Enterprise Gloo
-* `GITHUB_TOKEN`: This is necessary for deploying Service Mesh Hub
-
-## Build (beta)
-
-Valet offers the ability to build artifacts from any repo. 
-It currently supports building Go binaries, tagging and pushing docker containers, 
-and producing Helm charts and manifests. Valet typically determines the artifacts to 
-build by reading a file called `artifacts.yaml` in the root of the repo. An example 
-is included in [this repo](artifacts.yaml) for building Valet itself. 
-
-Valet artifacts are always stored locally in the `_artifacts` directory at the root of the repo. 
-
-Valet artifacts are versioned, with the version provided at runtime. 
-This version may be a semver version (i.e. 1.2.3), a SHA, or any other version. 
-Typically, when running locally, you would use git to determine a meaningful, 
-unique, and stable version:
-
-`valet build -v $(git describe --tags --dirty | cut -c 2-)`
-
-If your repo does not have any tags, then you may use this instead:
-
-`valet build -v $(git describe --always --dirty)`
-
-Artifacts can be tagged for upload to the google storage valet bucket 
-by adding `upload: true` to the binary or helm chart. 
-(NOTE: this requires google storage writer permissions on the valet bucket.) 
+Often, this is a good place to store environment variables for things like credentials, so they can be left 
+out of the workflow. In CI workflows, the environment variable can be provided in the preferred way depending 
+on the CI tool. 

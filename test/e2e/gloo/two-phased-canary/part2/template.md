@@ -1,6 +1,6 @@
 # Two-phased canary rollout, part 2
 
-In the last guide, we looked at how you can use Gloo to set up a two-phased approach to canary testing 
+In the last part, we looked at how you can use Gloo to set up a two-phased approach to canary testing 
 and rolling out new versions of your services. 
 
 In the first phase, you redirect a small slice of your traffic so you can verify the functionality of the new
@@ -8,13 +8,13 @@ version. Once satisfied, you move on to the second phase, during which you use w
 gradually shift the load to the new version of the service, until you are complete and the old version 
 can be decommissioned. 
 
-Now we're going to look at how we can improve upon that workflow design, so we can scale across more teams, 
+Now we're going to look at how we can improve upon that workflow design, so we can scale across many services owned by many teams, 
 while taking into account how responsibilities may be separated across different roles in the organization, 
 and making sure the platform gracefully handles configuration errors.   
 
 ## Scaling across multiple teams
 
-As we saw in the last post, Gloo uses the [VirtualService](LINK) to manage the routes for a particular domain. 
+As we saw in the last post, Gloo uses the [VirtualService](https://docs.solo.io/gloo/latest/introduction/architecture/concepts/#virtual-services) to manage the routes for a particular domain. 
 We were able to execute our two-phased upgrade workflow in Gloo by modifying the routes on the virtual service object. 
 
 Before, we executed the workflow for a single service called **echo**. Now, we are going to introduce a second 
@@ -30,7 +30,7 @@ In particular, we're going to look for an approach that satisfies the following 
 The simple approach to scaling would be to have a single VirtualService, and manage all the routes for the **echo** 
 and **foxtrot** services with the same resource. 
 
-Right away, we can see a problem with our goals above. Since this is all controlled with a single object, we either
+Right away, we can see a problem. Since all our routes are controlled with a single object, we either
 need to grant write permissions to that object to both teams, or we need all the rights to go through a central
 admin team. The latter approach would most likely be the lesser of two evils, and you would place an increasingly large 
 burden on your central admin team as the number of discrete development teams grows. 
@@ -38,8 +38,8 @@ burden on your central admin team as the number of discrete development teams gr
 ### Option 2: Separating ownership across domains
 
 The first alternative we might consider is to model each service with different domains, so that the routes 
-are managed on different objects. For example, if our primary domain was "example.com", we could have a virtual 
-service for each subdomain: "echo.example.com" and "foxtrot.example.com". 
+are managed on different objects. For example, if our primary domain was `example.com`, we could have a virtual 
+service for each subdomain: `echo.example.com` and `foxtrot.example.com`. 
 
 ```yaml
 apiVersion: gateway.solo.io/v1
@@ -84,17 +84,18 @@ and for that team to be able to **delegate** ownership of one or more routes.
 ### Option 3: Separating ownership across route tables with **delegation**
 
 To solve these problems, we'll take advantage of a feature in Gloo called **delegation**. With delegation, we can 
-define our routes on a different object called a [RouteTable](TODO). In the virtual service, we can define a 
+define our routes on a different object called a [RouteTable](https://docs.solo.io/gloo/latest/guides/traffic_management/destination_types/delegation/). In the virtual service, we can define a 
 **delegate action**, and reference the **route table**. This enables us to
 separate our ownership of the domain from the ownership of the specific routes, and also separate the ownership 
 of different routes across different development teams. 
 
-This sounds like the best approach, that would satisfy our three criteria above. Let's see how this works in Gloo. 
+This sounds like the most satisfactory approach, so now let's see how this works in Gloo. 
 
 ## Setting up Gloo
 
 I'm also assuming you have a decent understanding of the two-phased approach 
-detailed in part 1.  I'm also assuming you have a Kubernetes cluster and you've installed Gloo as I explained
+detailed in [part 1](https://www.solo.io/blog/two-phased-canary-rollout-with-gloo/).  
+I'm also assuming you have a Kubernetes cluster and you've installed Gloo as I explained
 in part 1, and are ready to start deploying the services. 
 
 ### Deploy the applications
@@ -113,7 +114,7 @@ workflow: workflow.yaml
 step: deploy-foxtrot
 %}}
 
-We should wait for echo and foxtrot to be deployed:
+We should wait for echo and foxtrot to be ready:
 
 {{%valet
 workflow: workflow.yaml
@@ -127,7 +128,7 @@ step: wait-foxtrot
 
 ### Model the services as upstreams in Gloo
 
-Then we will model echo as an [Upstream](TODO) destination in Gloo:
+Let's model echo as an [Upstream](https://docs.solo.io/gloo/latest/introduction/architecture/concepts/#upstreams) destination in Gloo:
 
 {{%valet 
 workflow: workflow.yaml
@@ -143,7 +144,7 @@ workflow: workflow.yaml
 step: deploy-upstream-echo
 %}}
 
-And we will model foxtrot as an [Upstream](TODO):
+And let's do the same for foxtrot, modeling it as an [Upstream](https://docs.solo.io/gloo/latest/introduction/architecture/concepts/#upstreams):
 
 {{%valet 
 workflow: workflow.yaml
@@ -152,7 +153,7 @@ flags:
   - YamlOnly
 %}}
 
-And deploy it to the cluster:
+And deploying it to the cluster:
 
 {{%valet 
 workflow: workflow.yaml
@@ -161,7 +162,7 @@ step: deploy-upstream-foxtrot
 
 ### Set up route tables
 
-Now, we will create a route table containing the route to the echo upstream: 
+Now, let's create a route table containing the route to the echo upstream: 
 
 {{%valet 
 workflow: workflow.yaml
@@ -177,7 +178,7 @@ workflow: workflow.yaml
 step: deploy-rt-echo
 %}}
 
-And the route table for foxtrot:
+And let's create the route table for foxtrot:
 
 {{%valet 
 workflow: workflow.yaml
@@ -233,8 +234,8 @@ version:foxtrot-v1
 
 ## Running the two-phased canary workflow
 
-Now, we can run the two-phased workflow on either service by making edits to the corresponding 
-route table. We're going to impersonate the foxtrot team and start rolling out v2. 
+Now, the echo or foxtrot team can run the two-phased workflow on their service by making edits to their 
+corresponding route table. We're going to impersonate the foxtrot team and start rolling out v2. 
 
 ### Foxtrot team starts phase 1
 
@@ -337,7 +338,7 @@ flags:
   - YamlOnly
 %}}
 
-And deploy it to the cluster:
+Let's deploy it to the cluster:
 
 {{%valet 
 workflow: workflow.yaml
@@ -373,8 +374,8 @@ version:foxtrot-v2
 
 As we can now see, using route tables allows us to scale our canary rollout to multiple development teams, 
 without needing to give teams ownership over their own domain configuration. Teams can manage their own 
-canary rollouts in parallel, without needing to coordinate. At least, that's true until someone starts authoring
-invalid configuration. We'll see that Gloo's default behavior in response to invalid configuration isn't desirable 
+canary rollouts in parallel, without needing to coordinate. **At least, that's true until someone starts authoring
+invalid configuration**. We'll see that Gloo's default behavior in response to invalid configuration isn't desirable 
 for our use case; however, we can resolve that and change the behavior with a simple settings change. 
 
 ### Default Gloo behavior when there is invalid configuration
@@ -383,7 +384,7 @@ Typically, when Gloo encounters invalid configuration, it tries to continue serv
 to Envoy. That way, the mistake won't cause working routes to get removed, and as soon as the 
 configuration is repaired, Envoy will start receiving updates again. This isn't foolproof - it only works as long as 
 Gloo and Envoy have that last known configuration in memory, and won't survive pod restarts. But it preserves decent 
-degradation semantics in the event of a problem. 
+degradation semantics in the event of a problem, and is often the ideal behavior for a particular use case. 
 
 Let's see what that looks like in our use case. Let's simulate the echo team writing configuration that 
 is invalid, by referencing an upstream destination that doesn't exist. 
@@ -411,7 +412,7 @@ flags:
   - YamlOnly
 %}}
 
-Let's deploy it to the cluster:
+Let's deploy that to the cluster:
 
 {{%valet 
 workflow: workflow.yaml
@@ -460,10 +461,14 @@ version:foxtrot-v2
 ```
 
 As we can see, there is an error in the overall proxy config, so Gloo is continuing to serve Envoy the last 
-known good configuration. This means the foxtrot team is blocked, pending the echo team fixing their configuration. 
-This is a major red flag to scaling our workflow across a larger development organization. 
+known good configuration. This means the foxtrot team's change to set the weight to v2 did not apply. 
+The foxtrot team is blocked, pending the echo team fixing their configuration. 
 
-### Changing the Gloo behavior around invalid configuration
+When considering an API gateway that is used across a large development organization, with many independent teams, 
+we would consider it a red flag if one team's mistake could block another team's progress. Fortunately, Gloo 
+has a feature called [route replacement](https://docs.solo.io/gloo/latest/guides/traffic_management/configuration_validation/invalid_route_replacement/) that changes the proxy behavior and addresses this concern. 
+
+### Changing the behavior around invalid configuration
 
 Let's create a file called `settings-patch.yaml` that contains the following patch for our Gloo settings:
 
@@ -525,7 +530,7 @@ flags:
   - YamlOnly
 %}}
 
-Apply it to your cluster with the following command:
+Let's deploy it with the following command:
 
 {{%valet
 workflow: workflow.yaml
@@ -539,7 +544,7 @@ workflow: workflow.yaml
 step: delete-foxtrot-v1
 %}}
 
-And we can check to make sure foxtrot is still healthy:
+Finally, let's check to make sure foxtrot is still healthy:
 
 ```bash
 ➜ curl $(glooctl proxy url)/foxtrot
@@ -596,9 +601,13 @@ version:echo-v2
 
 In this post, we looked at extending our two-phased canary rollout workflow. We scaled it across multiple dev teams
 by delegating different route tables to different teams. With delegation, we achieved a cleaner separation of responsibilities
-for our dev ops team, who owns the domain, and for our dev teams who own different routes. Finally, it was easy to customized
+for our dev ops team, who owns the domain, and for our dev teams, who own different routes. Finally, it was easy to customize
 the behavior in Gloo to ensure the two teams could operate in parallel without needing to coordinate, and without risk that 
 one team will block another by writing invalid configuration. 
+
+Special thanks to Ievgenii Shepeliuk for providing feedback on part 1 and sharing how route tables are used 
+at his organization. For a deeper look at how Gloo is used at New Age Solutions, check out our 
+[case study](https://www.solo.io/blog/end-user-case-study-hrzn-igaming-platform-by-new-age-solutions/).
 
 ## Get Involved in the Gloo Community
 

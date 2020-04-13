@@ -1,10 +1,11 @@
 # Two-phased canary rollout, part 2
 
-In the last part, we looked at how you can use Gloo to set up a two-phased approach to canary testing 
+In the [last part](https://www.solo.io/blog/two-phased-canary-rollout-with-gloo/), we looked at how you can use Gloo to set up a two-phased approach to canary testing 
 and rolling out new versions of your services. 
 
-In the first phase, you redirect a small slice of your traffic so you can verify the functionality of the new
-version. Once satisfied, you move on to the second phase, during which you use weighted destinations to 
+* In the first phase, you redirect a small slice of your traffic so you can verify the functionality of the new
+version. 
+* Once satisfied, you move on to the second phase, during which you use weighted destinations to 
 gradually shift the load to the new version of the service, until you are complete and the old version 
 can be decommissioned. 
 
@@ -605,7 +606,7 @@ for our dev ops team, who owns the domain, and for our dev teams, who own differ
 the behavior in Gloo to ensure the two teams could operate in parallel without needing to coordinate, and without risk that 
 one team will block another by writing invalid configuration. 
 
-Special thanks to Ievgenii Shepeliuk for providing feedback on part 1 and sharing how route tables are used 
+Special thanks to Ievgenii Shepeliuk for providing feedback on [part 1](https://www.solo.io/blog/two-phased-canary-rollout-with-gloo/) and sharing how route tables are used 
 at his organization. For a deeper look at how Gloo is used at New Age Solutions, check out our 
 [case study](https://www.solo.io/blog/end-user-case-study-hrzn-igaming-platform-by-new-age-solutions/).
 

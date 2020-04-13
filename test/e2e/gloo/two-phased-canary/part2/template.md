@@ -25,7 +25,7 @@ In particular, we're going to look for an approach that satisfies the following 
   * (B) Limits the risk of one team disrupting another team's service health
   * (C) Fits in nicely with an organization's approach to roles, role-based access control, and Kubernetes  
 
-## Option 1: Shared virtual service
+### Option 1: Shared virtual service
 
 The simple approach to scaling would be to have a single VirtualService, and manage all the routes for the **echo** 
 and **foxtrot** services with the same resource. 
@@ -35,7 +35,7 @@ need to grant write permissions to that object to both teams, or we need all the
 admin team. The latter approach would most likely be the lesser of two evils, and you would place an increasingly large 
 burden on your central admin team as the number of discrete development teams grows. 
 
-## Option 2: Separating ownership across domains
+### Option 2: Separating ownership across domains
 
 The first alternative we might consider is to model each service with different domains, so that the routes 
 are managed on different objects. For example, if our primary domain was "example.com", we could have a virtual 
@@ -81,7 +81,7 @@ just not shared across development teams.
 For such an organization, a better approach would be to have an admin team own the root virtual service, 
 and for that team to be able to **delegate** ownership of one or more routes.  
 
-## Option 3: Separating ownership across route tables with **delegation**
+### Option 3: Separating ownership across route tables with **delegation**
 
 To solve these problems, we'll take advantage of a feature in Gloo called **delegation**. With delegation, we can 
 define our routes on a different object called a [RouteTable](TODO). In the virtual service, we can define a 

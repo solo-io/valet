@@ -5,6 +5,7 @@ data:
     default allow = false
     allow {
         [header, payload, signature] = io.jwt.decode(input.state.jwt)
+        trace(sprintf("%v", [payload]))
         payload["email"] = "rick.ducott@solo.io"
     }
 kind: ConfigMap

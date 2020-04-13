@@ -1,11 +1,13 @@
 package gloo
 
 import (
+	"fmt"
 	"github.com/solo-io/valet/pkg/step/check"
 	"github.com/solo-io/valet/pkg/step/helm"
 	"github.com/solo-io/valet/pkg/step/kubectl"
 	"github.com/solo-io/valet/pkg/step/script"
 	"github.com/solo-io/valet/pkg/workflow"
+	"strings"
 )
 
 func GatewayProxy() *check.ServiceRef {
@@ -85,6 +87,15 @@ func DeleteAllVirtualServices() *workflow.Step {
 	return &workflow.Step{
 		Bash: &script.Bash{
 			Inline: "kubectl delete virtualservices.gateway.solo.io -n gloo-system --all",
+		},
+	}
+}
+
+func DeleteNamespaces(ns ...string) *workflow.Step {
+	joinedNs := strings.Join(ns, " ")
+	return &workflow.Step{
+		Bash: &script.Bash{
+			Inline: fmt.Sprintf("kubectl delete ns %s --ignore-not-found", joinedNs),
 		},
 	}
 }

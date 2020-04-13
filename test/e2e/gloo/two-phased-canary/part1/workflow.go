@@ -1,4 +1,4 @@
-package two_phased_canary
+package part1
 
 import (
 	"context"

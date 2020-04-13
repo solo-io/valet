@@ -76,6 +76,9 @@ func (c *Curl) GetDescription(ctx *api.WorkflowContext, values render.Values) (s
 		return "", err
 	}
 	str := fmt.Sprintf("Issuing http request\n%s %s", c.Method, url)
+	if len(c.Headers) > 0 {
+		str += fmt.Sprintf("\nHeaders: %v", c.Headers)
+	}
 	if c.RequestBody != "" {
 		str += fmt.Sprintf("\nBody: %s", c.RequestBody)
 	}

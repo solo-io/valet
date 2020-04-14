@@ -62,6 +62,11 @@ func (p *Patch) Run(ctx *api.WorkflowContext, values render.Values) error {
 }
 
 func (p *Patch) GetDocs(ctx *api.WorkflowContext, values render.Values, flags render.Flags) (string, error) {
-	panic("implement me")
+	if flags.Contains(DocsFlagYamlOnly) {
+		return ctx.FileStore.Load(p.Path)
+	} else {
+		return fmt.Sprintf("kubectl patch -n %s %s %s --type %s --patch \"$(cat %s)\"", p.Namespace, p.KubeType, p.Name, p.PatchType, p.Path), nil
+	}
+
 }
 

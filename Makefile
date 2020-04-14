@@ -43,17 +43,3 @@ docker-build: build-linux
 
 docker-push: docker-build
 	docker push quay.io/solo-io/valet:$(VERSION)
-
-#------------
-# Test server
-#------------
-
-.PHONY: build-test-server
-build-test-server:
-	GO111MODULE=on CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o _output/valet-test-server -v test/e2e/test-server/main.go
-
-docker-build-test-server: build-test-server
-	docker build -t quay.io/solo-io/valet-test-server:$(VERSION) -f test/e2e/test-server/Dockerfile _output
-
-docker-push-test-server: docker-build-test-server
-	docker push quay.io/solo-io/valet-test-server:$(VERSION)
